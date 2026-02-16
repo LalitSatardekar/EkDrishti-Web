@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-borderSubtle;
+  }
+  
+  body {
+    @apply bg-primary text-textPrimary font-body antialiased;
+    background-image: radial-gradient(ellipse at top, rgba(37, 99, 235, 0.1) 0%, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-surface/40 backdrop-blur-lg border border-borderSubtle rounded-2xl;
+  }
+
+  .btn-primary {
+    @apply bg-accent hover:bg-accent/90 text-white font-medium px-6 py-3 rounded-lg transition-all duration-300;
+  }
+
+  .btn-secondary {
+    @apply bg-transparent hover:bg-surface text-textPrimary font-medium px-6 py-3 rounded-lg border border-borderSubtle transition-all duration-300;
+  }
+
+  .section-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+}
