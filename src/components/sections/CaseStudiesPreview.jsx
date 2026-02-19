@@ -20,16 +20,16 @@ const CaseStudyCard = ({ study }) => {
       
       {/* Content */}
       <div className="absolute inset-0 p-8 flex flex-col justify-end">
-        <span className="text-accentLight text-sm font-medium mb-2">
+        <span className="text-amber-400 text-sm font-medium mb-2">
           {study.category}
         </span>
-        <h3 className="text-3xl font-heading font-bold text-textPrimary mb-3 group-hover:text-accent transition-colors duration-300">
+        <h3 className="text-3xl font-heading font-bold text-textPrimary mb-3 group-hover:text-amber-400 transition-colors duration-300">
           {study.title}
         </h3>
         <p className="text-textSecondary mb-4">
           {study.description}
         </p>
-        <div className="flex items-center text-accent font-medium">
+        <div className="flex items-center text-amber-400 font-medium">
           View Case Study
           <svg
             className="w-5 h-5 ml-2 group-hover:translate-x-2 transition-transform duration-300"
@@ -53,7 +53,7 @@ const CaseStudiesPreview = () => {
     <section className="py-24">
       <div className="section-container">
         <div className="text-center mb-16">
-          <span className="text-accent font-medium mb-4 block">Success Stories</span>
+          <span className="text-amber-400 font-medium mb-4 block">Success Stories</span>
           <h2 className="text-4xl md:text-5xl font-heading font-bold text-textPrimary mb-6">
             Featured Work
           </h2>

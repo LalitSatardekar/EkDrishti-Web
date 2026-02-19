@@ -10,12 +10,12 @@ const workItems = [
   { ...caseStudies[0], height: 'h-56' },
   { ...caseStudies[1], height: 'h-72' },
   { ...caseStudies[2], height: 'h-48' },
-  { ...caseStudies[0], id: 4, height: 'h-64' },
-  { ...caseStudies[1], id: 5, height: 'h-52' },
-  { ...caseStudies[2], id: 6, height: 'h-60' },
-  { ...caseStudies[0], id: 7, height: 'h-56' },
-  { ...caseStudies[1], id: 8, height: 'h-48' },
-  { ...caseStudies[2], id: 9, height: 'h-64' },
+  { ...caseStudies[0], id: 4, height: 'h-64', image: 'https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=800&q=80' },
+  { ...caseStudies[1], id: 5, height: 'h-52', image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80' },
+  { ...caseStudies[2], id: 6, height: 'h-60', image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80' },
+  { ...caseStudies[0], id: 7, height: 'h-56', image: 'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=800&q=80' },
+  { ...caseStudies[1], id: 8, height: 'h-48', image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80' },
+  { ...caseStudies[2], id: 9, height: 'h-64', image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80' },
 ]
 
 const Work = () => {
@@ -94,13 +94,12 @@ const Work = () => {
               className="group block break-inside-avoid mb-6"
             >
               <div className={`relative rounded-2xl overflow-hidden ${item.height} w-full`}>
-                {/* Image Placeholder */}
-                <div className="absolute inset-0 bg-surface flex items-center justify-center">
-                  <div className="text-center space-y-2">
-                    <p className="text-textSecondary font-medium">PROJECT IMAGE</p>
-                    <p className="text-sm text-textSecondary/70">{item.client}</p>
-                  </div>
-                </div>
+                {/* Project Image */}
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
                 
                 {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/50 to-transparent opacity-0 group-hover:opacity-90 transition-opacity duration-300" />

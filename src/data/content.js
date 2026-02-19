@@ -37,6 +37,79 @@ export const services = [
   },
 ]
 
+export const pricingPlans = [
+  {
+    id: 'starter',
+    title: 'Starter',
+    subtitle: 'Perfect for small businesses',
+    price: '$499',
+    period: '/month',
+    icon: '🌱',
+    description: 'Everything you need to launch your digital presence and start building brand awareness.',
+    features: [
+      'Brand audit & positioning',
+      'Social media setup (2 channels)',
+      'Monthly content calendar',
+      '5 social media posts / week',
+      'Basic monthly analytics report',
+    ],
+  },
+  {
+    id: 'growth',
+    title: 'Growth',
+    subtitle: 'Most popular for scaling brands',
+    price: '$1,299',
+    period: '/month',
+    icon: '🚀',
+    badge: 'Most Popular',
+    description: 'Accelerate growth with data-driven strategies across every key digital channel.',
+    features: [
+      'Full brand strategy & identity',
+      'Social media management (4 channels)',
+      'SEO optimisation & monthly report',
+      '15 original content pieces / month',
+      'Paid ads management (up to $5k spend)',
+      'Monthly 1-on-1 strategy call',
+    ],
+  },
+  {
+    id: 'pro',
+    title: 'Pro',
+    subtitle: 'For ambitious growing businesses',
+    price: '$2,499',
+    period: '/month',
+    icon: '⚡',
+    description: 'A comprehensive marketing engine with advanced analytics and dedicated creative support.',
+    features: [
+      'Everything in Growth',
+      'Dedicated creative team',
+      'Custom analytics dashboard',
+      'Performance marketing (up to $15k spend)',
+      'Bi-weekly strategy sessions',
+      'Email marketing automation',
+      'Influencer outreach (up to 5/month)',
+    ],
+  },
+  {
+    id: 'enterprise',
+    title: 'Enterprise',
+    subtitle: 'For established brands ready to dominate',
+    price: 'Custom',
+    period: '',
+    icon: '👑',
+    description: 'A fully bespoke marketing operation tailored to your specific business objectives.',
+    features: [
+      'Dedicated account team',
+      'Unlimited channels & content',
+      'Custom reporting & BI integration',
+      'Unlimited ad spend management',
+      'Weekly executive strategy sessions',
+      'PR & media outreach',
+      'Influencer partnership programme',
+    ],
+  },
+]
+
 export const caseStudies = [
   {
     id: 1,
@@ -45,7 +118,7 @@ export const caseStudies = [
     client: 'Siddhita & Kanad',
     category: 'Family Events',
     description: 'A beautiful wedding celebration captured in stunning moments.',
-    image: 'https://placehold.co/800x600/0F172A/38BDF8?text=Siddhita+%26+Kanad',
+    image: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80',
     results: {
       metric1: 'Memorable moments captured',
       metric2: 'Professional wedding photography',
@@ -59,7 +132,7 @@ export const caseStudies = [
     client: 'LuxeWear',
     category: 'Digital Marketing',
     description: 'Omnichannel marketing strategy driving 5x revenue growth in 12 months.',
-    image: 'https://placehold.co/800x600/0F172A/2563EB?text=LuxeWear+Growth',
+    image: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&q=80',
     results: {
       metric1: '500% ROI on ad spend',
       metric2: '250K new customers acquired',
@@ -73,7 +146,7 @@ export const caseStudies = [
     client: 'PayFlow',
     category: 'Performance Marketing',
     description: 'Product launch campaign reaching 1M users in first quarter.',
-    image: 'https://placehold.co/800x600/0F172A/38BDF8?text=PayFlow+Launch',
+    image: 'https://images.unsplash.com/photo-1563986768494-4dee2763ff3f?w=800&q=80',
     results: {
       metric1: '1M+ app downloads',
       metric2: '65% user retention rate',

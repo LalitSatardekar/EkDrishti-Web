@@ -12,13 +12,13 @@ const Hero = () => {
           <div className="space-y-8">
             <div className="space-y-4">
               <div className="inline-block">
-                <span className="px-4 py-2 bg-accent/10 border border-accent/20 rounded-full text-accentLight text-sm font-medium">
+                <span className="px-4 py-2 bg-amber-500/10 border border-amber-500/30 rounded-full text-amber-400 text-sm font-medium">
                   Award-Winning Digital Agency
                 </span>
               </div>
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-heading font-bold text-textPrimary leading-tight">
                 Transform Your
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-accent to-accentLight">
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-accent via-accentLight to-amber-400">
                   Digital Presence
                 </span>
               </h1>
@@ -40,15 +40,15 @@ const Hero = () => {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-8 pt-8 border-t border-borderSubtle">
               <div>
-                <div className="text-3xl font-heading font-bold text-accent">150+</div>
+                <div className="text-3xl font-heading font-bold text-amber-400">150+</div>
                 <div className="text-sm text-textSecondary">Happy Clients</div>
               </div>
               <div>
-                <div className="text-3xl font-heading font-bold text-accent">$50M+</div>
+                <div className="text-3xl font-heading font-bold text-amber-400">$50M+</div>
                 <div className="text-sm text-textSecondary">Revenue Generated</div>
               </div>
               <div>
-                <div className="text-3xl font-heading font-bold text-accent">10+</div>
+                <div className="text-3xl font-heading font-bold text-amber-400">10+</div>
                 <div className="text-sm text-textSecondary">Years Experience</div>
               </div>
             </div>
@@ -71,7 +71,7 @@ const Hero = () => {
               </div>
               {/* Decorative Elements */}
               <div className="absolute -top-4 -left-4 w-24 h-24 bg-accent/20 rounded-full blur-3xl" />
-              <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-accentLight/20 rounded-full blur-3xl" />
+              <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-amber-500/20 rounded-full blur-3xl" />
             </div>
           </div>
         </div>

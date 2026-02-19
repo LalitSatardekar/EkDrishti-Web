@@ -3,11 +3,11 @@ import { services } from '../../data/content'
 
 const ServiceCard = ({ service }) => {
   return (
-    <div className="group glass-card p-8 hover:-translate-y-2 transition-all duration-300 cursor-pointer">
+    <div className="group glass-card p-8 hover:-translate-y-2 transition-all duration-300 cursor-pointer border-borderSubtle hover:border-amber-500/30 hover:shadow-[0_0_28px_rgba(245,158,11,0.10)]">
       <div className="text-5xl mb-6 group-hover:scale-110 transition-transform duration-300">
         {service.icon}
       </div>
-      <h3 className="text-2xl font-heading font-bold text-textPrimary mb-4">
+      <h3 className="text-2xl font-heading font-bold text-textPrimary mb-4 group-hover:text-amber-400 transition-colors duration-300">
         {service.title}
       </h3>
       <p className="text-textSecondary leading-relaxed">
@@ -22,7 +22,7 @@ const ServicesPreview = () => {
     <section className="py-24 bg-gradient-to-b from-transparent to-surface/50">
       <div className="section-container">
         <div className="text-center mb-16">
-          <span className="text-accent font-medium mb-4 block">What We Do</span>
+          <span className="text-amber-400 font-medium mb-4 block">What We Do</span>
           <h2 className="text-4xl md:text-5xl font-heading font-bold text-textPrimary mb-6">
             Our Services
           </h2>

@@ -24,16 +24,8 @@ const Navbar = () => {
 
   return (
     <nav
-      className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-all duration-300 h-20',
-        !isScrolled
-          ? 'bg-white/95 backdrop-blur-lg shadow-lg border-b border-gray-200'
-          : 'backdrop-blur-sm'
-      )}
-      style={isScrolled ? { backgroundColor: '#151627cc' } : {}} //#151627cc
-      // Original (before inversion):
-      // className: isScrolled ? 'bg-white/95...' : 'backdrop-blur-sm'
-      // style: !isScrolled ? { backgroundColor: '#151627cc' } : {}
+      className="fixed top-0 left-0 right-0 z-50 h-20 backdrop-blur-lg border-b border-borderSubtle"
+      style={{ backgroundColor: '#151627cc' }}
     >
       <div className="max-w-[1400px] mx-auto px-8 h-full">
         <div className="flex items-center justify-center h-full relative">
@@ -47,10 +39,7 @@ const Navbar = () => {
                   'font-medium text-base transition-colors duration-200 whitespace-nowrap',
                   isActive(link.path)
                     ? 'text-amber-500'
-                    : !isScrolled
-                    ? 'text-gray-800 hover:text-amber-500'
                     : 'text-textPrimary hover:text-amber-500'
-                  // Original (before inversion): isScrolled ? 'text-gray-800...' : 'text-textPrimary...'
                 )}
               >
                 {link.name}
@@ -64,11 +53,10 @@ const Navbar = () => {
               src={!isScrolled ? "/logo.png" : "/logo2.svg"}
               alt="Ekdrishti" 
               className={cn(
-                "w-auto transition-all duration-300",
-                !isScrolled ? "h-14" : "h-12"
+                'w-auto transition-all duration-300',
+                !isScrolled ? 'h-14' : 'h-12'
               )}
             />
-            {/* Original (before inversion): src={!isScrolled ? "/logo2.svg" : "/logo.png"} */}
           </Link>
 
           {/* Right Navigation - Desktop */}
@@ -81,8 +69,6 @@ const Navbar = () => {
                   'font-medium text-base transition-colors duration-200 whitespace-nowrap',
                   isActive(link.path)
                     ? 'text-amber-500'
-                    : !isScrolled
-                    ? 'text-gray-800 hover:text-amber-500'
                     : 'text-textPrimary hover:text-amber-500'
                 )}
               >
@@ -94,10 +80,7 @@ const Navbar = () => {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className={cn(
-              'lg:hidden focus:outline-none absolute right-0 transition-colors duration-200',
-              !isScrolled ? 'text-gray-800' : 'text-textPrimary'
-            )}
+            className="lg:hidden focus:outline-none absolute right-0 text-textPrimary"
           >
             <svg
               className="w-6 h-6"
@@ -119,10 +102,7 @@ const Navbar = () => {
 
         {/* Mobile Menu */}
         {isOpen && (
-          <div className={cn(
-            "lg:hidden py-4 border-t",
-            !isScrolled ? "border-gray-200" : "border-borderSubtle"
-          )}>
+          <div className="lg:hidden py-4 border-t border-borderSubtle">
             <div className="flex flex-col space-y-4">
               {[...leftNavLinks, ...rightNavLinks].map((link) => (
                 <Link
@@ -133,8 +113,6 @@ const Navbar = () => {
                     'font-medium transition-colors duration-200',
                     isActive(link.path)
                       ? 'text-amber-500'
-                      : !isScrolled
-                      ? 'text-gray-700 hover:text-amber-500'
                       : 'text-textSecondary hover:text-textPrimary'
                   )}
                 >
