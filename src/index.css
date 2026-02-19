@@ -9,7 +9,9 @@
   
   body {
     @apply bg-primary text-textPrimary font-body antialiased;
-    background-image: radial-gradient(ellipse at top, rgba(37, 99, 235, 0.1) 0%, transparent 50%);
+    background-image:
+      radial-gradient(ellipse at top left, rgba(37, 99, 235, 0.10) 0%, transparent 45%),
+      radial-gradient(ellipse at bottom right, rgba(245, 158, 11, 0.07) 0%, transparent 50%);
     background-attachment: fixed;
   }
 
@@ -28,7 +30,7 @@
   }
 
   .btn-secondary {
-    @apply bg-transparent hover:bg-surface text-textPrimary font-medium px-6 py-3 rounded-lg border border-borderSubtle transition-all duration-300;
+    @apply bg-transparent hover:bg-amber-500/10 text-textPrimary hover:text-amber-400 font-medium px-6 py-3 rounded-lg border border-borderSubtle hover:border-amber-500/40 transition-all duration-300;
   }
 
   .section-container {

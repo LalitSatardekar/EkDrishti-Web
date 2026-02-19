@@ -65,14 +65,14 @@ const Footer = () => {
                         href={link.path}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-textSecondary hover:text-accent transition-colors duration-200"
+                        className="text-textSecondary hover:text-amber-400 transition-colors duration-200"
                       >
                         {link.name}
                       </a>
                     ) : (
                       <Link
                         to={link.path}
-                        className="text-textSecondary hover:text-accent transition-colors duration-200"
+                        className="text-textSecondary hover:text-amber-400 transition-colors duration-200"
                       >
                         {link.name}
                       </Link>
@@ -93,13 +93,13 @@ const Footer = () => {
             <div className="flex space-x-6 text-sm">
               <Link
                 to="#"
-                className="text-textSecondary hover:text-accent transition-colors duration-200"
+                className="text-textSecondary hover:text-amber-400 transition-colors duration-200"
               >
                 Privacy Policy
               </Link>
               <Link
                 to="#"
-                className="text-textSecondary hover:text-accent transition-colors duration-200"
+                className="text-textSecondary hover:text-amber-400 transition-colors duration-200"
               >
                 Terms of Service
               </Link>

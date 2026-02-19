@@ -6,7 +6,7 @@ const CTABand = () => {
       <div className="section-container">
         <div className="relative rounded-3xl overflow-hidden">
           {/* Background with accent gradient */}
-          <div className="absolute inset-0 bg-gradient-to-r from-accent to-accentLight" />
+          <div className="absolute inset-0 bg-gradient-to-r from-accent via-accentLight to-amber-500" />
           
           {/* Pattern Overlay */}
           <div className="absolute inset-0 opacity-10">
