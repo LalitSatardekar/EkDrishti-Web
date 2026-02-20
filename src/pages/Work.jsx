@@ -1,30 +1,37 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { caseStudies } from '../data/content'
+import { allCases } from '../data/cases'
+import { getSortedCases } from '../lib/sortingEngine'
 import category1 from '../assets/work/category1.png'
 import category2 from '../assets/work/category2.png'
 import category3 from '../assets/work/category3.png'
 
-// Extended work items with varying heights for masonry effect (landscape orientation)
-const workItems = [
-  { ...caseStudies[0], height: 'h-56' },
-  { ...caseStudies[1], height: 'h-72' },
-  { ...caseStudies[2], height: 'h-48' },
-  { ...caseStudies[0], id: 4, height: 'h-64', image: 'https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=800&q=80' },
-  { ...caseStudies[1], id: 5, height: 'h-52', image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80' },
-  { ...caseStudies[2], id: 6, height: 'h-60', image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80' },
-  { ...caseStudies[0], id: 7, height: 'h-56', image: 'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=800&q=80' },
-  { ...caseStudies[1], id: 8, height: 'h-48', image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80' },
-  { ...caseStudies[2], id: 9, height: 'h-64', image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80' },
-]
+// Sub-filter pills per top-level category
+const CATEGORY_FILTERS = {
+  'EVENTS':            ['All', 'Family Events', 'Corporate'],
+  'DIGITAL MARKETING': ['All', 'Social Media', 'SEO', 'Paid Ads', 'Email', 'Content', 'Influencer'],
+  'PRODUCTION':        ['All', 'Brand Film', 'Corporate', 'Music Video', 'Documentary', 'Product'],
+}
 
 const Work = () => {
-  const [activeFilter, setActiveFilter] = useState('All')
-  const [activeCategory, setActiveCategory] = useState('DIGITAL MARKETING')
+  const [activeCategory,  setActiveCategory]  = useState('DIGITAL MARKETING')
+  const [activeSubFilter, setActiveSubFilter] = useState('All')
+
+  const handleCategoryChange = (name) => {
+    setActiveCategory(name)
+    setActiveSubFilter('All')
+  }
+
+  // Run through engine: filter by category (and optionally subCategory), sort by priority
+  const filteredItems = getSortedCases(allCases, {
+    category: activeCategory,
+    ...(activeSubFilter !== 'All' && { subCategory: activeSubFilter }),
+    sortBy: 'priority',
+  })
 
   return (
     <div className="bg-primary">
-      <div className="section-container">
+      <div className="section-container px-[70px]">
         {/* Header */}
         
 
@@ -37,7 +44,7 @@ const Work = () => {
           ].map((category, index) => (
             <button
               key={category.name}
-              onClick={() => setActiveCategory(category.name)}
+              onClick={() => handleCategoryChange(category.name)}
               className="relative w-full aspect-[4/3] rounded-[32px] overflow-hidden group transition-all duration-300"
             >
               {/* Background Image */}
@@ -58,8 +65,8 @@ const Work = () => {
               <div className="absolute inset-0 flex items-center justify-center">
                 <h3 className={`text-textPrimary font-heading font-bold text-3xl tracking-wide transition-all duration-300 ${
                   activeCategory === category.name
-                    ? 'drop-shadow-[0_0_15px_rgba(37,99,235,0.8)]'
-                    : 'group-hover:drop-shadow-[0_0_15px_rgba(37,99,235,0.8)]'
+                    ? 'drop-shadow-[0_0_15px_rgba(242,160,32,0.8)]'
+                    : 'group-hover:drop-shadow-[0_0_15px_rgba(242,160,32,0.8)]'
                 }`}>
                   {category.name}
                 </h3>
@@ -68,26 +75,26 @@ const Work = () => {
           ))}
         </div>
 
-        {/* Filter Tags */}
-        <div className="flex flex-wrap gap-3 mb-12">
-          {['All', 'Corporate', 'Family Events'].map((tag) => (
+        {/* Sub-category Filter Pills */}
+        <div className="flex flex-wrap items-center gap-3 max-w-[1300px] mx-auto pb-10">
+          {(CATEGORY_FILTERS[activeCategory] || []).map((filter) => (
             <button
-              key={tag}
-              onClick={() => setActiveFilter(tag)}
-              className={`px-6 py-2 rounded-full border border-borderSubtle font-medium transition-all duration-300 ${
-                activeFilter === tag
-                  ? 'bg-accent text-textPrimary border-accent'
-                  : 'text-textSecondary hover:bg-surface hover:border-accentLight hover:text-textPrimary'
+              key={filter}
+              onClick={() => setActiveSubFilter(filter)}
+              className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
+                activeSubFilter === filter
+                  ? 'bg-amber-500 text-black shadow-[0_0_16px_rgba(242,160,32,0.4)]'
+                  : 'bg-transparent border border-borderSubtle text-textSecondary hover:border-amber-500/50 hover:text-textPrimary'
               }`}
             >
-              {tag}
+              {filter}
             </button>
           ))}
         </div>
 
         {/* Masonry Grid */}
-        <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
-          {workItems.map((item) => (
+        <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6 pb-[40px]">
+          {filteredItems.map((item) => (
             <Link
               key={item.id}
               to={`/work/${item.slug}`}
@@ -115,9 +122,9 @@ const Work = () => {
                     <h3 className="text-xl font-heading font-bold text-textPrimary mb-2">
                       {item.title}
                     </h3>
-                    <p className="text-textSecondary text-sm mb-4">
+                  {/*  <p className="text-textSecondary text-sm mb-4">
                       {item.description}
-                    </p>
+                    </p> */}
                     <div className="text-accent font-medium flex items-center">
                       View Project
                       <svg
