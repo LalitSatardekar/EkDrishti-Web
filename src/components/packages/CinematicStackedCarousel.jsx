@@ -25,16 +25,16 @@ import PackageCard from './PackageCard'
 // so all x values here are in px at runtime, set via a helper below.
 
 const EASING = {
-  main: 'power4.out',
-  enter: 'back.out(1.4)',
+  main: 'circ.out',
+  enter: 'back.out(1.2)',
 }
 
 const DUR = {
-  exit: 0.42,
-  shift: 0.52,
-  enter: 0.62,
-  appear: 0.38,
-  stagger: 0.48,
+  exit: 0.28,
+  shift: 0.35,
+  enter: 0.38,
+  appear: 0.28,
+  stagger: 0.32,
 }
 
 // These are multipliers of container half-width — resolved to px at runtime
@@ -277,19 +277,6 @@ export default function CinematicStackedCarousel({ items = [] }) {
         tl.to(wrapperRefs.current[newPeekIdx], { ...slotProps(peekSlot, hw, mob), duration: DUR.appear, ease: EASING.main }, DUR.exit * 0.6)
       }
 
-      // Stagger text elements inside the incoming card
-      const incomingWrapper = wrapperRefs.current[newActive]
-      if (incomingWrapper) {
-        const textEls = incomingWrapper.querySelectorAll('[data-stagger]')
-        if (textEls.length) {
-          tl.fromTo(
-            textEls,
-            { y: 14, opacity: 0 },
-            { y: 0, opacity: 1, duration: DUR.stagger, ease: 'power3.out', stagger: 0.08 },
-            DUR.enter * 0.55
-          )
-        }
-      }
     },
     [N, halfWidth]
   )
@@ -335,18 +322,6 @@ export default function CinematicStackedCarousel({ items = [] }) {
         tl.to(el, { opacity: props.opacity, duration: 0.38, ease: 'power2.out' }, 0.28)
       })
 
-      const inEl = wrapperRefs.current[clamped]
-      if (inEl) {
-        const textEls = inEl.querySelectorAll('[data-stagger]')
-        if (textEls.length) {
-          tl.fromTo(
-            textEls,
-            { y: 14, opacity: 0 },
-            { y: 0, opacity: 1, duration: 0.42, ease: 'power3.out', stagger: 0.07 },
-            0.38
-          )
-        }
-      }
     },
     [N, navigate, halfWidth, items]
   )
@@ -361,21 +336,58 @@ export default function CinematicStackedCarousel({ items = [] }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [navigate])
 
-  // ── Touch / swipe ──
+  // ── Touch + Mouse drag / swipe ──
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
     let startX = 0
-    const onStart = (e) => { startX = e.touches[0].clientX }
-    const onEnd = (e) => {
+    let dragging = false
+    const THRESHOLD = 48
+
+    // Touch
+    const onTouchStart = (e) => { startX = e.touches[0].clientX }
+    const onTouchEnd   = (e) => {
       const dx = e.changedTouches[0].clientX - startX
-      if (Math.abs(dx) > 48) navigate(dx < 0 ? 'next' : 'prev')
+      if (Math.abs(dx) > THRESHOLD) navigate(dx < 0 ? 'next' : 'prev')
     }
-    el.addEventListener('touchstart', onStart, { passive: true })
-    el.addEventListener('touchend', onEnd, { passive: true })
+
+    // Mouse drag
+    const onMouseDown = (e) => {
+      startX   = e.clientX
+      dragging = true
+      el.style.cursor = 'grabbing'
+    }
+    const onMouseMove = (e) => {
+      if (!dragging) return
+      e.preventDefault()
+    }
+    const onMouseUp = (e) => {
+      if (!dragging) return
+      dragging = false
+      el.style.cursor = ''
+      const dx = e.clientX - startX
+      if (Math.abs(dx) > THRESHOLD) navigate(dx < 0 ? 'next' : 'prev')
+    }
+    const onMouseLeave = () => {
+      if (dragging) {
+        dragging = false
+        el.style.cursor = ''
+      }
+    }
+
+    el.addEventListener('touchstart',  onTouchStart,  { passive: true })
+    el.addEventListener('touchend',    onTouchEnd,    { passive: true })
+    el.addEventListener('mousedown',   onMouseDown)
+    el.addEventListener('mousemove',   onMouseMove)
+    el.addEventListener('mouseup',     onMouseUp)
+    el.addEventListener('mouseleave',  onMouseLeave)
     return () => {
-      el.removeEventListener('touchstart', onStart)
-      el.removeEventListener('touchend', onEnd)
+      el.removeEventListener('touchstart',  onTouchStart)
+      el.removeEventListener('touchend',    onTouchEnd)
+      el.removeEventListener('mousedown',   onMouseDown)
+      el.removeEventListener('mousemove',   onMouseMove)
+      el.removeEventListener('mouseup',     onMouseUp)
+      el.removeEventListener('mouseleave',  onMouseLeave)
     }
   }, [navigate])
 
@@ -384,20 +396,20 @@ export default function CinematicStackedCarousel({ items = [] }) {
 
   return (
     <section
-      className="w-full py-16 overflow-hidden select-none"
+      className="w-full py-6 overflow-hidden select-none cursor-grab active:cursor-grabbing"
       ref={containerRef}
       aria-label="Services carousel"
     >
       {/* Card track */}
       <div
         className="relative flex items-center justify-center"
-        style={{ height: '520px', perspective: '1100px' }}
+        style={{ height: '420px', perspective: '1100px' }}
       >
         {items.map((item, idx) => (
           <div
             key={item.id ?? idx}
             ref={(el) => (wrapperRefs.current[idx] = el)}
-            className="absolute w-full max-w-[420px] will-change-transform cursor-pointer"
+            className="absolute w-full max-w-[340px] will-change-transform cursor-pointer"
             style={{ transformStyle: 'preserve-3d' }}
             onClick={() => {
               if (idx !== activeIdxRef.current) {
@@ -417,7 +429,7 @@ export default function CinematicStackedCarousel({ items = [] }) {
       </div>
 
       {/* ── Navigation controls ── */}
-      <div className="flex items-center justify-center gap-5 mt-10">
+      <div className="flex items-center justify-center gap-5 mt-6">
         {/* Prev */}
         <button
           onClick={() => navigate('prev')}

@@ -21,19 +21,19 @@ export default function PackageCard({ item = {}, isActive = false }) {
     >
       {/* Top image / icon block */}
       {image ? (
-        <div className="relative w-full h-44 overflow-hidden">
+        <div className="relative w-full h-32 overflow-hidden">
           <img src={image} alt={title} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-surface/80" />
         </div>
       ) : (
-        <div className="relative flex items-center justify-center h-32 bg-gradient-to-b from-accent/10 to-transparent">
+        <div className="relative flex items-center justify-center h-20 bg-gradient-to-b from-accent/10 to-transparent">
           {badge && (
             <span className="absolute top-3 right-3 px-2.5 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs font-semibold rounded-full tracking-wide">
               {badge}
             </span>
           )}
           {icon && (
-            <span data-stagger className="text-5xl select-none" aria-hidden="true">
+            <span className="text-4xl select-none" aria-hidden="true">
               {icon}
             </span>
           )}
@@ -41,22 +41,22 @@ export default function PackageCard({ item = {}, isActive = false }) {
       )}
 
       {/* Body */}
-      <div className="p-7 space-y-4">
+      <div className="p-5 space-y-3">
         {/* Heading + price row */}
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 data-stagger className="font-heading font-bold text-2xl text-textPrimary leading-snug">
+            <h3 className="font-heading font-bold text-lg text-textPrimary leading-snug">
               {title}
             </h3>
             {subtitle && (
-              <p data-stagger className="mt-1 text-sm font-medium text-accentLight tracking-wide">
+              <p className="mt-0.5 text-xs font-medium text-accentLight tracking-wide">
                 {subtitle}
               </p>
             )}
           </div>
           {price && (
-            <div data-stagger className="text-right shrink-0">
-              <span className="font-heading font-bold text-2xl text-textPrimary">{price}</span>
+            <div className="text-right shrink-0">
+              <span className="font-heading font-bold text-xl text-textPrimary">{price}</span>
               {period && <span className="text-xs text-textSecondary ml-0.5">{period}</span>}
             </div>
           )}
@@ -64,22 +64,18 @@ export default function PackageCard({ item = {}, isActive = false }) {
 
         {/* Description */}
         {description && (
-          <p
-            data-stagger
-            className="text-textSecondary text-sm leading-relaxed"
-          >
+          <p className="text-textSecondary text-xs leading-relaxed">
             {description}
           </p>
         )}
 
         {/* Features list */}
         {features.length > 0 && (
-          <ul className="space-y-2 pt-1">
+          <ul className="space-y-1.5 pt-0.5">
             {features.map((feat, i) => (
               <li
                 key={i}
-                data-stagger
-                className="flex items-center gap-2 text-sm text-textSecondary"
+                className="flex items-center gap-2 text-xs text-textSecondary"
               >
                 {/* accent check icon */}
                 <svg
@@ -101,8 +97,8 @@ export default function PackageCard({ item = {}, isActive = false }) {
         )}
 
         {/* CTA */}
-        <div data-stagger className="pt-2">
-          <button className="btn-primary w-full text-center text-sm">
+        <div className="pt-1">
+          <button className="btn-primary w-full text-center text-sm py-2.5">
             Learn More
           </button>
         </div>

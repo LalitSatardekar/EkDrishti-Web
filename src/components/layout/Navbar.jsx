@@ -1,18 +1,26 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useScrollPosition } from '../../hooks/useScrollPosition'
 import { cn } from '../../lib/utils'
 
+const serviceLinks = [
+  { name: 'Family Events', path: '/services/family-events', icon: '🎉' },
+  { name: 'Digital Marketing', path: '/services/digital-marketing', icon: '📱' },
+  { name: 'Production', path: '/services/production', icon: '🎥' },
+]
+
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false)
+  const [servicesOpen, setServicesOpen] = useState(false)
+  const [mobileServicesOpen, setMobileServicesOpen] = useState(false)
   const scrollPosition = useScrollPosition()
   const location = useLocation()
+  const dropdownRef = useRef(null)
 
   const isScrolled = scrollPosition > 50
 
   const leftNavLinks = [
     { name: 'About', path: '/about' },
-    { name: 'Services', path: '/services' },
   ]
 
   const rightNavLinks = [
@@ -21,6 +29,22 @@ const Navbar = () => {
   ]
 
   const isActive = (path) => location.pathname === path
+  const isServicesActive = location.pathname.startsWith('/services')
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setServicesOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  useEffect(() => {
+    setServicesOpen(false)
+    setIsOpen(false)
+  }, [location.pathname])
 
   return (
     <nav
@@ -36,15 +60,62 @@ const Navbar = () => {
                 key={link.path}
                 to={link.path}
                 className={cn(
-                  'font-medium text-base transition-colors duration-200 whitespace-nowrap',
+                  'relative font-medium text-base transition-colors duration-200 whitespace-nowrap pb-1',
+                  'after:absolute after:bottom-0 after:left-0 after:h-0.5 after:rounded-full after:bg-amber-500 after:transition-all after:duration-300',
                   isActive(link.path)
-                    ? 'text-amber-500'
-                    : 'text-textPrimary hover:text-amber-500'
+                    ? 'text-amber-500 after:w-full'
+                    : 'text-textPrimary hover:text-amber-500 after:w-0 hover:after:w-full'
                 )}
               >
                 {link.name}
               </Link>
             ))}
+
+            {/* Services Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setServicesOpen((v) => !v)}
+                className={cn(
+                  'relative flex items-center gap-1.5 font-medium text-base transition-colors duration-200 whitespace-nowrap pb-1',
+                  'after:absolute after:bottom-0 after:left-0 after:h-0.5 after:rounded-full after:bg-amber-500 after:transition-all after:duration-300',
+                  isServicesActive
+                    ? 'text-amber-500 after:w-full'
+                    : 'text-textPrimary hover:text-amber-500 after:w-0 hover:after:w-full'
+                )}
+              >
+                Services
+                <svg
+                  className={cn('w-3.5 h-3.5 transition-transform duration-200', servicesOpen ? 'rotate-180' : 'rotate-0')}
+                  fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth="2"
+                  strokeLinecap="round" strokeLinejoin="round"
+                >
+                  <path d="M2 4.5L6 8L10 4.5" />
+                </svg>
+              </button>
+              {servicesOpen && (
+                <div
+                  className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-56 rounded-2xl border border-borderSubtle shadow-[0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden"
+                  style={{ backgroundColor: '#151627f5' }}
+                >
+                  {serviceLinks.map((s, i) => (
+                    <Link
+                      key={s.path}
+                      to={s.path}
+                      className={cn(
+                        'flex items-center gap-3 px-5 py-3.5 text-sm font-medium transition-colors duration-150',
+                        isActive(s.path)
+                          ? 'text-amber-400 bg-amber-500/10'
+                          : 'text-textSecondary hover:text-amber-400 hover:bg-amber-500/5',
+                        i !== serviceLinks.length - 1 && 'border-b border-borderSubtle'
+                      )}
+                    >
+                      <span className="text-base">{s.icon}</span>
+                      {s.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Center Logo */}
@@ -54,7 +125,7 @@ const Navbar = () => {
               alt="Ekdrishti" 
               className={cn(
                 'w-auto transition-all duration-300',
-                !isScrolled ? 'h-14' : 'h-12'
+                !isScrolled ? 'h-14' : 'h-14'
               )}
             />
           </Link>
@@ -66,10 +137,11 @@ const Navbar = () => {
                 key={link.path}
                 to={link.path}
                 className={cn(
-                  'font-medium text-base transition-colors duration-200 whitespace-nowrap',
+                  'relative font-medium text-base transition-colors duration-200 whitespace-nowrap pb-1',
+                  'after:absolute after:bottom-0 after:left-0 after:h-0.5 after:rounded-full after:bg-amber-500 after:transition-all after:duration-300',
                   isActive(link.path)
-                    ? 'text-amber-500'
-                    : 'text-textPrimary hover:text-amber-500'
+                    ? 'text-amber-500 after:w-full'
+                    : 'text-textPrimary hover:text-amber-500 after:w-0 hover:after:w-full'
                 )}
               >
                 {link.name}
@@ -103,17 +175,65 @@ const Navbar = () => {
         {/* Mobile Menu */}
         {isOpen && (
           <div className="lg:hidden py-4 border-t border-borderSubtle">
-            <div className="flex flex-col space-y-4">
-              {[...leftNavLinks, ...rightNavLinks].map((link) => (
+            <div className="flex flex-col space-y-1">
+              {leftNavLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
                   onClick={() => setIsOpen(false)}
                   className={cn(
-                    'font-medium transition-colors duration-200',
-                    isActive(link.path)
-                      ? 'text-amber-500'
-                      : 'text-textSecondary hover:text-textPrimary'
+                    'font-medium px-2 py-2.5 transition-colors duration-200 rounded-lg',
+                    isActive(link.path) ? 'text-amber-500' : 'text-textSecondary hover:text-textPrimary'
+                  )}
+                >
+                  {link.name}
+                </Link>
+              ))}
+              {/* Mobile Services Accordion */}
+              <div>
+                <button
+                  onClick={() => setMobileServicesOpen((v) => !v)}
+                  className={cn(
+                    'w-full flex items-center justify-between px-2 py-2.5 font-medium transition-colors duration-200 rounded-lg',
+                    isServicesActive ? 'text-amber-500' : 'text-textSecondary hover:text-textPrimary'
+                  )}
+                >
+                  Services
+                  <svg
+                    className={cn('w-3.5 h-3.5 transition-transform duration-200', mobileServicesOpen ? 'rotate-180' : 'rotate-0')}
+                    fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth="2"
+                    strokeLinecap="round" strokeLinejoin="round"
+                  >
+                    <path d="M2 4.5L6 8L10 4.5" />
+                  </svg>
+                </button>
+                {mobileServicesOpen && (
+                  <div className="ml-4 mt-1 flex flex-col space-y-1 border-l border-borderSubtle pl-4">
+                    {serviceLinks.map((s) => (
+                      <Link
+                        key={s.path}
+                        to={s.path}
+                        onClick={() => setIsOpen(false)}
+                        className={cn(
+                          'flex items-center gap-2 py-2 text-sm font-medium transition-colors duration-200',
+                          isActive(s.path) ? 'text-amber-400' : 'text-textSecondary hover:text-amber-400'
+                        )}
+                      >
+                        <span>{s.icon}</span>
+                        {s.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {rightNavLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  onClick={() => setIsOpen(false)}
+                  className={cn(
+                    'font-medium px-2 py-2.5 transition-colors duration-200 rounded-lg',
+                    isActive(link.path) ? 'text-amber-500' : 'text-textSecondary hover:text-textPrimary'
                   )}
                 >
                   {link.name}

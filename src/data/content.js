@@ -117,7 +117,7 @@ export const caseStudies = [
     title: 'Siddhita & Kanad',
     client: 'Siddhita & Kanad',
     category: 'Family Events',
-    description: 'A beautiful wedding celebration captured in stunning moments.',
+  //  description: 'A beautiful wedding celebration captured in stunning moments.',
     image: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80',
     results: {
       metric1: 'Memorable moments captured',
@@ -131,7 +131,7 @@ export const caseStudies = [
     title: 'E-Commerce Growth',
     client: 'LuxeWear',
     category: 'Digital Marketing',
-    description: 'Omnichannel marketing strategy driving 5x revenue growth in 12 months.',
+  //  description: 'Omnichannel marketing strategy driving 5x revenue growth in 12 months.',
     image: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&q=80',
     results: {
       metric1: '500% ROI on ad spend',
@@ -145,7 +145,7 @@ export const caseStudies = [
     title: 'FinTech Product Launch',
     client: 'PayFlow',
     category: 'Performance Marketing',
-    description: 'Product launch campaign reaching 1M users in first quarter.',
+  //  description: 'Product launch campaign reaching 1M users in first quarter.',
     image: 'https://images.unsplash.com/photo-1563986768494-4dee2763ff3f?w=800&q=80',
     results: {
       metric1: '1M+ app downloads',
