@@ -47,11 +47,11 @@ const ServiceDetailCard = ({ service, index }) => {
 
 const Services = () => {
   return (
-    <div className="py-24">
+    <div className="py-16 md:py-24">
       <div className="section-container">
         {/* Header */}
-        <div className="text-center mb-20">
-          <h1 className="text-5xl md:text-6xl font-heading font-bold text-textPrimary mb-6">
+          <div className="text-center mb-12 md:mb-20">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-heading font-bold text-textPrimary mb-4 md:mb-6">
             Our Services
           </h1>
           <p className="text-xl text-textSecondary max-w-3xl mx-auto">
@@ -69,14 +69,14 @@ const Services = () => {
         </div>
 
         {/* Services List */}
-        <div className="space-y-32">
+        <div className="space-y-16 lg:space-y-32">
           {services.map((service, index) => (
             <ServiceDetailCard key={service.id} service={service} index={index} />
           ))}
         </div>
 
         {/* Process Section */}
-        <div className="mt-32">
+        <div className="mt-16 lg:mt-32">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-heading font-bold text-textPrimary mb-6">
               Our Process
@@ -109,7 +109,7 @@ const Services = () => {
         </div>
 
         {/* Testimonials */}
-        <div className="mt-24">
+        <div className="mt-16 md:mt-24">
           <div className="text-center mb-12">
             <span className="inline-block px-4 py-1.5 mb-4 text-xs font-semibold tracking-widest uppercase rounded-full bg-accent/10 border border-accent/20 text-accentLight">
               Client Stories
@@ -140,7 +140,7 @@ const Services = () => {
         <FAQ />
 
         {/* CTA */}
-        <div className="mt-24 text-center glass-card p-12 rounded-3xl">
+        <div className="mt-16 md:mt-24 text-center glass-card p-8 md:p-12 rounded-3xl">
           <h3 className="text-3xl font-heading font-bold text-textPrimary mb-4">
             Let's Discuss Your Project
           </h3>

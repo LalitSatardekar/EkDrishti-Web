@@ -2,18 +2,17 @@ import { stats } from '../data/content'
 
 const About = () => {
   const teamMembers = [
-    { name: 'Team Member 1', role: 'Creative Director', avatar: 'https://placehold.co/300x300/2563EB/FFFFFF?text=TM1' },
-    { name: 'Team Member 2', role: 'Strategy Lead', avatar: 'https://placehold.co/300x300/38BDF8/FFFFFF?text=TM2' },
-    { name: 'Team Member 3', role: 'Marketing Director', avatar: 'https://placehold.co/300x300/2563EB/FFFFFF?text=TM3' },
-    { name: 'Team Member 4', role: 'Tech Lead', avatar: 'https://placehold.co/300x300/38BDF8/FFFFFF?text=TM4' },
+    { name: 'Chinmay Shivdikar', role: ' Director', avatar: 'https://placehold.co/300x300/2563EB/FFFFFF?text=TM1' },
+    { name: 'Lalit Satardekar', role: 'Director', avatar: 'https://placehold.co/300x300/38BDF8/FFFFFF?text=TM2' },
+    { name: 'Shreya Pandav', role: 'Director', avatar: 'https://placehold.co/300x300/2563EB/FFFFFF?text=TM3' },
   ]
 
   return (
-    <div className="py-24">
+    <div className="py-16 md:py-24">
       <div className="section-container">
         {/* Header */}
-        <div className="text-center mb-20">
-          <h1 className="text-5xl md:text-6xl font-heading font-bold text-textPrimary mb-6">
+          <div className="text-center mb-12 md:mb-20">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-heading font-bold text-textPrimary mb-4 md:mb-6">
             About Us
           </h1>
           <p className="text-xl text-textSecondary max-w-3xl mx-auto">
@@ -22,7 +21,7 @@ const About = () => {
         </div>
 
         {/* Story Section */}
-        <div className="grid lg:grid-cols-2 gap-16 items-center mb-32">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center mb-16 lg:mb-32">
           <div>
             <h2 className="text-4xl font-heading font-bold text-textPrimary mb-6">
               Our Story
@@ -49,9 +48,9 @@ const About = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-32">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mb-16 lg:mb-32">
           {stats.map((stat) => (
-            <div key={stat.label} className="glass-card p-8 text-center">
+            <div key={stat.label} className="glass-card p-6 md:p-8 text-center">
               <div className="text-4xl font-heading font-bold text-accent mb-2">
                 {stat.value}
               </div>
@@ -63,17 +62,17 @@ const About = () => {
         </div>
 
         {/* Values */}
-        <div className="mb-32">
-          <h2 className="text-4xl font-heading font-bold text-textPrimary mb-12 text-center">
+        <div className="mb-16 lg:mb-32">
+          <h2 className="text-3xl md:text-4xl font-heading font-bold text-textPrimary mb-8 md:mb-12 text-center">
             Our Values
           </h2>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-6 md:gap-8">
             {[
               { title: 'Innovation', desc: 'Pushing boundaries and embracing new ideas', icon: '💡' },
               { title: 'Excellence', desc: 'Delivering quality in everything we do', icon: '⭐' },
               { title: 'Integrity', desc: 'Building trust through transparency', icon: '🤝' },
             ].map((value) => (
-              <div key={value.title} className="glass-card p-8 text-center">
+              <div key={value.title} className="glass-card p-6 md:p-8 text-center">
                 <div className="text-5xl mb-4">{value.icon}</div>
                 <h3 className="text-2xl font-heading font-bold text-textPrimary mb-3">
                   {value.title}
@@ -87,13 +86,13 @@ const About = () => {
         </div>
 
         {/* Team */}
-        <div className="mb-24">
-          <h2 className="text-4xl font-heading font-bold text-textPrimary mb-12 text-center">
+        <div className="mb-16 md:mb-24">
+          <h2 className="text-3xl md:text-4xl font-heading font-bold text-textPrimary mb-8 md:mb-12 text-center">
             Meet the Team
           </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="flex flex-wrap justify-center gap-8">
             {teamMembers.map((member) => (
-              <div key={member.name} className="glass-card p-6 text-center">
+              <div key={member.name} className="glass-card p-6 text-center w-full sm:w-64">
                 <img
                   src={member.avatar}
                   alt={member.name}
@@ -111,7 +110,7 @@ const About = () => {
         </div>
 
         {/* CTA */}
-        <div className="text-center glass-card p-12 rounded-3xl">
+        <div className="text-center glass-card p-8 md:p-12 rounded-3xl">
           <h3 className="text-3xl font-heading font-bold text-textPrimary mb-4">
             Want to Join Our Team?
           </h3>

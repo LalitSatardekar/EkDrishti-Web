@@ -19,11 +19,11 @@ const CaseStudyCard = ({ study }) => {
       <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/50 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300" />
       
       {/* Content */}
-      <div className="absolute inset-0 p-8 flex flex-col justify-end">
+        <div className="absolute inset-0 p-5 md:p-8 flex flex-col justify-end">
         <span className="text-amber-400 text-sm font-medium mb-2">
           {study.category}
         </span>
-        <h3 className="text-3xl font-heading font-bold text-textPrimary mb-3 group-hover:text-amber-400 transition-colors duration-300">
+        <h3 className="text-xl lg:text-3xl font-heading font-bold text-textPrimary mb-2 lg:mb-3 group-hover:text-amber-400 transition-colors duration-300">
           {study.title}
         </h3>
         <p className="text-textSecondary mb-4">
@@ -50,11 +50,11 @@ const CaseStudyCard = ({ study }) => {
 
 const CaseStudiesPreview = () => {
   return (
-    <section className="py-24">
+    <section className="py-16 md:py-24">
       <div className="section-container">
         <div className="text-center mb-16">
           <span className="text-amber-400 font-medium mb-4 block">Success Stories</span>
-          <h2 className="text-4xl md:text-5xl font-heading font-bold text-textPrimary mb-6">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-textPrimary mb-4 md:mb-6">
             Featured Work
           </h2>
           <p className="text-xl text-textSecondary max-w-2xl mx-auto">

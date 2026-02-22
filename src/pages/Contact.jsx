@@ -44,11 +44,11 @@ const Contact = () => {
   }
 
   return (
-    <div className="py-24">
+    <div className="py-16 md:py-24">
       <div className="section-container">
         {/* Header */}
-        <div className="text-center mb-16">
-          <h1 className="text-5xl md:text-6xl font-heading font-bold text-textPrimary mb-6">
+          <div className="text-center mb-10 md:mb-16">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-heading font-bold text-textPrimary mb-4 md:mb-6">
             Let's Work Together
           </h1>
           <p className="text-xl text-textSecondary max-w-3xl mx-auto">
@@ -56,7 +56,7 @@ const Contact = () => {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-16">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
           {/* Contact Form */}
           <div className="glass-card p-8">
             <form onSubmit={handleSubmit} className="space-y-6">

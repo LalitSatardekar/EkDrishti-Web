@@ -2,7 +2,7 @@ import { testimonials } from '../../data/content'
 
 export const TestimonialCard = ({ t, featured = false }) => (
   <div
-    className={`glass-card p-8 flex flex-col gap-6 rounded-2xl border transition-all duration-300 ${
+    className={`glass-card p-6 md:p-8 flex flex-col gap-5 md:gap-6 rounded-2xl border transition-all duration-300 ${
       featured
         ? 'border-accent/30 shadow-[0_0_32px_rgba(37,99,235,0.15)]'
         : 'border-borderSubtle hover:border-accent/20 hover:shadow-[0_0_18px_rgba(37,99,235,0.08)]'
@@ -37,13 +37,13 @@ export const TestimonialCard = ({ t, featured = false }) => (
 )
 
 const Testimonials = () => (
-  <section className="py-24">
+  <section className="py-16 md:py-24">
     <div className="section-container">
       <div className="text-center mb-12">
         <span className="inline-block px-4 py-1.5 mb-4 text-xs font-semibold tracking-widest uppercase rounded-full bg-accent/10 border border-accent/20 text-accentLight">
           Client Stories
         </span>
-        <h2 className="text-4xl font-heading font-bold text-textPrimary mb-4">
+        <h2 className="text-3xl md:text-4xl font-heading font-bold text-textPrimary mb-4">
           Trusted by{' '}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-accentLight">
             Industry Leaders
