@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { allCases } from '../data/cases'
 import { getSortedCases } from '../lib/sortingEngine'
@@ -17,16 +17,40 @@ const CATEGORY_FILTERS = {
 const Work = () => {
   const [activeCategory,  setActiveCategory]  = useState('DIGITAL MARKETING')
   const [activeSubFilter, setActiveSubFilter] = useState('All')
-  const [hoveredItem,     setHoveredItem]     = useState(null)
-  const [hoveredEl,       setHoveredEl]       = useState(null)
+  const [hoveredItem, setHoveredItem] = useState(null)
+  const [hoveredEl,   setHoveredEl]   = useState(null)
+  const cleanupRef = useRef(null)
 
-  const handleMouseEnter = (e, item) => {
-    setHoveredEl(e.currentTarget)
-    setHoveredItem(item)
-  }
-  const handleMouseLeave = () => {
+  const clear = () => {
     setHoveredItem(null)
     setHoveredEl(null)
+  }
+
+  const handleMouseEnter = (e, item) => {
+    // Remove listener from previous card if still attached
+    if (cleanupRef.current) {
+      cleanupRef.current()
+      cleanupRef.current = null
+    }
+    const el = e.currentTarget
+    // Native mouseleave on the element fires reliably even on fast moves
+    const onLeave = () => {
+      clear()
+      cleanupRef.current = null
+    }
+    el.addEventListener('mouseleave', onLeave, { once: true })
+    cleanupRef.current = () => el.removeEventListener('mouseleave', onLeave)
+
+    setHoveredEl(el)
+    setHoveredItem(item)
+  }
+
+  const handleMouseLeave = () => {
+    if (cleanupRef.current) {
+      cleanupRef.current()
+      cleanupRef.current = null
+    }
+    clear()
   }
 
   const handleCategoryChange = (name) => {
