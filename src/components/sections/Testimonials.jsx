@@ -57,8 +57,8 @@ const Testimonials = () => (
       <div className="relative">
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-accent/5 via-transparent to-transparent rounded-3xl blur-2xl pointer-events-none" aria-hidden="true" />
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {testimonials.map((t, i) => (
-            <TestimonialCard key={t.id} t={t} featured={i === 0} />
+          {testimonials.map((t) => (
+            <TestimonialCard key={t.id} t={t} />
           ))}
         </div>
       </div>

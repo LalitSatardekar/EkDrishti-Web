@@ -4,6 +4,7 @@ import AlbumGrid from '../components/album/AlbumGrid'
 import SuggestionSection from '../components/work/SuggestionSection'
 import { useParams, Link } from 'react-router-dom'
 import { caseStudies } from '../data/content'
+import { allCases } from '../data/cases'
 import long1 from '../assets/siddhita-kanad/long-1.jpg'
 import long2 from '../assets/siddhita-kanad/long2.jpg'
 import short1 from '../assets/siddhita-kanad/short1.jpg'
@@ -37,7 +38,7 @@ import album24 from '../assets/siddhita-kanad/albumdata/dc6cd392-8df8-49c7-a243-
 
 const WorkDetail = () => {
   const { slug } = useParams()
-  const project = caseStudies.find((study) => study.slug === slug)
+  const project = caseStudies.find((s) => s.slug === slug) ?? allCases.find((s) => s.slug === slug)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
@@ -271,7 +272,7 @@ const WorkDetail = () => {
         </div>
 
         {/* Suggestion Section */}
-        <SuggestionSection currentProjectSlug={slug} currentCategory="Family Events" />
+        <SuggestionSection currentProjectSlug={slug} currentCategory="EVENTS" />
       </div>
     )
   }
@@ -311,22 +312,22 @@ const WorkDetail = () => {
           </p>
         </div>
 
-        {/* Project Image Placeholder */}
+        {/* Project Image */}
         <div className="relative rounded-2xl overflow-hidden aspect-video mb-16">
-          <div className="absolute inset-0 bg-surface flex items-center justify-center">
-            <div className="text-center space-y-4">
-              <div className="text-6xl">📸</div>
-              <p className="text-textSecondary font-medium">
-                FEATURED PROJECT IMAGE
-              </p>
-              <p className="text-sm text-textSecondary/70 max-w-md mx-auto">
-                Drop your main project image here (16:9 aspect ratio recommended)
-              </p>
+          {project.image ? (
+            <img src={project.image} alt={project.title} className="w-full h-full object-cover" />
+          ) : (
+            <div className="absolute inset-0 bg-surface flex items-center justify-center">
+              <div className="text-center space-y-4">
+                <div className="text-6xl">📸</div>
+                <p className="text-textSecondary font-medium">FEATURED PROJECT IMAGE</p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Results */}
+        {project.results && Object.keys(project.results).length > 0 && (
         <div className="mb-16">
           <h2 className="text-3xl font-heading font-bold text-textPrimary mb-8">
             Results
@@ -344,6 +345,7 @@ const WorkDetail = () => {
             ))}
           </div>
         </div>
+        )}
 
         {/* Additional Content Sections */}
         <div className="space-y-16">

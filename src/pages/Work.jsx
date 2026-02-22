@@ -105,7 +105,10 @@ const Work = () => {
         </div>
 
         {/* Masonry Grid */}
-        <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6 pb-[40px]">
+        <div
+          className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6 pb-[40px]"
+          onMouseLeave={handleMouseLeave}
+        >
           {filteredItems.map((item) => (
             <div
               key={item.id}
