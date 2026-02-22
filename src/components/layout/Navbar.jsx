@@ -15,6 +15,7 @@ const Navbar = () => {
   const [mobileServicesOpen, setMobileServicesOpen] = useState(false)
   const scrollPosition = useScrollPosition()
   const location = useLocation()
+  const isPreview = new URLSearchParams(location.search).get('preview') === '1'
   const dropdownRef = useRef(null)
 
   const isScrolled = scrollPosition > 50
@@ -44,7 +45,15 @@ const Navbar = () => {
   useEffect(() => {
     setServicesOpen(false)
     setIsOpen(false)
+    setMobileServicesOpen(false)
   }, [location.pathname])
+
+  const closeMobileMenu = () => {
+    setIsOpen(false)
+    setMobileServicesOpen(false)
+  }
+
+  if (isPreview) return null
 
   return (
     <nav
@@ -173,14 +182,20 @@ const Navbar = () => {
         </div>
 
         {/* Mobile Menu */}
-        {isOpen && (
-          <div className="lg:hidden py-4 border-t border-borderSubtle">
-            <div className="flex flex-col space-y-1">
+        <div
+          className={cn(
+            'lg:hidden border-borderSubtle overflow-hidden transition-all duration-300 ease-in-out',
+            isOpen
+              ? 'max-h-[480px] opacity-100 border-t py-4'
+              : 'max-h-0 opacity-0 border-t-0 py-0'
+          )}
+        >
+          <div className="flex flex-col space-y-1">
               {leftNavLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
-                  onClick={() => setIsOpen(false)}
+                  onClick={closeMobileMenu}
                   className={cn(
                     'font-medium px-2 py-2.5 transition-colors duration-200 rounded-lg',
                     isActive(link.path) ? 'text-amber-500' : 'text-textSecondary hover:text-textPrimary'
@@ -213,7 +228,7 @@ const Navbar = () => {
                       <Link
                         key={s.path}
                         to={s.path}
-                        onClick={() => setIsOpen(false)}
+                        onClick={closeMobileMenu}
                         className={cn(
                           'flex items-center gap-2 py-2 text-sm font-medium transition-colors duration-200',
                           isActive(s.path) ? 'text-amber-400' : 'text-textSecondary hover:text-amber-400'
@@ -230,7 +245,7 @@ const Navbar = () => {
                 <Link
                   key={link.path}
                   to={link.path}
-                  onClick={() => setIsOpen(false)}
+                  onClick={closeMobileMenu}
                   className={cn(
                     'font-medium px-2 py-2.5 transition-colors duration-200 rounded-lg',
                     isActive(link.path) ? 'text-amber-500' : 'text-textSecondary hover:text-textPrimary'
@@ -239,9 +254,8 @@ const Navbar = () => {
                   {link.name}
                 </Link>
               ))}
-            </div>
           </div>
-        )}
+        </div>
       </div>
     </nav>
   )

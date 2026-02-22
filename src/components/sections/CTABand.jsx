@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 const CTABand = () => {
   return (
-    <section className="py-24">
+    <section className="py-16 md:py-24">
       <div className="section-container">
         <div className="relative rounded-3xl overflow-hidden">
           {/* Background with accent gradient */}
@@ -17,7 +17,7 @@ const CTABand = () => {
           
           {/* Content */}
           <div className="relative z-10 px-8 py-16 md:py-20 text-center">
-            <h2 className="text-4xl md:text-5xl font-heading font-bold text-white mb-6">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-white mb-4 md:mb-6">
               Ready to Transform Your Brand?
             </h2>
             <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
