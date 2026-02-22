@@ -1,25 +1,21 @@
-import { caseStudies } from '../../data/content'
+import { allCases } from '../../data/cases'
+import { getSortedCases } from '../../lib/sortingEngine'
 import SuggestionCard from './SuggestionCard'
 
 const SuggestionSection = ({ currentProjectSlug, currentCategory }) => {
   const getSuggestedProjects = () => {
-    const sameCategory = caseStudies.filter(
-      project => project.category === currentCategory && project.slug !== currentProjectSlug
-    )
-    
-    const differentCategory = caseStudies.filter(
-      project => project.category !== currentCategory && project.slug !== currentProjectSlug
-    )
-    
-    const sameCategoryCount = Math.min(sameCategory.length, 3)
-    const selectedSameCategory = sameCategory.slice(0, sameCategoryCount)
-    
-    const differentCategoryCount = Math.min(4 - sameCategoryCount, differentCategory.length)
-    const selectedDifferentCategory = differentCategory.slice(0, differentCategoryCount)
-    
-    const suggestions = [...selectedSameCategory, ...selectedDifferentCategory].slice(0, 4)
-    
-    return suggestions
+    // Same category, sorted by priority, excluding current item
+    const same = getSortedCases(allCases, { category: currentCategory, sortBy: 'priority' })
+      .filter((p) => p.slug !== currentProjectSlug)
+
+    // Different category, featured/priority first
+    const other = getSortedCases(allCases, { sortBy: 'priority' })
+      .filter((p) => p.slug !== currentProjectSlug && p.category !== currentCategory)
+
+    // Fill up to 4: up to 3 from same category, rest from other
+    const sameSlice  = same.slice(0, 3)
+    const otherSlice = other.slice(0, 4 - sameSlice.length)
+    return [...sameSlice, ...otherSlice].slice(0, 4)
   }
 
   const suggestions = getSuggestedProjects()

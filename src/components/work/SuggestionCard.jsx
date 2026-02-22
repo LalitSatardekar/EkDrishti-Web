@@ -7,12 +7,18 @@ const SuggestionCard = ({ project }) => {
       className="group relative block rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-[1.02]"
     >
       <div className="relative h-80 overflow-hidden">
-        <div className="absolute inset-0 bg-surface flex items-center justify-center">
-          <div className="text-center space-y-2">
-            <p className="text-textSecondary/50 text-sm">CASE STUDY IMAGE</p>
+        {/* Real thumbnail image */}
+        {project.image ? (
+          <img
+            src={project.image}
+            alt={project.title}
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-surface flex items-center justify-center">
             <p className="text-textSecondary/30 text-xs">{project.client}</p>
           </div>
-        </div>
+        )}
         
         <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/60 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
         
