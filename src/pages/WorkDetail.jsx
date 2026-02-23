@@ -38,8 +38,7 @@ import album24 from '../assets/siddhita-kanad/albumdata/dc6cd392-8df8-49c7-a243-
 
 const WorkDetail = () => {
   const { slug } = useParams()
-  // allCases is the authoritative source (consistent categories); fall back to legacy content.js
-  const project = allCases.find((s) => s.slug === slug) ?? caseStudies.find((s) => s.slug === slug)
+  const project = caseStudies.find((s) => s.slug === slug) ?? allCases.find((s) => s.slug === slug)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
 

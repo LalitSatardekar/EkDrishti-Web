@@ -90,9 +90,9 @@ const About = () => {
           <h2 className="text-3xl md:text-4xl font-heading font-bold text-textPrimary mb-8 md:mb-12 text-center">
             Meet the Team
           </h2>
-          <div className="flex flex-wrap justify-center gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 items-center">
             {teamMembers.map((member) => (
-              <div key={member.name} className="glass-card p-6 text-center w-full sm:w-64">
+              <div key={member.name} className="glass-card p-6 text-center">
                 <img
                   src={member.avatar}
                   alt={member.name}

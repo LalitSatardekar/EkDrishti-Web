@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useScrollPosition } from '../../hooks/useScrollPosition'
 import { cn } from '../../lib/utils'
@@ -17,6 +17,16 @@ const Navbar = () => {
   const location = useLocation()
   const isPreview = new URLSearchParams(location.search).get('preview') === '1'
   const dropdownRef = useRef(null)
+  const hoverTimeout = useRef(null)
+
+  const openDropdown = useCallback(() => {
+    clearTimeout(hoverTimeout.current)
+    setServicesOpen(true)
+  }, [])
+
+  const closeDropdown = useCallback(() => {
+    hoverTimeout.current = setTimeout(() => setServicesOpen(false), 120)
+  }, [])
 
   const isScrolled = scrollPosition > 50
 
@@ -39,7 +49,10 @@ const Navbar = () => {
       }
     }
     document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
+    return () => {
+      document.removeEventListener('mousedown', handler)
+      clearTimeout(hoverTimeout.current)
+    }
   }, [])
 
   useEffect(() => {
@@ -57,11 +70,11 @@ const Navbar = () => {
 
   return (
     <nav
-      className="fixed top-0 left-0 right-0 z-50 h-20 backdrop-blur-lg border-b border-borderSubtle"
-      style={{ backgroundColor: '#151627cc' }}
+      className="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg border-b border-borderSubtle"
+      style={{ backgroundColor: '#151627ee' }}
     >
-      <div className="max-w-[1400px] mx-auto px-8 h-full">
-        <div className="flex items-center justify-center h-full relative">
+      <div className="max-w-[1400px] mx-auto px-8">
+        <div className="flex items-center justify-center h-20 relative">
           {/* Left Navigation - Desktop */}
           <div className="hidden lg:flex items-center space-x-16 mr-16">
             {leftNavLinks.map((link) => (
@@ -81,7 +94,7 @@ const Navbar = () => {
             ))}
 
             {/* Services Dropdown */}
-            <div className="relative" ref={dropdownRef}>
+            <div className="relative" ref={dropdownRef} onMouseEnter={openDropdown} onMouseLeave={closeDropdown}>
               <button
                 onClick={() => setServicesOpen((v) => !v)}
                 className={cn(
@@ -89,7 +102,7 @@ const Navbar = () => {
                   'after:absolute after:bottom-0 after:left-0 after:h-0.5 after:rounded-full after:bg-amber-500 after:transition-all after:duration-300',
                   isServicesActive
                     ? 'text-amber-500 after:w-full'
-                    : 'text-textPrimary hover:text-amber-500 after:w-0 hover:after:w-full'
+                    : 'text-textPrimary hover:text-amber-500 after:w-0'
                 )}
               >
                 Services
@@ -103,6 +116,8 @@ const Navbar = () => {
               </button>
               {servicesOpen && (
                 <div
+                  onMouseEnter={openDropdown}
+                  onMouseLeave={closeDropdown}
                   className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-56 rounded-2xl border border-borderSubtle shadow-[0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden"
                   style={{ backgroundColor: '#151627f5' }}
                 >
@@ -184,10 +199,10 @@ const Navbar = () => {
         {/* Mobile Menu */}
         <div
           className={cn(
-            'lg:hidden border-borderSubtle overflow-hidden transition-all duration-300 ease-in-out',
+            'lg:hidden overflow-hidden transition-all duration-300 ease-in-out',
             isOpen
-              ? 'max-h-[480px] opacity-100 border-t py-4'
-              : 'max-h-0 opacity-0 border-t-0 py-0'
+              ? 'max-h-[520px] opacity-100 border-t border-borderSubtle pb-6'
+              : 'max-h-0 opacity-0 pb-0'
           )}
         >
           <div className="flex flex-col space-y-1">
