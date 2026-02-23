@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { services } from '../../data/content'
 
 const ServiceCard = ({ service }) => {
@@ -37,9 +38,9 @@ const ServicesPreview = () => {
         </div>
 
         <div className="text-center">
-          <a href="/#packages" className="btn-primary inline-block">
+          <Link to="/home/packages" className="btn-primary inline-block">
             Explore All Services
-          </a>
+          </Link>
         </div>
       </div>
     </section>
