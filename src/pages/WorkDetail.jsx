@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import AlbumShowcase from '../components/sections/AlbumShowcase'
 import AlbumGrid from '../components/album/AlbumGrid'
 import SuggestionSection from '../components/work/SuggestionSection'
+import DownloadButton from '../components/ui/DownloadButton'
 import { useParams, Link } from 'react-router-dom'
 import { caseStudies } from '../data/content'
 import { allCases } from '../data/cases'
@@ -185,7 +186,7 @@ const WorkDetail = () => {
               Video
             </h2>
             
-            <div className="relative aspect-video rounded-lg overflow-hidden bg-surface">
+            <div className="relative aspect-video rounded-lg overflow-hidden bg-surface mb-6">
               {/* Video Element - Replace src with actual video file path */}
               <video 
                 controls
@@ -195,6 +196,16 @@ const WorkDetail = () => {
                 <source src="/path-to-wedding-video.mp4" type="video/mp4" />
                 Your browser does not support the video tag.
               </video>
+            </div>
+            
+            {/* Download Video Button */}
+            <div className="flex justify-center">
+              <DownloadButton 
+                label="Download Video" 
+                driveLink={project.driveLinks?.video}
+                icon="video"
+                variant="primary"
+              />
             </div>
           </div>
         </div>
@@ -206,6 +217,34 @@ const WorkDetail = () => {
           </h2>
           
           <AlbumGrid images={albumImages} onImageClick={openLightbox} />
+          
+          {/* Download Album Photos Button */}
+          <div className="flex justify-center mt-12">
+            <DownloadButton 
+              label="Download Album Photos" 
+              driveLink={project.driveLinks?.albumGallery}
+              icon="download"
+              variant="primary"
+            />
+          </div>
+        </div>
+        
+        {/* Download All Files Section */}
+        <div className="max-w-5xl mx-auto px-5 mt-20">
+          <div className="bg-gradient-to-br from-surface to-secondary p-8 rounded-2xl border border-borderSubtle text-center">
+            <h3 className="text-2xl md:text-3xl font-heading font-bold text-textPrimary mb-4">
+              Client Access
+            </h3>
+            <p className="text-textSecondary mb-6 max-w-2xl mx-auto">
+              Download all event files including photos, videos, and albums. This is a restricted access link available only for the client.
+            </p>
+            <DownloadButton 
+              label="Download All Files" 
+              driveLink={project.driveLinks?.allFiles}
+              icon="folder"
+              variant="restricted"
+            />
+          </div>
         </div>
 
         {/* Lightbox Modal */}

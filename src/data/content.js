@@ -124,6 +124,11 @@ export const caseStudies = [
       metric2: 'Professional wedding photography',
       metric3: 'Complete event coverage',
     },
+    driveLinks: {
+      albumGallery: 'https://drive.google.com/drive/folders/ALBUM_GALLERY_FOLDER_ID', // Public access
+      video: 'https://drive.google.com/drive/folders/VIDEO_FOLDER_ID', // Public access
+      allFiles: 'https://drive.google.com/drive/folders/ALL_FILES_RESTRICTED_ID', // Restricted access - client only
+    },
   },
   {
     id: 2,
