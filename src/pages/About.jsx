@@ -43,10 +43,10 @@ const About = () => {
   }
 
   const teamMembers = [
-    { name: 'Team Member 1', role: 'Creative Director', avatar: 'https://randomuser.me/api/portraits/men/32.jpg' },
-    { name: 'Team Member 2', role: 'Strategy Lead', avatar: 'https://randomuser.me/api/portraits/women/44.jpg' },
-    { name: 'Team Member 3', role: 'Marketing Director', avatar: 'https://randomuser.me/api/portraits/men/76.jpg' },
-    { name: 'Team Member 4', role: 'Tech Lead', avatar: 'https://randomuser.me/api/portraits/women/68.jpg' },
+    { name: 'Team Member 1', role: 'Creative Director', avatar: '' },
+    { name: 'Team Member 2', role: 'Strategy Lead', avatar: '' },
+    { name: 'Team Member 3', role: 'Marketing Director', avatar: '' },
+    { name: 'Team Member 4', role: 'Tech Lead', avatar: '' },
   ]
 
   const leadershipTeam = [
@@ -179,7 +179,7 @@ const About = () => {
 
             {/* Portrait */}
             <img
-              src="https://pngimg.com/uploads/man/man_PNG6531.png"
+              src=""
               alt={leader.name}
               className="absolute left-1/2 -translate-x-1/2 object-contain"
               style={{
@@ -244,7 +244,7 @@ const About = () => {
           <img
             src={
               member.avatar ||
-              "https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=400&q=80"
+              ""
             }
             alt={member.name}
             className="
