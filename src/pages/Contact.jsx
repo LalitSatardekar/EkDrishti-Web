@@ -191,9 +191,9 @@ const Contact = () => {
 
             <div className="space-y-6">
               {[
-                { icon: '📧', label: 'Email', value: 'hello@digitalagency.com' },
-                { icon: '📱', label: 'Phone', value: '+1 (555) 123-4567' },
-                { icon: '📍', label: 'Office', value: '123 Digital Street, San Francisco, CA 94102' },
+                { icon: '📧', label: 'Email', value: '' },
+                { icon: '📱', label: 'Phone', value: '' },
+                { icon: '📍', label: 'Office', value: '' },
               ].map((item) => (
                 <div key={item.label} className="glass-card p-6 flex items-start space-x-4">
                   <div className="text-3xl">{item.icon}</div>

@@ -38,7 +38,7 @@ export const services = [
 ]
 
 export const pricingPlans = [
-  {
+  {/*
     id: 'starter',
     title: 'Starter',
     subtitle: 'Perfect for small businesses',
@@ -53,61 +53,20 @@ export const pricingPlans = [
       '5 social media posts / week',
       'Basic monthly analytics report',
     ],
-  },
-  {
-    id: 'growth',
-    title: 'Growth',
-    subtitle: 'Most popular for scaling brands',
-    price: '$1,299',
-    period: '/month',
-    icon: '🚀',
-    badge: 'Most Popular',
-    description: 'Accelerate growth with data-driven strategies across every key digital channel.',
+ */ },
+ {
+    id: '',
+    title: 'Starter',
+    subtitle: 'Perfect for small businesses',
+    price: 'INR',
+    period: '/',
+    icon: '🌱',
+    description: 'Everything you need to launch your digital presence and start building brand awareness.',
     features: [
-      'Full brand strategy & identity',
-      'Social media management (4 channels)',
-      'SEO optimisation & monthly report',
-      '15 original content pieces / month',
-      'Paid ads management (up to $5k spend)',
-      'Monthly 1-on-1 strategy call',
+      '',
     ],
-  },
-  {
-    id: 'pro',
-    title: 'Pro',
-    subtitle: 'For ambitious growing businesses',
-    price: '$2,499',
-    period: '/month',
-    icon: '⚡',
-    description: 'A comprehensive marketing engine with advanced analytics and dedicated creative support.',
-    features: [
-      'Everything in Growth',
-      'Dedicated creative team',
-      'Custom analytics dashboard',
-      'Performance marketing (up to $15k spend)',
-      'Bi-weekly strategy sessions',
-      'Email marketing automation',
-      'Influencer outreach (up to 5/month)',
-    ],
-  },
-  {
-    id: 'enterprise',
-    title: 'Enterprise',
-    subtitle: 'For established brands ready to dominate',
-    price: 'Custom',
-    period: '',
-    icon: '👑',
-    description: 'A fully bespoke marketing operation tailored to your specific business objectives.',
-    features: [
-      'Dedicated account team',
-      'Unlimited channels & content',
-      'Custom reporting & BI integration',
-      'Unlimited ad spend management',
-      'Weekly executive strategy sessions',
-      'PR & media outreach',
-      'Influencer partnership programme',
-    ],
-  },
+ }
+ 
 ]
 
 export const caseStudies = [
@@ -164,29 +123,29 @@ export const testimonials = [
   {
     id: 1,
     quote: 'Working with this team transformed our entire digital presence. The results exceeded every expectation we had.',
-    author: 'Sarah Chen',
-    role: 'CEO, TechStart Inc.',
+    author: '',
+    role: '',
     avatar: 'https://placehold.co/100x100/2563EB/FFFFFF?text=SC',
   },
   {
     id: 2,
     quote: 'The strategic approach and attention to detail set them apart. Our revenue grew 5x in under a year.',
-    author: 'Michael Rodriguez',
-    role: 'Founder, LuxeWear',
+    author: '',
+    role: '',
     avatar: 'https://placehold.co/100x100/38BDF8/FFFFFF?text=MR',
   },
   {
     id: 3,
     quote: 'Exceptional creativity combined with data-driven execution. They truly understand modern digital marketing.',
-    author: 'Emily Watson',
-    role: 'CMO, PayFlow',
+    author: '',
+    role: '',
     avatar: 'https://placehold.co/100x100/2563EB/FFFFFF?text=EW',
   },
 ]
 
 export const stats = [
   { label: 'Clients Worldwide', value: '150+' },
-  { label: 'Revenue Generated', value: '$50M+' },
-  { label: 'Team Members', value: '40+' },
-  { label: 'Years Experience', value: '10+' },
+  { label: 'Revenue Generated', value: '$--' },
+  { label: 'Team Members', value: '--' },
+  { label: 'Years Experience', value: '--' },
 ]
