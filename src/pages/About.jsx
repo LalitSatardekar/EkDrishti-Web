@@ -43,16 +43,31 @@ const About = () => {
   }
 
   const teamMembers = [
-    { name: 'Team Member 1', role: 'Creative Director', avatar: '' },
-    { name: 'Team Member 2', role: 'Strategy Lead', avatar: '' },
-    { name: 'Team Member 3', role: 'Marketing Director', avatar: '' },
-    { name: 'Team Member 4', role: 'Tech Lead', avatar: '' },
+    { name: 'DAKSHESH SHETTY', role: 'EDITOR', avatar: '' },
+    { name: 'KAJAL GHATOLE', role: 'CONTENT WRITER', avatar: '' },
+    { name: 'TANMAY JARE', role: 'DEVELOPER', avatar: '' },
+    { name: 'RIYA KADAM', role: 'DEVEOPER', avatar: '' },
   ]
 
   const leadershipTeam = [
-    { name: 'Leader Name 1', designation: 'Co-Founder & CEO', image: 'https://placehold.co/300x300/2563EB/FFFFFF?text=Leader1' },
-    { name: 'Leader Name 2', designation: 'Co-Founder & Strategy Head', image: 'https://placehold.co/300x300/2563EB/FFFFFF?text=Leader1' },
-    { name: 'Leader Name 3', designation: 'Creative & Operations Head', image: 'https://placehold.co/300x300/2563EB/FFFFFF?text=Leader1' },
+    {
+      role: 'COO',
+      name: 'Shreya V Pandav',
+      details: 'Director of Ekdrishti, Chief Operating Officer',
+      image: 'https://placehold.co/300x300/2563EB/FFFFFF?text=Shreya'
+    },
+    {
+      role: 'CEO',
+      name: 'Chinmay N Shivdikar',
+      details: 'Director of Ekdrishti, Chief Executive Officer',
+      image: 'https://placehold.co/300x300/2563EB/FFFFFF?text=Chinmay'
+    },
+    {
+      role: 'CCO',
+      name: 'Lalit H Satardekar',
+      details: 'Director of Ekdrishti, Chief Creative Officer',
+      image: 'https://placehold.co/300x300/2563EB/FFFFFF?text=Lalit'
+    },
   ]
 
   return (
@@ -79,7 +94,7 @@ const About = () => {
     tracking-[0.25em]
     drop-shadow-[0_6px_28px_rgba(0,0,0,0.65)]
   ">
-    REFINED VISION. REAL IMPACT.
+    DREAM IT & GET IT
   </h1>
 
   {/* subtle premium underline */}
@@ -92,18 +107,15 @@ const About = () => {
         {/* Story Section */}
         <div className="grid lg:grid-cols-2 gap-16 items-center mb-32">
           <div>
-            <h2 className="text-4xl font-heading font-bold text-textPrimary mb-6">
-              Our Vision
+            <h2 className="text-[36px] font-heading font-bold text-textPrimary mb-6">
+              Our Story
             </h2>
-            <div className="space-y-4 text-textSecondary text-lg leading-relaxed">
+            <div className="space-y-4 text-textSecondary text-[18px] leading-relaxed">
               <p>
-                At Ekdrishti Studios, we believe that every brand, event, and story deserves to be presented with clarity, creativity, and purpose.
-                </p>
-                <p>
-                Our approach combines cinematic storytelling, strategic digital marketing, and strong visual identity to help businesses and individuals communicate their message with impact.
-                </p>
-                <p>
-                We don't just capture moments — we craft experiences that stay with audiences long after the moment passes.
+                We are a creative, production agency and Event management company offering video, image, audio and other event management solutions for all types of events, programs, and commercials along with result-focused digital marketing for products, and services.
+              </p>
+              <p>
+                Established on December 1, 2024, Ekdrishti proudly integrates Chinmay Photography, with 7+ years of experience in photo and video production, and Marketing Vision, with 2+ years of expertise in digital marketing. Founded by four dedicated directors, Ekdrishti is committed to delivering exceptional results as needed to meet unique client requirements.
               </p>
             </div>
           </div>
@@ -114,6 +126,16 @@ const About = () => {
               <p className="text-sm text-textSecondary/70">Company/Team Photo</p>
             </div>
           </div>
+        </div>
+
+        {/* Mission Section */}
+        <div className="mb-32">
+          <h2 className="text-4xl font-heading font-bold text-textPrimary mb-6 text-center">
+            Our Mission
+          </h2>
+          <p className="max-w-4xl mx-auto text-textSecondary text-lg leading-relaxed text-center">
+            To empower businesses and individuals by unifying creative services. We eliminate the complexity of brand building by providing a single, integrated team for digital marketing, production, and events, turning ambitious ideas into measurable success.
+          </p>
         </div>
 
         
@@ -159,15 +181,33 @@ const About = () => {
               }}
             />
 
+            {/* Leadership Role */}
+            <p
+              className="font-heading font-semibold text-white text-center"
+              style={{
+                position: "absolute",
+                top: isCenter ? "24px" : "20px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                fontSize: isCenter ? "16px" : "14px",
+                letterSpacing: "1.2px",
+                textShadow: "0 6px 18px rgba(0,0,0,0.45)",
+                zIndex: 3,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {leader.role}
+            </p>
+
             {/* Leader Name */}
             <h3
               className="font-heading font-bold text-white text-center"
               style={{
                 position: "absolute",
-                top: isCenter ? "40px" : "32px",
+                top: isCenter ? "50px" : "42px",
                 left: "50%",
                 transform: "translateX(-50%)",
-                fontSize: isCenter ? "26px" : "19px",
+                fontSize: isCenter ? "24px" : "18px",
                 letterSpacing: "0.3px",
                 textShadow: "0 6px 18px rgba(0,0,0,0.45)",
                 zIndex: 3,
@@ -200,23 +240,25 @@ const About = () => {
               }
             />
 
-            {/* Designation — always visible */}
+            {/* Details — always visible */}
             <p
               className="text-white text-center font-semibold"
               style={{
                 position: "absolute",
-                bottom: "22px",
+                bottom: "18px",
                 left: "50%",
                 transform: "translateX(-50%)",
-                fontSize: isCenter ? "15px" : "13px",
+                width: "86%",
+                fontSize: isCenter ? "13px" : "12px",
+                lineHeight: 1.35,
                 opacity: 0.95,
                 letterSpacing: "0.4px",
                 textShadow: "0 4px 10px rgba(0,0,0,0.35)",
-                whiteSpace: "nowrap",
+                whiteSpace: "normal",
                 zIndex: 4,
               }}
             >
-              {leader.designation}
+              {leader.details}
             </p>
           </div>
         );
@@ -232,7 +274,7 @@ const About = () => {
         {/* Team */}
 <div className="mb-24">
   <h2 className="text-4xl font-heading font-bold text-textPrimary mb-12 text-center">
-    Meet the Team
+    Meet the Teams
   </h2>
 
   <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
