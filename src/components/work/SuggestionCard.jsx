@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 
-const SuggestionCard = ({ project }) => {
+const SuggestionCard = ({   project }) => {
+  const thumb = project.thumbnail || project.thumbnail169 || project.thumbnail32 || project.image || (project.album && project.album[0])
+
   return (
     <Link
       to={`/work/${project.slug}`}
@@ -8,9 +10,9 @@ const SuggestionCard = ({ project }) => {
     >
       <div className="relative h-80 overflow-hidden">
         {/* Real thumbnail image */}
-        {project.image ? (
+        {thumb ? (
           <img
-            src={project.image}
+            src={thumb}
             alt={project.title}
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />

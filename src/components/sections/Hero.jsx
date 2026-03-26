@@ -6,26 +6,25 @@ const Hero = () => {
       {/* Subtle Background Effects */}
       <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-[#F2A020]/5" />
       
-      <div className="section-container relative z-10">
+      <div className="section-container relative z-10  ">
         <div className="max-w-4xl px-8 pt-8">
           {/* Main Headline */}
           <h1 className="mb-8">
             <span className="block text-3xl sm:text-7xl md:text-8xl lg:text-8xl font-heading font-black text-white leading-none mb-2">
-              Dream it.
+              Dreams Deserve 
             </span>
             <span className="block text-6xl sm:text-7xl md:text-8xl lg:text-8xl font-heading font-black text-[#F2A020] leading-none">
-              Get it.
+              Better Execution.
             </span>
           </h1>
 
           {/* Subheadline */}
           <div className="mb-12 space-y-1">
-            <p className="text-lg md:text-xl text-white font-medium">
-              Your vision. Our Execution.
+            <p className="lg:text-2xl md:text-xl text-white font-medium">
+              Behind every dream is a story waiting to be told.
             </p>
-            <p className="text-l md:text-l text-white/90 font-normal">
-              We turn ambitious marketing goals into measurable success stories.
-            </p>
+            <p className="lg:text-l md:text-lg text-white/90 font-normal">
+              We help you bring it out with clarity, creativity, and purpose.               </p>
           </div>
         </div>
 

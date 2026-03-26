@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { allCases } from '../data/cases'
 import { getSortedCases } from '../lib/sortingEngine'
@@ -9,13 +9,14 @@ import category3 from '../assets/work/category3.png'
 
 // Sub-filter pills per top-level category
 const CATEGORY_FILTERS = {
-  'EVENTS':            ['All', 'Family Events', 'Corporate'],
-  'DIGITAL MARKETING': ['All', 'Social Media', 'SEO', 'Paid Ads', 'Email', 'Content', 'Influencer'],
-  'PRODUCTION':        ['All', 'Brand Film', 'Corporate', 'Music Video', 'Documentary', 'Product'],
+  // Temporarily disabled; pills hidden in UI
+  // 'EVENTS':            ['All', 'Family Events', 'Corporate'],
+  // 'DIGITAL MARKETING': ['All', 'Social Media', 'SEO', 'Paid Ads', 'Email', 'Content', 'Influencer'],
+  // 'PRODUCTION':        ['All', 'Brand Film', 'Corporate', 'Music Video', 'Documentary', 'Product'],
 }
 
 const Work = () => {
-  const [activeCategory,  setActiveCategory]  = useState('DIGITAL MARKETING')
+  const [activeCategory,  setActiveCategory]  = useState('EVENTS')
   const [activeSubFilter, setActiveSubFilter] = useState('All')
   const [hoveredItem, setHoveredItem] = useState(null)
   const [hoveredEl,   setHoveredEl]   = useState(null)
@@ -69,7 +70,7 @@ const Work = () => {
     <div className="bg-primary">
       <div className="section-container md:px-[70px]">
         {/* Header */}
-        
+
 
         {/* Category Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-[21px] max-w-[1300px] mx-auto py-16">
@@ -111,8 +112,13 @@ const Work = () => {
           ))}
         </div>
 
-        {/* Sub-category Filter Pills */}
-        <div className="flex flex-wrap items-center gap-3 max-w-[1300px] mx-auto pb-10">
+        {/* Divider */}
+        <div className="max-w-[1300px] mx-auto px-4">
+          <div className="h-px w-full bg-borderSubtle/60" />
+        </div>
+
+        {/* Sub-category Filter Pills (temporarily hidden) */}
+        {/* <div className="flex flex-wrap items-center gap-3 max-w-[1300px] mx-auto pb-10">
           {(CATEGORY_FILTERS[activeCategory] || []).map((filter) => (
             <button
               key={filter}
@@ -120,43 +126,60 @@ const Work = () => {
               className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
                 activeSubFilter === filter
                   ? 'bg-amber-500 text-black shadow-[0_0_16px_rgba(242,160,32,0.4)]'
-                  : 'bg-transparent border border-borderSubtle text-textSecondary hover:border-amber-500/50 hover:text-textPrimary'
+                  : 'bg-transparent border border-borderSubtle text-textSecondary hover-border-amber-500/50 hover:text-textPrimary'
               }`}
             >
               {filter}
             </button>
           ))}
-        </div>
+        </div> */}
 
         {/* Masonry Grid */}
         <div
           className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6 pb-[40px]"
           onMouseLeave={handleMouseLeave}
         >
-          {filteredItems.map((item) => (
-            <div
-              key={item.id}
-              className="group block break-inside-avoid mb-6 cursor-pointer"
-              onMouseEnter={(e) => handleMouseEnter(e, item)}
-              onMouseLeave={handleMouseLeave}
-            >
-              <Link to={`/work/${item.slug}`} className="block">
-                <div className={`relative rounded-2xl overflow-hidden ${item.height} w-full`}>
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-all duration-300" />
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 px-6">
-                    <h3 className="text-white font-heading font-bold text-2xl text-center leading-snug drop-shadow-lg">
-                      {item.title}
-                    </h3>
+          {filteredItems.map((item, index) => {
+            const mod = index % 3
+            const stagger = mod === 1
+              ? 'mt-12 md:mt-16'
+              : mod === 2
+              ? 'mt-6 md:mt-10'
+              : ''
+            const aspectClass = mod === 0 ? 'md:aspect-video aspect-[3/2]' : 'aspect-[3/2]'
+
+            // Prefer thumbnails that match the box aspect: provide thumbnail32 or thumbnail169 in cases.js for best fit
+            const thumb = mod === 0
+              ? item.thumbnail169 || item.thumbnail || item.image || (item.album && item.album[0])
+              : item.thumbnail32  || item.thumbnail || item.image || (item.album && item.album[0])
+            if (!thumb) return null
+
+            return (
+              <div
+                key={item.id}
+                className={`group block break-inside-avoid mb-6 cursor-pointer ${stagger}`}
+                onMouseEnter={(e) => handleMouseEnter(e, item)}
+                onMouseLeave={handleMouseLeave}
+              >
+                <Link to={`/work/${item.slug}`} className="block">
+                  <div className={`relative rounded-2xl overflow-hidden w-full bg-surface ${aspectClass}`}>
+                    <img
+                      src={thumb}
+                      alt={item.title}
+                      loading="lazy"
+                      className="absolute inset-0 w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 bg-surface"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-all duration-300" />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 px-6">
+                      <h3 className="text-white font-heading font-bold text-2xl text-center leading-snug drop-shadow-lg">
+                        {item.title}
+                      </h3>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            </div>
-          ))}
+                </Link>
+              </div>
+            )
+          })}
         </div>
 
         {/* Hover Preview */}

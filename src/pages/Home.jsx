@@ -12,7 +12,7 @@ const Home = () => {
       <Hero />
       <ServicesPreview />
 
-      {/* Packages Carousel */}
+      {/* Packages Carousel 
       <section className="py-16 overflow-hidden">
         <div className="section-container">
           <div className="text-center mb-6">
@@ -21,7 +21,7 @@ const Home = () => {
           </div>
           <CinematicStackedCarousel items={pricingPlans} />
         </div>
-      </section>
+      </section> */}
 
       <CaseStudiesPreview />
       <Testimonials />

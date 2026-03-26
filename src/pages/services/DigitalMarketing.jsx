@@ -45,11 +45,12 @@ const Hero = () => {
           Digital Marketing Services
         </span>
 
-        <h1 className="text-5xl md:text-6xl lg:text-7xl font-heading font-bold text-textPrimary leading-tight max-w-4xl mx-auto">
-          Grow Your Brand{' '}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent via-accentLight to-amber-400">
-            Digitally
+        <h1 className="text-5xl md:text-6xl lg:text-6xl font-heading font-bold text-textPrimary leading-tight max-w-4xl mx-auto">
+         <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent via-accentLight to-amber-400">
+            Digital
           </span>
+         {' '} growth, done right.
+          
         </h1>
 
         <p className="text-xl text-textSecondary max-w-2xl mx-auto leading-relaxed">
@@ -58,10 +59,10 @@ const Hero = () => {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
           <a href="/contact" className="btn-primary inline-block text-center px-8 py-4 text-base shadow-[0_0_24px_rgba(37,99,235,0.3)] hover:shadow-[0_0_36px_rgba(37,99,235,0.45)]">
-            Start Your Campaign
+            Start a Project
           </a>
           <a href="#insights" className="btn-secondary inline-block text-center px-8 py-4 text-base">
-            View Analytics
+            See Our Work
           </a>
         </div>
 
