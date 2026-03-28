@@ -3,6 +3,7 @@ import { useParams, Link, useSearchParams } from 'react-router-dom'
 import AlbumGrid from '../components/album/AlbumGrid'
 import SuggestionSection from '../components/work/SuggestionSection'
 import DownloadButton from '../components/ui/DownloadButton'
+import CachedImage from '../components/ui/CachedImage'
 import { allCases } from '../data/cases'
 
 // Parse ratios like "16/9", "16:9", or "16 / 9" into numeric + css-ready string
@@ -25,11 +26,18 @@ const bucketAspectRatio = (numeric, fallbackCss) => {
     { numeric: 16 / 9, css: '16 / 9' },
     { numeric: 3 / 2, css: '3 / 2' },
     { numeric: 9 / 16, css: '9 / 16' },
+    { numeric: 2 / 3, css: '2 / 3' },
   ]
   const tolerance = 0.08 // allow ~8% deviation
   const match = candidates.find((c) => Math.abs(numeric - c.numeric) / c.numeric <= tolerance)
   return match ? match.css : fallbackCss
 }
+
+// Build a responsive box that keeps the video visible in one view without getting tiny
+const buildVideoBoxStyle = (ratioCss, { maxHeight = 'min(75vh, 640px)', maxWidth = 'min(92vw, 760px)' } = {}) =>
+  ratioCss
+    ? { aspectRatio: ratioCss, width: '100%', maxWidth, maxHeight }
+    : { width: '100%', maxWidth, maxHeight }
 
 const WorkDetail = () => {
   const { slug } = useParams()
@@ -148,21 +156,21 @@ const WorkDetail = () => {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {heroImages.slice(0, 2).map((src, idx) => (
-                <img
+                <CachedImage
                   key={`hero-top-${idx}`}
                   src={src}
                   alt={`${project.title} hero ${idx + 1}`}
-                  className="w-full aspect-[3/2] max-h-[320px] object-cover rounded-lg"
+                  className="w-full aspect-[3/2] max-h-[400px] object-cover rounded-lg"
                 />
               ))}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {heroImages.slice(2, 5).map((src, idx) => (
-                <img
+                <CachedImage
                   key={`hero-bottom-${idx}`}
                   src={src}
                   alt={`${project.title} highlight ${idx + 3}`}
-                  className="w-full aspect-[2/3] max-h-[240px] object-cover rounded-lg"
+                  className="w-full aspect-[9/16] max-h-[400px] object-cover rounded-lg"
                 />
               ))}
             </div>
@@ -170,7 +178,7 @@ const WorkDetail = () => {
         ) : (
           project.image && (
             <div className="mb-10">
-              <img
+              <CachedImage
                 src={project.image}
                 alt={project.title}
                 className="w-full rounded-xl object-cover"
@@ -191,14 +199,17 @@ const WorkDetail = () => {
                   if (!src) return null
                   const poster = typeof item === 'string' ? (project.videoPoster || project.image) : (item.poster || project.videoPoster || project.image)
                   const ratioKey = src
-                  const explicit = parseAspectRatio(typeof item === 'object' && item.aspectRatio ? item.aspectRatio : project.aspectRatio)
-                  const ratio = explicit ? explicit.css : videoRatios[ratioKey]
+                  const explicitItem = parseAspectRatio(typeof item === 'object' ? item.aspectRatio : null)
+                  const computed = videoRatios[ratioKey]
+                  const projectDefault = parseAspectRatio(project.aspectRatio)
+                  const chosen = explicitItem || (computed ? { numeric: parseFloat(computed.split('/')[0]) / parseFloat(computed.split('/')[1]), css: computed } : null) || projectDefault
+                  const ratio = chosen ? bucketAspectRatio(chosen.numeric, chosen.css) : undefined
 
                   return (
                     <div
                       key={`video-${idx}`}
                       className="relative rounded-lg overflow-hidden bg-surface w-full"
-                      style={ratio ? { aspectRatio: ratio, maxHeight: 'min(75vh, 560px)' } : { maxHeight: 'min(75vh, 560px)' }}
+                      style={buildVideoBoxStyle(ratio)}
                     >
                       <video
                         controls
@@ -208,8 +219,10 @@ const WorkDetail = () => {
                         onLoadedMetadata={(e) => {
                           const { videoWidth, videoHeight } = e.target
                           if (videoWidth && videoHeight) {
+                            const numeric = videoWidth / videoHeight
                             const computed = `${videoWidth} / ${videoHeight}`
-                            setVideoRatios((prev) => (prev[ratioKey] === computed ? prev : { ...prev, [ratioKey]: computed }))
+                            const snapped = bucketAspectRatio(numeric, computed)
+                            setVideoRatios((prev) => (prev[ratioKey] === snapped ? prev : { ...prev, [ratioKey]: snapped }))
                           }
                         }}
                       >
@@ -222,11 +235,15 @@ const WorkDetail = () => {
               </div>
             ) : (
               <div
-                className="relative rounded-lg overflow-hidden bg-surface mb-6 max-w-sm md:max-w-md mx-auto"
+                className="relative rounded-lg overflow-hidden bg-surface mb-6 mx-auto"
                 style={(() => {
-                  const explicit = parseAspectRatio(project.aspectRatio)
-                  const ratio = explicit ? explicit.css : videoRatios.single
-                  return ratio ? { aspectRatio: ratio, maxHeight: 'min(75vh, 560px)' } : { maxHeight: 'min(75vh, 560px)' }
+                  const computed = videoRatios.single
+                  const projectDefault = parseAspectRatio(project.aspectRatio)
+                  const chosen = computed
+                    ? { numeric: parseFloat(computed.split('/')[0]) / parseFloat(computed.split('/')[1]), css: computed }
+                    : projectDefault
+                  const ratio = chosen ? bucketAspectRatio(chosen.numeric, chosen.css) : undefined
+                  return buildVideoBoxStyle(ratio)
                 })()}
               >
                 <video
@@ -237,8 +254,10 @@ const WorkDetail = () => {
                   onLoadedMetadata={(e) => {
                     const { videoWidth, videoHeight } = e.target
                     if (videoWidth && videoHeight) {
+                      const numeric = videoWidth / videoHeight
                       const computed = `${videoWidth} / ${videoHeight}`
-                      setVideoRatios((prev) => (prev.single === computed ? prev : { ...prev, single: computed }))
+                      const snapped = bucketAspectRatio(numeric, computed)
+                      setVideoRatios((prev) => (prev.single === snapped ? prev : { ...prev, single: snapped }))
                     }
                   }}
                 >

@@ -1,5 +1,10 @@
-//original about 
+
+
 import { stats } from '../data/content'
+
+
+  //original about 
+
 
 const About = () => {
   const teamMembers = [
@@ -123,4 +128,8 @@ const About = () => {
   )
 }
 
+
+
+
 export default About
+

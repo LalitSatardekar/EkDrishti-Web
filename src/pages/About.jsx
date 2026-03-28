@@ -50,9 +50,9 @@ const About = () => {
   ]
 
   const leadershipTeam = [
-    { name: 'Leader Name 1', designation: 'Co-Founder & CEO', image: 'https://placehold.co/300x300/2563EB/FFFFFF?text=Leader1' },
-    { name: 'Leader Name 2', designation: 'Co-Founder & Strategy Head', image: 'https://placehold.co/300x300/2563EB/FFFFFF?text=Leader1' },
-    { name: 'Leader Name 3', designation: 'Creative & Operations Head', image: 'https://placehold.co/300x300/2563EB/FFFFFF?text=Leader1' },
+    { name: 'Leader Name 1', designation: 'Co-Founder & CEO', image: '' },
+    { name: 'Leader Name 2', designation: 'Co-Founder & Strategy Head', image: '' },
+    { name: 'Leader Name 3', designation: 'Creative & Operations Head', image: '' },
   ]
 
   return (
