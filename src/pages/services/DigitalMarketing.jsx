@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import MindMapHero from '../../components/hero/MindMapHero'
+import DigitalMarketingPreview from '../../components/services/DigitalMarketingPreview'
 import StorySection from '../../components/digital/StorySection'
 import ReelsSection from '../../components/digital/ReelsSection'
 import StaticsSection from '../../components/digital/StaticsSection'
@@ -8,76 +10,6 @@ import InsightsSection from '../../components/digital/InsightsSection'
 import FAQ from '../../components/sections/FAQ'
 
 gsap.registerPlugin(ScrollTrigger)
-
-/* ─── Hero ────────────────────────────────────────────────────── */
-const Hero = () => {
-  const heroRef = useRef(null)
-
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        heroRef.current.children,
-        { opacity: 0, y: 44 },
-        { opacity: 1, y: 0, duration: 1, ease: 'power4.out', stagger: 0.13 }
-      )
-    }, heroRef)
-    return () => ctx.revert()
-  }, [])
-
-  return (
-    <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden py-32">
-      {/* Radial glow blobs */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[600px] bg-accent/8 rounded-full blur-[140px]" />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[400px] bg-amber-500/6 rounded-full blur-[110px]" />
-      </div>
-
-      {/* Noise texture overlay */}
-      <div
-        className="absolute inset-0 opacity-[0.025] pointer-events-none"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-        }}
-      />
-
-      <div ref={heroRef} className="section-container text-center z-10 space-y-7">
-        <span className="inline-block px-5 py-2 bg-amber-500/10 border border-amber-500/30 rounded-full text-amber-400 text-sm font-semibold tracking-wide">
-          Digital Marketing Services
-        </span>
-
-        <h1 className="text-5xl md:text-6xl lg:text-6xl font-heading font-bold text-textPrimary leading-tight max-w-4xl mx-auto">
-         <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent via-accentLight to-amber-400">
-            Digital
-          </span>
-         {' '} growth, done right.
-          
-        </h1>
-
-        <p className="text-xl text-textSecondary max-w-2xl mx-auto leading-relaxed">
-          Data-driven digital marketing strategies that elevate your brand, expand your reach, and convert audiences into loyal customers — measurably and at scale.
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
-          <a href="/contact" className="btn-primary inline-block text-center px-8 py-4 text-base shadow-[0_0_24px_rgba(37,99,235,0.3)] hover:shadow-[0_0_36px_rgba(37,99,235,0.45)]">
-            Start a Project
-          </a>
-          <a href="#insights" className="btn-secondary inline-block text-center px-8 py-4 text-base">
-            See Our Work
-          </a>
-        </div>
-
-        {/* Quick service chips */}
-        <div className="flex flex-wrap justify-center gap-3 pt-4">
-          {['Social Media', 'SEO & SEM', 'Paid Ads', 'Content', 'Email', 'Analytics'].map((t) => (
-            <span key={t} className="px-4 py-1.5 text-xs font-medium bg-surface/50 border border-borderSubtle rounded-full text-textSecondary">
-              {t}
-            </span>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
 
 /* ─── Services Grid ───────────────────────────────────────────── */
 const SERVICES = [
@@ -150,7 +82,8 @@ const DigitalMarketing = () => (
     {/* smooth scroll behaviour */}
     <style>{`html { scroll-behavior: smooth; }`}</style>
 
-    <Hero />
+    <MindMapHero serviceType="digitalMarketing" />
+    <DigitalMarketingPreview />
     <ServicesGrid />
     <StorySection />
     <ReelsSection />

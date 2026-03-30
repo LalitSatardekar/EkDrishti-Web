@@ -187,8 +187,8 @@ const ServicesPreview = () => {
           </motion.p>
         </div>
       </div>
-        {/* Services Tabs Layout */}
-        <div className="grid lg:grid-cols-[290px_1fr] gap-6 lg:gap-8 mb-16">
+        {/* Services Tabs Layout - Desktop */}
+        <div className="hidden lg:grid lg:grid-cols-[290px_1fr] gap-6 lg:gap-8 mb-16 section-container max-w-[1440px]">
           {/* Left Side - Service Buttons */}
           <div className="flex flex-col gap-3">
             {servicePreviewData.map((service, index) => (
@@ -295,8 +295,104 @@ const ServicesPreview = () => {
             </AnimatePresence>
           </div>
         </div>
-      </section>
-      )
-    }
 
-    export default ServicesPreview
+        {/* Mobile/Tablet Accordion Layout */}
+        <div className="lg:hidden section-container max-w-[1440px] mb-16">
+          <div className="space-y-4">
+            {servicePreviewData.map((service, index) => (
+              <div
+                key={service.id}
+                className={`border rounded-2xl overflow-hidden transition-all duration-300 ${
+                  activeService === index
+                    ? 'border-[#F2A020] shadow-[0_0_24px_rgba(242,160,32,0.25)]'
+                    : 'border-white/10 hover:border-[#F2A020]/50 hover:shadow-[0_0_24px_rgba(242,160,32,0.15)]'
+                }`}
+              >
+                <button
+                  onClick={() => setActiveService(activeService === index ? -1 : index)}
+                  className="w-full px-5 py-4 flex items-center justify-between bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm hover:from-white/15 hover:to-white/8 text-left transition-colors duration-200"
+                  aria-expanded={activeService === index}
+                  aria-controls={`service-content-${service.id}`}
+                >
+                  <h3
+                    className={`font-heading font-semibold text-base sm:text-lg transition-colors duration-200 ${
+                      activeService === index ? 'text-[#F2A020]' : 'text-white'
+                    }`}
+                  >
+                    {toSentenceCase(service.buttonTitle)}
+                  </h3>
+                  <svg
+                    className={`w-6 h-6 transition-all duration-300 flex-shrink-0 ml-4 ${
+                      activeService === index ? 'text-[#F2A020] rotate-180' : 'text-[#F2A020]'
+                    }`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                <AnimatePresence>
+                  {activeService === index && (
+                    <motion.div
+                      id={`service-content-${service.id}`}
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: 'easeInOut' }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-5 py-6 bg-[#0B1120]/40 border-t border-white/10 space-y-6">
+                        {/* Left Column */}
+                        <div className="space-y-4">
+                          <h4 className="text-[#F2A020] text-sm sm:text-base font-medium tracking-wide">
+                            {toSentenceCase(service.leftColumnTitle)}:
+                          </h4>
+                          <div className="space-y-2">
+                            {service.leftItems.map((item) => (
+                              <div
+                                key={item}
+                                className="flex items-start gap-2.5 text-white/90 text-xs sm:text-sm leading-relaxed"
+                              >
+                                <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-[#F2A020]/80 shrink-0" />
+                                <span>{toSentenceCase(item)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Divider */}
+                        <div className="h-px bg-white/10" />
+
+                        {/* Right Column */}
+                        <div className="space-y-4">
+                          <h4 className="text-[#F2A020] text-sm sm:text-base font-medium tracking-wide">
+                            {toSentenceCase(service.rightColumnTitle)}:
+                          </h4>
+                          <div className="space-y-2">
+                            {service.rightItems.map((item) => (
+                              <div
+                                key={item}
+                                className="flex items-start gap-2.5 text-white/90 text-xs sm:text-sm leading-relaxed"
+                              >
+                                <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-[#F2A020]/80 shrink-0" />
+                                <span>{toSentenceCase(item)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  export default ServicesPreview

@@ -118,22 +118,21 @@ const Navbar = () => {
                 <div
                   onMouseEnter={openDropdown}
                   onMouseLeave={closeDropdown}
-                  className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-56 rounded-2xl border border-borderSubtle shadow-[0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden"
-                  style={{ backgroundColor: '#151627f5' }}
+                  className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-64 rounded-2xl border border-amber-500/15 shadow-[0_4px_24px_rgba(0,0,0,0.25)] overflow-hidden backdrop-blur-xl"
+                  style={{ backgroundColor: 'rgba(21, 22, 39, 0.98)' }}
                 >
-                  {serviceLinks.map((s, i) => (
+                  {serviceLinks.map((s) => (
                     <Link
                       key={s.path}
                       to={s.path}
                       className={cn(
-                        'flex items-center gap-3 px-5 py-3.5 text-sm font-medium transition-colors duration-150',
+                        'flex items-center gap-3 px-6 py-4 text-sm font-medium transition-all duration-200 ease-out',
                         isActive(s.path)
-                          ? 'text-amber-400 bg-amber-500/10'
-                          : 'text-textSecondary hover:text-amber-400 hover:bg-amber-500/5',
-                        i !== serviceLinks.length - 1 && 'border-b border-borderSubtle'
+                          ? 'text-amber-400 bg-amber-500/12'
+                          : 'text-textSecondary hover:text-amber-400 hover:bg-amber-500/8'
                       )}
                     >
-                      <span className="text-base">{s.icon}</span>
+                      <span className="text-lg">{s.icon}</span>
                       {s.name}
                     </Link>
                   ))}
@@ -177,6 +176,9 @@ const Navbar = () => {
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="lg:hidden focus:outline-none absolute right-0 text-textPrimary"
+            aria-label={isOpen ? 'Close mobile menu' : 'Open mobile menu'}
+            aria-expanded={isOpen}
+            aria-controls="mobile-menu"
           >
             <svg
               className="w-6 h-6"
@@ -186,6 +188,7 @@ const Navbar = () => {
               strokeWidth="2"
               viewBox="0 0 24 24"
               stroke="currentColor"
+              aria-hidden="true"
             >
               {isOpen ? (
                 <path d="M6 18L18 6M6 6l12 12" />
@@ -198,6 +201,7 @@ const Navbar = () => {
 
         {/* Mobile Menu */}
         <div
+          id="mobile-menu"
           className={cn(
             'lg:hidden overflow-hidden transition-all duration-300 ease-in-out',
             isOpen
@@ -238,18 +242,20 @@ const Navbar = () => {
                   </svg>
                 </button>
                 {mobileServicesOpen && (
-                  <div className="ml-4 mt-1 flex flex-col space-y-1 border-l border-borderSubtle pl-4">
+                  <div className="ml-4 mt-1 flex flex-col space-y-1 pl-6">
                     {serviceLinks.map((s) => (
                       <Link
                         key={s.path}
                         to={s.path}
                         onClick={closeMobileMenu}
                         className={cn(
-                          'flex items-center gap-2 py-2 text-sm font-medium transition-colors duration-200',
-                          isActive(s.path) ? 'text-amber-400' : 'text-textSecondary hover:text-amber-400'
+                          'flex items-center gap-3 py-3 px-4 text-sm font-medium transition-all duration-200 ease-out rounded-lg',
+                          isActive(s.path)
+                            ? 'text-amber-400 bg-amber-500/12'
+                            : 'text-textSecondary hover:text-amber-400 hover:bg-amber-500/8'
                         )}
                       >
-                        <span>{s.icon}</span>
+                        <span className="text-base">{s.icon}</span>
                         {s.name}
                       </Link>
                     ))}

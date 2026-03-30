@@ -25,10 +25,8 @@ const Footer = () => {
     {
       title: 'Connect',
       links: [
-        { name: 'LinkedIn', path: '#', external: true },
-        { name: 'Twitter', path: '#', external: true },
-        { name: 'Instagram', path: '#', external: true },
-        { name: 'Facebook', path: '#', external: true },
+        { name: 'LinkedIn', path: 'https://www.linkedin.com/company/ekdrishti-group/', external: true },
+        { name: 'Instagram', path: 'https://www.instagram.com/ekdrishti_official?igsh=MXFibWJhd25jbW5wbw==', external: true },
       ],
     },
   ]
@@ -49,6 +47,20 @@ const Footer = () => {
             <p className="text-textSecondary mb-4 max-w-sm">
               Transforming brands through strategic digital marketing and creative excellence.
             </p>
+            <div className="space-y-2 text-sm">
+              <a
+                href="mailto:edadmin@ekdrishti.com"
+                className="text-textSecondary hover:text-amber-400 transition-colors duration-200 block"
+              >
+                📧 edadmin@ekdrishti.com
+              </a>
+              <a
+                href="tel:+918169667383"
+                className="text-textSecondary hover:text-amber-400 transition-colors duration-200 block"
+              >
+                📱 +91 816 966 7383
+              </a>
+            </div>
           </div>
 
           {/* Footer Links */}
@@ -64,7 +76,8 @@ const Footer = () => {
                       <a
                         href={link.path}
                         target="_blank"
-                        rel="noopener noreferrer"
+                        rel="noopener noreferrer nofollow"
+                        aria-label={`Visit our ${link.name} page (opens in new tab)`}
                         className="text-textSecondary hover:text-amber-400 transition-colors duration-200"
                       >
                         {link.name}

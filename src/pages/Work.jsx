@@ -66,6 +66,7 @@ const Work = () => {
     sortBy: 'priority',
   })
 
+
   return (
     <div className="bg-primary">
       <div className="section-container md:px-[70px]">
@@ -134,12 +135,33 @@ const Work = () => {
           ))}
         </div> */}
 
-        {/* Masonry Grid */}
-        <div
-          className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6 pb-[40px]"
-          onMouseLeave={handleMouseLeave}
-        >
-          {filteredItems.map((item, index) => {
+        {/* Conditional Rendering: Coming Soon or Masonry Grid */}
+        {filteredItems.length === 0 ? (
+          /* Coming Soon State */
+          <div className="flex flex-col items-center justify-center py-32 px-6">
+            <div className="text-7xl md:text-8xl mb-6 opacity-50">🚧</div>
+            <h2 className="text-3xl md:text-4xl font-heading font-bold text-textPrimary mb-4 text-center">
+              Coming Soon
+            </h2>
+            <p className="text-textSecondary text-base md:text-lg text-center max-w-md mb-8 leading-relaxed">
+              We're currently working on showcasing our {activeCategory.toLowerCase()} projects.
+              Check back soon to see our latest work!
+            </p>
+            <Link
+              to="/contact"
+              className="px-8 py-3 bg-amber-500 text-black font-semibold rounded-full
+                         hover:bg-amber-400 transition-colors duration-200 shadow-lg hover:shadow-xl"
+            >
+              Get in Touch
+            </Link>
+          </div>
+        ) : (
+          /* Masonry Grid */
+          <div
+            className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6 pb-[40px]"
+            onMouseLeave={handleMouseLeave}
+          >
+            {filteredItems.map((item, index) => {
             const mod = index % 3
             const stagger = mod === 1
               ? 'mt-12 md:mt-16'
@@ -179,8 +201,9 @@ const Work = () => {
                 </Link>
               </div>
             )
-          })}
-        </div>
+            })}
+          </div>
+        )}
 
         {/* Hover Preview */}
         {hoveredItem && hoveredEl && (

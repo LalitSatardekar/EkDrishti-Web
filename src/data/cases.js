@@ -1,3 +1,9 @@
+import {
+  ASSET_DEFAULT_VARIANT,
+  ASSET_ORIGINAL_BASE_URL,
+  ASSET_WEBP_BASE_URL,
+} from '../lib/config'
+
 /**
  * cases.js — Centralized work/case-study data store.
  *
@@ -27,7 +33,46 @@
  *   results   – object with up to 3 key metrics shown on WorkDetail page
  */
 
-const asset = (category, folder, file) => `/assets/${category}/${folder}/${file}`
+const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp']
+const DEFAULT_VARIANT = (ASSET_DEFAULT_VARIANT || 'webp').toLowerCase() === 'webp' ? 'webp' : 'original'
+
+const trimSlashes = (value = '') => value.replace(/^[\/]+|[\/]+$/g, '')
+const normalizeSegment = (value = '') => trimSlashes(value.replace(/\\/g, '/'))
+const normalizeFile = (value = '') => value.replace(/\\/g, '/').replace(/^\/+/, '')
+
+const isImageFile = (file) => IMAGE_EXTENSIONS.some((ext) => file.toLowerCase().endsWith(ext))
+
+const toWebpFile = (file) => {
+  const normalized = normalizeFile(file)
+  if (!isImageFile(normalized)) return normalized
+  // S3 assets are stored as originalname.EXT.webp (extension appended, not replaced)
+  if (normalized.toLowerCase().endsWith('.webp')) return normalized
+  return `${normalized}.webp`
+}
+
+const encodeSegment = (value = '') => encodeURIComponent(value).replace(/%2F/gi, '/')
+
+const buildAssetUrl = (base, category, folder, file) => {
+  const safeBase = base.replace(/\/$/, '')
+  const pathParts = [normalizeSegment(category), normalizeSegment(folder), normalizeFile(file)]
+    .filter(Boolean)
+    .map(encodeSegment)
+  return [safeBase, ...pathParts].join('/')
+}
+
+const sanitizeVariant = (value) => (value === 'webp' ? 'webp' : 'original')
+
+const resolveVariant = (file, variant) => {
+  if (variant) return sanitizeVariant(variant)
+  return isImageFile(file) ? DEFAULT_VARIANT : 'original'
+}
+
+const asset = (category, folder, file, options = {}) => {
+  const variant = resolveVariant(file, options.variant)
+  const base = variant === 'webp' ? ASSET_WEBP_BASE_URL : ASSET_ORIGINAL_BASE_URL
+  const finalFile = variant === 'webp' ? toWebpFile(file) : normalizeFile(file)
+  return buildAssetUrl(base, category, folder, finalFile)
+}
 
 export const allCases = [
   // ─── EVENTS ──────────────────────────────────────────────────────────────
@@ -342,14 +387,14 @@ export const allCases = [
     status: 'published',
     date: '2024-09-18',
     description: 'Milestone birthday celebration with decor and family portraits.',
-    image: asset('Events', 'Kamini Katkar_s 60th Birthday/Photos', 'AT2A4630-32.JPG'),
+    image: asset('Events', 'Kamini Katkar_s 60th Birthday/Photos', 'AT2A4630.JPG'),
     album: [
       asset('Events', 'Kamini Katkar_s 60th Birthday/Photos', 'AT2A4614.JPG'),
       asset('Events', 'Kamini Katkar_s 60th Birthday/Photos', 'AT2A4617.JPG'),
       asset('Events', 'Kamini Katkar_s 60th Birthday/Photos', 'AT2A4624.JPG'),
       asset('Events', 'Kamini Katkar_s 60th Birthday/Photos', 'AT2A4626.JPG'),
       asset('Events', 'Kamini Katkar_s 60th Birthday/Photos', 'AT2A4630.JPG'),
-      asset('Events', 'Kamini Katkar_s 60th Birthday/Photos', 'AT2A4630-32.JPG'),
+      asset('Events', 'Kamini Katkar_s 60th Birthday/Photos', 'AT2A4630.JPG'),
       asset('Events', 'Kamini Katkar_s 60th Birthday/Photos', 'AT2A4772.JPG'),
       asset('Events', 'Kamini Katkar_s 60th Birthday/Photos', 'AT2A4849.JPG'),
       asset('Events', 'Kamini Katkar_s 60th Birthday/Photos', 'AT2A4852.JPG'),
@@ -517,12 +562,12 @@ export const allCases = [
     status: 'published',
     date: '2024-10-18',
     description: '80th birthday milestone captured for the family.',
-    image: asset('Events', 'Shubhangi Dholam 80th Birthday/Photos', '_EDS1448-32.JPG'),
+    image: asset('Events', 'Shubhangi Dholam 80th Birthday/Photos', '_EDS1448.JPG'),
     album: [
       asset('Events', 'Shubhangi Dholam 80th Birthday/Photos', '_EDS1426.JPG'),
       asset('Events', 'Shubhangi Dholam 80th Birthday/Photos', '_EDS1431.JPG'),
       asset('Events', 'Shubhangi Dholam 80th Birthday/Photos', '_EDS1448.JPG'),
-      asset('Events', 'Shubhangi Dholam 80th Birthday/Photos', '_EDS1448-32.JPG'),
+      asset('Events', 'Shubhangi Dholam 80th Birthday/Photos', '_EDS1448.JPG'),
       asset('Events', 'Shubhangi Dholam 80th Birthday/Photos', '_EDS1453.JPG'),
       asset('Events', 'Shubhangi Dholam 80th Birthday/Photos', '_EDS1482.JPG'),
       asset('Events', 'Shubhangi Dholam 80th Birthday/Photos', '_EDS1541.JPG'),
@@ -627,36 +672,6 @@ export const allCases = [
 
   // ─── PRODUCTION ───────────────────────────────────────────────────────────
   {
-    id: 3,
-    slug: 'fintech-product-launch',
-    title: 'FinTech Product Launch',
-    client: 'PayFlow',
-    service: 'production',
-    category: 'PRODUCTION',
-    subCategory: 'Corporate',
-    tags: ['product-launch', 'video', 'corporate'],
-    featured: true,
-    priority: 96,
-    status: 'published',
-    date: '2024-01-15',
-    description: 'Product launch campaign reaching 1M users in first quarter.',
-    image: 'https://images.unsplash.com/photo-1563986768494-4dee2763ff3f?w=800&q=80',
-    album: [
-      'https://images.unsplash.com/photo-1563986768494-4dee2763ff3f?w=600&q=80',
-      'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&q=80',
-      'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=600&q=80',
-      'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80',
-      'https://images.unsplash.com/photo-1540655037529-dec987208707?w=600&q=80',
-    ],
-    hasVideo: true,
-    height: 'h-48',
-    results: {
-      metric1: '1M+ app downloads',
-      metric2: '65% user retention rate',
-      metric3: 'Featured in top 10 finance apps',
-    },
-  },
-  {
     id: 33,
     slug: 'larios-production',
     title: 'Larios Brand Films',
@@ -717,12 +732,10 @@ export const allCases = [
       {
         src: asset('Production', 'Muskan Makeover/Videos', 'MUSKAN_R1_2.mp4'),
         poster: asset('Production', 'Muskan Makeover/Photos', 'makeover_muskan_Img1.png'),
-        aspectRatio: '9:16',
       },
       {
         src: asset('Production', 'Muskan Makeover/Videos', 'MUSKAN_R2_4.mp4'),
         poster: asset('Production', 'Muskan Makeover/Photos', 'makeover_muskan_Img2.png'),
-        aspectRatio: '3:2',
       },
     ],
     height: 'h-52',

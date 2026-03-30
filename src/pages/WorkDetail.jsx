@@ -4,7 +4,10 @@ import AlbumGrid from '../components/album/AlbumGrid'
 import SuggestionSection from '../components/work/SuggestionSection'
 import DownloadButton from '../components/ui/DownloadButton'
 import CachedImage from '../components/ui/CachedImage'
+import YouTubeEmbed from '../components/ui/YouTubeEmbed'
 import { allCases } from '../data/cases'
+import { selectHeroImages } from '../lib/heroSelector'
+import { prepareGalleryImages } from '../lib/galleryFilter'
 
 // Parse ratios like "16/9", "16:9", or "16 / 9" into numeric + css-ready string
 const parseAspectRatio = (value) => {
@@ -46,29 +49,59 @@ const WorkDetail = () => {
 
   const project = allCases.find((s) => s.slug === slug)
   const [videoRatios, setVideoRatios] = useState({})
+  const [heroSelection, setHeroSelection] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   // Reset cached ratios when slug changes to avoid index carry-over between cases
   useEffect(() => {
     setVideoRatios({})
   }, [slug])
 
-  // Build a deduped hero strip. Prefer an explicit hero list if provided; otherwise use album-only; fall back to image when no album exists.
-  const heroSource = (project?.hero && project.hero.length > 0)
-    ? project.hero
-    : ((project?.album && project.album.length > 0) ? project.album : [project?.image])
+  // Smart hero selection with aspect ratio matching
+  useEffect(() => {
+    const loadHeroImages = async () => {
+      if (!project) {
+        setLoading(false)
+        return
+      }
+      
+      try {
+        const selection = await selectHeroImages(project, {
+          landscape: { count: 2, ratio: 3/2, tolerance: 0.15 },
+          portrait: { count: 3, ratio: 9/16, tolerance: 0.15 },
+        })
+        
+        setHeroSelection(selection)
+      } catch (error) {
+        console.error('Error selecting hero images:', error)
+        // Fallback to simple selection
+        const heroSource = (project?.hero && project.hero.length > 0)
+          ? project.hero
+          : ((project?.album && project.album.length > 0) ? project.album : [project?.image])
+        
+        const fallbackImages = Array.from(new Set(heroSource.filter(Boolean))).slice(0, 5)
+        setHeroSelection({
+          landscape: fallbackImages.slice(0, 2),
+          portrait: fallbackImages.slice(2, 5),
+          allSelected: fallbackImages,
+          fallbackUsed: true
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadHeroImages()
+  }, [project])
 
-  const heroImages = Array.from(new Set(heroSource.filter(Boolean))).slice(0, 5)
-
-  // Dedup album and exclude anything already shown in the hero to avoid repeats
-  // Album: include all unique album images (even if used in hero) to ensure full set is visible
-  const albumImages = Array.from(new Set(project?.album || []))
-    .filter(Boolean)
-    .map((src, index) => ({
-      id: index + 1,
-      src,
-      title: `${project?.title ?? 'Album'}`,
-      alt: `${project?.title ?? 'Album'} photo ${index + 1}`,
-    }))
+  // Deduplicated gallery images
+  const albumImages = heroSelection
+    ? prepareGalleryImages(
+        project?.album || [],
+        heroSelection.allSelected,
+        project
+      )
+    : []
 
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
@@ -153,28 +186,45 @@ const WorkDetail = () => {
         </h1>
 
         {isEvent ? (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {heroImages.slice(0, 2).map((src, idx) => (
-                <CachedImage
-                  key={`hero-top-${idx}`}
-                  src={src}
-                  alt={`${project.title} hero ${idx + 1}`}
-                  className="w-full aspect-[3/2] max-h-[400px] object-cover rounded-lg"
-                />
-              ))}
+          loading ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[1, 2].map((i) => (
+                  <div key={`skeleton-landscape-${i}`} className="w-full aspect-[3/2] max-h-[400px] bg-surface/50 rounded-lg animate-pulse" />
+                ))}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={`skeleton-portrait-${i}`} className="w-full aspect-[9/16] max-h-[400px] bg-surface/50 rounded-lg animate-pulse" />
+                ))}
+              </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {heroImages.slice(2, 5).map((src, idx) => (
-                <CachedImage
-                  key={`hero-bottom-${idx}`}
-                  src={src}
-                  alt={`${project.title} highlight ${idx + 3}`}
-                  className="w-full aspect-[9/16] max-h-[400px] object-cover rounded-lg"
-                />
-              ))}
+          ) : heroSelection ? (
+            <div className="space-y-4">
+              {/* Top row: 2 landscape images (3:2 ratio) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {heroSelection.landscape.slice(0, 2).map((src, idx) => (
+                  <CachedImage
+                    key={`hero-landscape-${idx}`}
+                    src={src}
+                    alt={`${project.title} hero ${idx + 1}`}
+                    className="w-full aspect-[3/2] max-h-[400px] object-cover rounded-lg"
+                  />
+                ))}
+              </div>
+              {/* Bottom row: 3 portrait images (9:16 ratio) */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {heroSelection.portrait.slice(0, 3).map((src, idx) => (
+                  <CachedImage
+                    key={`hero-portrait-${idx}`}
+                    src={src}
+                    alt={`${project.title} highlight ${idx + 3}`}
+                    className="w-full aspect-[9/16] max-h-[400px] object-cover rounded-lg"
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          ) : null
         ) : (
           project.image && (
             <div className="mb-10">
@@ -187,12 +237,20 @@ const WorkDetail = () => {
           )
         )}
 
-        {project.hasVideo && (project.video || (project.videos && project.videos.length > 0)) && (
+        {project.hasVideo && (project.youtubeUrl || project.video || (project.videos && project.videos.length > 0)) && (
           <div className="mt-16">
             <h2 className="text-3xl md:text-4xl text-center mb-8 text-textSecondary font-medium tracking-wide">
               Video
             </h2>
-            {project.videos && project.videos.length > 0 ? (
+            
+            {/* YouTube Embed - Priority over regular videos */}
+            {project.youtubeUrl ? (
+              <YouTubeEmbed
+                url={project.youtubeUrl}
+                title={`${project.title} - Video`}
+                aspectRatio={project.aspectRatio}
+              />
+            ) : project.videos && project.videos.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-w-4xl mx-auto place-items-center">
                 {project.videos.map((item, idx) => {
                   const src = typeof item === 'string' ? item : item.src
@@ -267,7 +325,7 @@ const WorkDetail = () => {
               </div>
             )}
             {project.driveLinks?.video && (
-              <div className="flex justify-center">
+              <div className="flex justify-center mt-6">
                 <DownloadButton
                   label="Download Video"
                   driveLink={project.driveLinks.video}

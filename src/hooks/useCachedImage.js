@@ -18,9 +18,19 @@ export const useCachedImage = (src) => {
 			return () => {}
 		}
 
+		// Skip Cache API for cross-origin images to avoid CORS preflight failures
+		const url = (() => {
+			try {
+				return new URL(src, window.location.href)
+			} catch (_) {
+				return null
+			}
+		})()
+		const isCrossOrigin = url && url.origin !== window.location.origin
+
 		const load = async () => {
-			// Fall back to direct src if Cache API is unavailable
-			if (typeof caches === 'undefined') {
+			// Fall back to direct src if Cache API is unavailable or cross-origin
+			if (typeof caches === 'undefined' || isCrossOrigin) {
 				setCachedSrc(src)
 				setLoading(false)
 				return

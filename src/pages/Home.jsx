@@ -1,3 +1,4 @@
+import SEO from '../components/ui/SEO'
 import Hero from '../components/sections/Hero'
 import ServicesPreview from '../components/sections/ServicesPreview'
 import CaseStudiesPreview from '../components/sections/CaseStudiesPreview'
@@ -9,6 +10,11 @@ import { pricingPlans } from '../data/content'
 const Home = () => {
   return (
     <>
+      <SEO
+        title="Ekdrishti Studios - Premium Digital Marketing & Event Photography"
+        description="Transform your brand with strategic digital marketing, stunning event photography, and professional production services. Capturing moments that matter."
+        keywords="digital marketing, event photography, brand strategy, wedding photography, corporate events, production services"
+      />
       <Hero />
       <ServicesPreview />
 

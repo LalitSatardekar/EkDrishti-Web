@@ -1,24 +1,18 @@
+import MindMapHero from '../../components/hero/MindMapHero'
+import ProductionPreview from '../../components/services/ProductionPreview'
+
 const Production = () => {
   return (
-    <div className="py-24">
-      <div className="section-container">
-        {/* Hero */}
-        <div className="text-center mb-20">
-          <span className="px-4 py-2 bg-amber-500/10 border border-amber-500/30 rounded-full text-amber-400 text-sm font-medium">
-            Production
-          </span>
-          <h1 className="mt-6 text-5xl md:text-6xl font-heading font-bold text-textPrimary mb-6">
-            Visuals That
-            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-accent via-accentLight to-amber-400">
-              Tell Your Story
-            </span>
-          </h1>
-          <p className="text-xl text-textSecondary max-w-3xl mx-auto">
-            High-end photo and video production that captures moments, elevates brands, and leaves a lasting impression.
-          </p>
-        </div>
+    <div className="bg-primary">
+      {/* Mind Map Hero */}
+      <MindMapHero serviceType="production" />
 
-        {/* Services Grid */}
+      {/* Services Preview Section */}
+      <ProductionPreview />
+
+      {/* Services Grid */}
+      <div className="section-container py-24">
+
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
           {[
             { icon: '🎥', title: 'Video Production', desc: 'Brand films, commercials, reels, and corporate videos crafted with cinematic precision.' },

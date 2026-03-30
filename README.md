@@ -135,6 +135,30 @@ npm run build
 npm run preview
 ```
 
+### Optimize Local Assets
+
+Generate compressed copies that mirror the source folder structure into fully separate trees — `public/assets/original/...` for lightly optimized originals and `public/assets/webp/...` for the compressed versions — while leaving `src/assets` untouched:
+
+```bash
+npm run assets:compress
+```
+
+This script uses `sharp` to resize to a 2000px max width, rotate based on EXIF data, and only reprocesses files whose sources changed. Run it before uploading assets to S3 or pushing new media.
+
+#### Pointing assets to S3 / CDN
+
+1. Upload the contents of `public/assets/original` and `public/assets/webp` to your bucket/CDN, preserving the folder hierarchy.
+2. Add the following to your `.env` (values can be any HTTPS root):
+
+  ```bash
+  VITE_ASSET_ORIGINAL_BASE_URL="https://cdn.example.com/assets/original"
+  VITE_ASSET_WEBP_BASE_URL="https://cdn.example.com/assets/webp"
+  # Optional: set to "original" if you cannot serve WebP yet
+  VITE_ASSET_DEFAULT_VARIANT="webp"
+  ```
+
+3. Restart `npm run dev`. The `asset()` helper used across [src/data/cases.js](src/data/cases.js#L1-L120) will now emit fully-qualified S3 URLs (WebP for images, originals for everything else).
+
 ## 🔌 API Integration
 
 The contact form uses a mock API (`src/api/contactApi.js`) that simulates async calls. To integrate with your backend:

@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import DOMPurify from 'dompurify'
+import SEO from '../components/ui/SEO'
 import { submitContactForm } from '../api/contactApi'
 
 const Contact = () => {
@@ -14,9 +16,15 @@ const Contact = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleChange = (e) => {
+    // Sanitize input to prevent XSS attacks
+    const sanitizedValue = DOMPurify.sanitize(e.target.value, {
+      ALLOWED_TAGS: [], // Strip all HTML tags
+      ALLOWED_ATTR: []
+    })
+    
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [e.target.name]: sanitizedValue,
     })
   }
 
@@ -44,10 +52,16 @@ const Contact = () => {
   }
 
   return (
-    <div className="py-16 md:py-24">
-      <div className="section-container">
-        {/* Header */}
-          <div className="text-center mb-10 md:mb-16">
+    <>
+      <SEO
+        title="Contact Us"
+        description="Get in touch with Ekdrishti Studios. Let's discuss your next project and bring your vision to life."
+        keywords="contact ekdrishti, get in touch, project inquiry, digital marketing contact, event photography booking"
+      />
+      <div className="py-16 md:py-24">
+        <div className="section-container">
+          {/* Header */}
+            <div className="text-center mb-10 md:mb-16">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-heading font-bold text-textPrimary mb-4 md:mb-6">
             Let's Work Together
           </h1>
@@ -171,8 +185,15 @@ const Contact = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                aria-busy={isSubmitting}
               >
+                {isSubmitting && (
+                  <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                )}
                 {isSubmitting ? 'Sending...' : 'Send Message'}
               </button>
             </form>
@@ -190,23 +211,57 @@ const Contact = () => {
             </div>
 
             <div className="space-y-6">
-              {[
-                { icon: '📧', label: 'Email', value: '' },
-                { icon: '📱', label: 'Phone', value: '' },
-                { icon: '📍', label: 'Office', value: '' },
-              ].map((item) => (
-                <div key={item.label} className="glass-card p-6 flex items-start space-x-4">
-                  <div className="text-3xl">{item.icon}</div>
-                  <div>
-                    <div className="font-heading font-semibold text-textPrimary mb-1">
-                      {item.label}
-                    </div>
-                    <div className="text-textSecondary">
-                      {item.value}
-                    </div>
+              {/* Email */}
+              <a
+                href="mailto:edadmin@ekdrishti.com"
+                className="glass-card p-6 flex items-start space-x-4 hover:border-amber-500/30 transition-colors duration-200 group"
+              >
+                <div className="text-3xl">📧</div>
+                <div>
+                  <div className="font-heading font-semibold text-textPrimary mb-1">
+                    Email
+                  </div>
+                  <div className="text-textSecondary group-hover:text-amber-400 transition-colors duration-200">
+                    edadmin@ekdrishti.com
                   </div>
                 </div>
-              ))}
+              </a>
+
+              {/* Phone */}
+              <a
+                href="tel:+918169667383"
+                className="glass-card p-6 flex items-start space-x-4 hover:border-amber-500/30 transition-colors duration-200 group"
+              >
+                <div className="text-3xl">📱</div>
+                <div>
+                  <div className="font-heading font-semibold text-textPrimary mb-1">
+                    Phone
+                  </div>
+                  <div className="text-textSecondary group-hover:text-amber-400 transition-colors duration-200">
+                    +91 816 966 7383
+                  </div>
+                </div>
+              </a>
+
+              {/* Address */}
+              <a
+                href="https://maps.google.com/?q=Plot+no+20,+Room+no.+B,+Swaroop+CHS,+Mulund+-+Airoli+Rd,+MHADA+Colony,+Mulund+East,+Mumbai,+Maharashtra+400081"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="glass-card p-6 flex items-start space-x-4 hover:border-amber-500/30 transition-colors duration-200 group"
+              >
+                <div className="text-3xl">📍</div>
+                <div>
+                  <div className="font-heading font-semibold text-textPrimary mb-1">
+                    Office
+                  </div>
+                  <div className="text-textSecondary group-hover:text-amber-400 transition-colors duration-200">
+                    Plot no 20, Room no. B, Swaroop CHS,<br />
+                    Mulund - Airoli Rd, MHADA Colony,<br />
+                    Mulund East, Mumbai, Maharashtra 400081
+                  </div>
+                </div>
+              </a>
             </div>
 
             <div className="glass-card p-8">
@@ -215,16 +270,8 @@ const Contact = () => {
               </h4>
               <div className="space-y-2 text-textSecondary">
                 <div className="flex justify-between">
-                  <span>Monday - Friday</span>
-                  <span className="font-medium text-textPrimary">9:00 AM - 6:00 PM</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Saturday</span>
-                  <span className="font-medium text-textPrimary">10:00 AM - 4:00 PM</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Sunday</span>
-                  <span className="font-medium text-textPrimary">Closed</span>
+                  <span>Monday - Sunday</span>
+                  <span className="font-medium text-textPrimary">8:00 AM - 8:00 PM</span>
                 </div>
               </div>
             </div>
@@ -234,21 +281,31 @@ const Contact = () => {
                 Follow Us
               </h4>
               <div className="flex space-x-4">
-                {['LinkedIn', 'Twitter', 'Instagram', 'Facebook'].map((social) => (
-                  <a
-                    key={social}
-                    href="#"
-                    className="w-12 h-12 bg-surface rounded-lg flex items-center justify-center hover:bg-accent hover:text-white transition-all duration-300"
-                  >
-                    <span className="text-sm font-medium">{social[0]}</span>
-                  </a>
-                ))}
+                <a
+                  href="https://www.linkedin.com/company/ekdrishti-group/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Visit our LinkedIn page"
+                  className="w-12 h-12 bg-surface rounded-lg flex items-center justify-center hover:bg-amber-500 hover:text-black transition-all duration-300"
+                >
+                  <span className="text-sm font-medium">L</span>
+                </a>
+                <a
+                  href="https://www.instagram.com/ekdrishti_official?igsh=MXFibWJhd25jbW5wbw=="
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Visit our Instagram page"
+                  className="w-12 h-12 bg-surface rounded-lg flex items-center justify-center hover:bg-amber-500 hover:text-black transition-all duration-300"
+                >
+                  <span className="text-sm font-medium">I</span>
+                </a>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+    </>
   )
 }
 

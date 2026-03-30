@@ -1,24 +1,17 @@
+import MindMapHero from '../../components/hero/MindMapHero'
+import FamilyEventsPreview from '../../components/services/FamilyEventsPreview'
+
 const FamilyEvents = () => {
   return (
-    <div className="py-24">
-      <div className="section-container">
-        {/* Hero */}
-        <div className="text-center mb-20">
-          <span className="px-4 py-2 bg-amber-500/10 border border-amber-500/30 rounded-full text-amber-400 text-sm font-medium">
-            Family Events
-          </span>
-          <h1 className="mt-6 text-5xl md:text-6xl font-heading font-bold text-textPrimary mb-6">
-            Celebrate Every
-            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-accent via-accentLight to-amber-400">
-              Special Moment
-            </span>
-          </h1>
-          <p className="text-xl text-textSecondary max-w-3xl mx-auto">
-            From intimate gatherings to grand celebrations — we craft unforgettable family events with meticulous attention to every detail.
-          </p>
-        </div>
+    <div className="bg-primary">
+      {/* Mind Map Hero */}
+      <MindMapHero serviceType="events" />
 
-        {/* Services Grid */}
+      {/* Services Preview Section */}
+      <FamilyEventsPreview />
+
+      {/* Services Grid */}
+      <div className="section-container py-24">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
           {[
             { icon: '💍', title: 'Weddings', desc: 'Full-service wedding planning, décor, and coordination tailored to your love story.' },
