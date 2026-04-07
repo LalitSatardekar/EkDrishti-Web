@@ -124,6 +124,7 @@ export const allCases = [
       
     ],
     hasVideo: true,
+    youtubeUrl: 'https://youtu.be/fwI25rAT9MY',
     height: 'h-56',
     results: {
       metric1: 'Memorable moments captured',
@@ -190,6 +191,7 @@ export const allCases = [
       asset('Events', 'Abhijeet & Shirin/Photos', '_DSC3966.JPG'),
     ],
     hasVideo: true,
+    youtubeUrl: 'https://youtu.be/H8aO1bmq03Y',
     video: asset('Events', 'Abhijeet & Shirin/Videos', 'Abhijeet Shirin Highlight.mp4'),
     height: 'h-64',
     results: {
@@ -283,6 +285,7 @@ export const allCases = [
       asset('Events', 'Hiva_s Naming Ceremony/Photos', '_CSP4431.jpg'),
     ],
     hasVideo: true,
+    youtubeUrl: 'https://youtu.be/eLuvzEK4Yak',
     video: asset('Events', 'Hiva_s Naming Ceremony/VID', 'Highlight HIVA.mov'),
     height: 'h-56',
     results: {
@@ -457,6 +460,7 @@ export const allCases = [
 
     ],
     hasVideo: true,
+    youtubeUrl: 'https://youtu.be/Cg_sEj2c_kM',
     video: asset('Events', 'Pankaj & Shamal 25th Anniversary/Video', 'Pankaj & Shamal Post Wedding.mp4'),
     height: 'h-64',
     results: {
@@ -502,6 +506,7 @@ export const allCases = [
       asset('Events', 'Santosh & Pratiksha/Photos', '_EDS6579.jpg'),
     ],
     hasVideo: true,
+    youtubeUrl: 'https://youtu.be/flEj7Tsrz_s',
     video: asset('Events', 'Santosh & Pratiksha/VID', 'Highlight Video Santosh & Pratiksha_1.mp4'),
     height: 'h-60',
     results: {
@@ -540,6 +545,7 @@ export const allCases = [
       asset('Events', 'Shamal_s 50th Bday/Photos', '_TSK7130.JPG'),
     ],
     hasVideo: true,
+    youtubeUrl: 'https://youtu.be/WFK9i0y-OWE',
     video: asset('Events', 'Shamal_s 50th Bday/Video', 'Shamal_s 50th bday Highlight.mov'),
     height: 'h-52',
     results: {

@@ -2,11 +2,11 @@ import { Link } from 'react-router-dom'
 
 const Hero = () => {
   return (
-    <section className="relative min-h-[90vh] overflow-hidden bg-[#0B1120]">
+    <section className="relative sm:min-h-[90vh] overflow-hidden bg-[#0B1120]">
       {/* Subtle Background Effects */}
       <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-[#F2A020]/5" />
       
-      <div className="section-container relative z-10  ">
+      <div className="section-container relative z-10 flex flex-col items-center text-center">
         <div className="max-w-4xl px-8 pt-8">
           {/* Main Headline */}
           <h1 className="mb-8">

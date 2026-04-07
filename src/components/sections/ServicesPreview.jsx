@@ -29,8 +29,8 @@ const servicePreviewData = [
       'SPORTS',
       'BDAYS AND ANNIVERSARY',
       'CONCERTS',
-      'SMALL FAM EVENTS (BABY SHOWER AND NAMING CEREMONY)',
-      'POOJAS'
+      'POOJAS',
+      'SMALL FAM EVENTS (BABY SHOWER AND NAMING CEREMONY)'
     ]
   },
   {

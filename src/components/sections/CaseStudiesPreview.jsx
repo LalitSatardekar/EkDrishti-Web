@@ -17,9 +17,9 @@ const CaseStudyCard = ({ study }) => {
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-90 group-hover:opacity-95 transition-opacity duration-300" />
 
       <div className="absolute inset-0 p-5 md:p-8 flex flex-col justify-end space-y-3">
-        <span className="inline-flex items-center px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-semibold w-fit">
+       {/* <span className="inline-flex items-center px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-semibold w-fit">
           {study.category}
-        </span>
+        </span>*/}
         <div>
           <h3 className="text-xl lg:text-3xl font-heading font-bold text-textPrimary mb-2 lg:mb-3 group-hover:text-amber-400 transition-colors duration-300">
             {study.title}
@@ -58,7 +58,7 @@ const CaseStudiesPreview = () => {
       <div className="section-container">
         <div className="text-center mb-16">
           <span className="text-amber-400 font-medium mb-4 block">Success Stories</span>
-          <h2 className="text-3xl md:text-4xl lg:text-[32px] font-heading font-bold text-textPrimary mb-4 md:mb-6">
+          <h2 className="text-3xl md:text-4xl lg:text-[4rem] font-heading font-bold text-textPrimary mb-4 md:mb-6">
             Dreams we built, together
           </h2>
           <p className="text-xl text-textSecondary max-w-2xl mx-auto">
