@@ -1,23 +1,29 @@
-// Mock API for contact form
-// Replace this with actual axios calls when backend is ready
+/**
+ * contactApi.js
+ * ─────────────────────────────────────────────────────────────
+ * Sends form data to the Vercel Serverless Function at /api/contact.
+ *
+ * TWEAK POINTS:
+ *  • API endpoint  → change '/api/contact' in the axios.post() call below
+ *  • Timeout       → add `{ timeout: 10000 }` as 3rd arg to axios.post()
+ *  • Success msg   → change the fallback string in the resolve block
+ * ─────────────────────────────────────────────────────────────
+ */
+
+import axios from 'axios'
 
 export const submitContactForm = async (formData) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      // Simulate API call
-      if (formData.email && formData.name && formData.message) {
-        resolve({
-          success: true,
-          message: 'Thank you for reaching out! We\'ll get back to you within 24 hours.',
-        })
-      } else {
-        reject({
-          success: false,
-          message: 'Please fill in all required fields.',
-        })
-      }
-    }, 1000)
-  })
+  // TWEAK: endpoint URL — must match the serverless function path in /api/
+  try {
+    const response = await axios.post('/api/contact', formData)
+    return response.data
+  } catch (err) {
+    // Surface the server's error message if available, otherwise use axios default
+    const message =
+      err?.response?.data?.message ||
+      'Something went wrong. Please try again.'
+    throw new Error(message)
+  }
 }
 
 export const subscribeNewsletter = async (email) => {

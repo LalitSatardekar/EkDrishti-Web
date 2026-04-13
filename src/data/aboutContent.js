@@ -60,22 +60,22 @@ export const teamMembers = [
 
 export const leadershipTeam = [
   { 
-    name: 'Leader Name 1', 
-    designation: 'Co-Founder & CEO', 
-    image: 'https://ui-avatars.com/api/?name=Leader+1&size=600&background=FF7A00&color=fff',
+    name: 'Lalit Satardekar', 
+    designation: 'Director & CCO', 
+    image: 'https://assets-ekdrishti.s3.eu-north-1.amazonaws.com/team/directors/lalit.png',
+    bio: 'Creative excellence meets operational efficiency'
+  },
+  { 
+    name: 'Chinmay Shivdikar', 
+    designation: 'Director & CEO', 
+    image: 'https://assets-ekdrishti.s3.eu-north-1.amazonaws.com/team/directors/chinmay.png',
     bio: 'Visionary leader with 15+ years of experience'
   },
   { 
-    name: 'Leader Name 2', 
-    designation: 'Co-Founder & Strategy Head', 
-    image: 'https://ui-avatars.com/api/?name=Leader+2&size=600&background=FF7A00&color=fff',
+    name: 'Shreya Pandav', 
+    designation: 'Director & COO', 
+    image: 'https://assets-ekdrishti.s3.eu-north-1.amazonaws.com/team/directors/shreya.png',
     bio: 'Strategic thinker driving business growth'
-  },
-  { 
-    name: 'Leader Name 3', 
-    designation: 'Creative & Operations Head', 
-    image: 'https://ui-avatars.com/api/?name=Leader+3&size=600&background=FF7A00&color=fff',
-    bio: 'Creative excellence meets operational efficiency'
   },
 ]
 

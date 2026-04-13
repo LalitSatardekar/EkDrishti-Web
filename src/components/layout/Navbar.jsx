@@ -2,17 +2,20 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useScrollPosition } from '../../hooks/useScrollPosition'
 import { cn } from '../../lib/utils'
+import ContactModal from '../ui/ContactModal'
 
 const serviceLinks = [
-  { name: 'Family Events', path: '/services/family-events', icon: '🎉' },
-  { name: 'Digital Marketing', path: '/services/digital-marketing', icon: '📱' },
-  { name: 'Production', path: '/services/production', icon: '🎥' },
+  { name: 'Family Events', path: '/services/family-events'},
+  { name: 'Digital Marketing', path: '/services/digital-marketing' },
+  { name: 'Production', path: '/services/production' },
 ]
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [servicesOpen, setServicesOpen] = useState(false)
   const [mobileServicesOpen, setMobileServicesOpen] = useState(false)
+  // TWEAK: rename button label in the JSX below (search "Let's Talk")
+  const [isContactOpen, setIsContactOpen] = useState(false)
   const scrollPosition = useScrollPosition()
   const location = useLocation()
   const isPreview = new URLSearchParams(location.search).get('preview') === '1'
@@ -36,7 +39,6 @@ const Navbar = () => {
 
   const rightNavLinks = [
     { name: 'Work', path: '/work' },
-    { name: 'Contact', path: '/contact' },
   ]
 
   const isActive = (path) => location.pathname === path
@@ -61,6 +63,12 @@ const Navbar = () => {
     setMobileServicesOpen(false)
   }, [location.pathname])
 
+  const scrollIfSameRoute = (path) => {
+    if (location.pathname === path) {
+      window.scrollTo({ top: 0, behavior: 'auto' })
+    }
+  }
+
   const closeMobileMenu = () => {
     setIsOpen(false)
     setMobileServicesOpen(false)
@@ -69,18 +77,20 @@ const Navbar = () => {
   if (isPreview) return null
 
   return (
+    <>
     <nav
       className="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg border-b border-borderSubtle"
       style={{ backgroundColor: '#151627ee' }}
     >
       <div className="max-w-[1400px] mx-auto px-8">
-        <div className="flex items-center justify-center h-20 relative">
+        <div className="flex items-center justify-center h-20 relative pr-10 lg:pr-0">
           {/* Left Navigation - Desktop */}
           <div className="hidden lg:flex items-center space-x-16 mr-16">
             {leftNavLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
+                onClick={() => scrollIfSameRoute(link.path)}
                 className={cn(
                   'relative font-medium text-base transition-colors duration-200 whitespace-nowrap pb-1',
                   'after:absolute after:bottom-0 after:left-0 after:h-0.5 after:rounded-full after:bg-amber-500 after:transition-all after:duration-300',
@@ -125,6 +135,7 @@ const Navbar = () => {
                     <Link
                       key={s.path}
                       to={s.path}
+                      onClick={() => scrollIfSameRoute(s.path)}
                       className={cn(
                         'flex items-center gap-3 px-6 py-4 text-sm font-medium transition-all duration-200 ease-out',
                         isActive(s.path)
@@ -142,7 +153,7 @@ const Navbar = () => {
           </div>
 
           {/* Center Logo */}
-          <Link to="/" className="flex items-center flex-shrink-0">
+          <Link to="/" onClick={() => scrollIfSameRoute('/')} className="flex items-center flex-shrink-0">
             <img 
               src={!isScrolled ? "/logo.png" : "/logo2.svg"}
               alt="Ekdrishti" 
@@ -154,11 +165,12 @@ const Navbar = () => {
           </Link>
 
           {/* Right Navigation - Desktop */}
-          <div className="hidden lg:flex items-center space-x-16 ml-16">
+          <div className="hidden lg:flex items-center space-x-8 ml-16">
             {rightNavLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
+                onClick={() => scrollIfSameRoute(link.path)}
                 className={cn(
                   'relative font-medium text-base transition-colors duration-200 whitespace-nowrap pb-1',
                   'after:absolute after:bottom-0 after:left-0 after:h-0.5 after:rounded-full after:bg-amber-500 after:transition-all after:duration-300',
@@ -170,6 +182,13 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
+            {/* TWEAK: change button label, padding, or colors below */}
+            <button
+              onClick={() => setIsContactOpen(true)}
+              className="px-5 py-2 rounded-full bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm transition-all duration-200 whitespace-nowrap shadow-sm hover:shadow-amber-500/30 hover:shadow-md"
+            >
+              Contact Us
+            </button>
           </div>
 
           {/* Mobile Menu Button */}
@@ -214,7 +233,7 @@ const Navbar = () => {
                 <Link
                   key={link.path}
                   to={link.path}
-                  onClick={closeMobileMenu}
+                  onClick={() => { scrollIfSameRoute(link.path); closeMobileMenu() }}
                   className={cn(
                     'font-medium px-2 py-2.5 transition-colors duration-200 rounded-lg',
                     isActive(link.path) ? 'text-amber-500' : 'text-textSecondary hover:text-textPrimary'
@@ -247,7 +266,7 @@ const Navbar = () => {
                       <Link
                         key={s.path}
                         to={s.path}
-                        onClick={closeMobileMenu}
+                        onClick={() => { scrollIfSameRoute(s.path); closeMobileMenu() }}
                         className={cn(
                           'flex items-center gap-3 py-3 px-4 text-sm font-medium transition-all duration-200 ease-out rounded-lg',
                           isActive(s.path)
@@ -266,7 +285,7 @@ const Navbar = () => {
                 <Link
                   key={link.path}
                   to={link.path}
-                  onClick={closeMobileMenu}
+                  onClick={() => { scrollIfSameRoute(link.path); closeMobileMenu() }}
                   className={cn(
                     'font-medium px-2 py-2.5 transition-colors duration-200 rounded-lg',
                     isActive(link.path) ? 'text-amber-500' : 'text-textSecondary hover:text-textPrimary'
@@ -275,10 +294,21 @@ const Navbar = () => {
                   {link.name}
                 </Link>
               ))}
+              {/* TWEAK: mobile Contact button label/style below */}
+              <button
+                onClick={() => { closeMobileMenu(); setIsContactOpen(true) }}
+                className="mt-1 w-full text-left px-2 py-2.5 font-semibold text-amber-400 hover:text-amber-300 transition-colors duration-200 rounded-lg"
+              >
+                Contact Us
+              </button>
           </div>
         </div>
       </div>
     </nav>
+
+    {/* Contact Modal — portal renders outside nav, no z-index conflict */}
+    <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
+    </>
   )
 }
 
