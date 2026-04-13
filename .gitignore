@@ -24,3 +24,7 @@ dist-ssr
 *.sw?
 
 .vercel
+
+# Media assets (images/videos — served separately, not tracked in git)
+src/assets/
+public/assets/
