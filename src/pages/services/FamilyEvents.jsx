@@ -10,7 +10,7 @@ const FamilyEvents = () => {
       {/* Services Preview Section */}
       <FamilyEventsPreview />
 
-      {/* Services Grid */}
+      {/* Services Grid 
       <div className="section-container py-24">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
           {[
@@ -28,13 +28,14 @@ const FamilyEvents = () => {
             </div>
           ))}
         </div>
+      */}
 
         {/* CTA */}
         <div className="text-center">
           <a href="/contact" className="btn-primary inline-block">Plan Your Event</a>
         </div>
       </div>
-    </div>
+      
   )
 }
 

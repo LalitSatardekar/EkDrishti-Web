@@ -2,28 +2,28 @@ import { Link } from 'react-router-dom'
 
 const Hero = () => {
   return (
-    <section className="relative sm:min-h-[90vh] overflow-hidden bg-[#0B1120]">
+    <section className="relative overflow-hidden bg-[#0B1120]">
       {/* Subtle Background Effects */}
       <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-[#F2A020]/5" />
       
-      <div className="section-container relative z-10 flex flex-col items-center text-center">
-        <div className="max-w-4xl px-8 pt-8">
+      <div className="section-container relative z-10 flex flex-col items-center text-center mb-5">
+        <div className="max-w-4xl px-4 py-4">
           {/* Main Headline */}
           <h1 className="mb-8">
-            <span className="block text-3xl sm:text-7xl md:text-8xl lg:text-8xl font-heading font-black text-white leading-none mb-2">
+            <span className="block text-4xl sm:text-4xl md:text-7xl lg:text-7xl font-heading font-black text-white leading-none mb-2">
               Dreams Deserve 
             </span>
-            <span className="block text-6xl sm:text-7xl md:text-8xl lg:text-8xl font-heading font-black text-[#F2A020] leading-none">
+            <span className="block text-4xl sm:text-4xl md:text-7xl lg:text-7xl font-heading font-black text-[#F2A020] leading-none">
               Better Execution.
             </span>
           </h1>
 
           {/* Subheadline */}
           <div className="mb-12 space-y-1">
-            <p className="lg:text-2xl md:text-xl text-white font-medium">
+            <p className="sm: text-m lg:text-2xl md:text-xl text-white font-medium">
               Behind every dream is a story waiting to be told.
             </p>
-            <p className="lg:text-l md:text-lg text-white/90 font-normal">
+            <p className="sm: text-m lg:text-l md:text-lg text-white/90 font-normal">
               We help you bring it out with clarity, creativity, and purpose.               </p>
           </div>
         </div>

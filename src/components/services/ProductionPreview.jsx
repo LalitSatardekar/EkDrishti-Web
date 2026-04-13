@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 const productionServiceItems = [
@@ -84,7 +84,22 @@ const ServiceThumbnailStrip = ({ title }) => {
 
 const ProductionPreview = () => {
   const [activeService, setActiveService] = useState(0)
-  const activeContent = productionServiceItems[activeService]
+  const activeContent = productionServiceItems[activeService] ?? productionServiceItems[0]
+  const accordionRefs = useRef([])
+
+  const scrollToRef = (index) => {
+    if (window.innerWidth >= 1024) return
+    const el = accordionRefs.current[index]
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const top = rect.top + window.pageYOffset - window.innerHeight * 0.25
+    window.scrollTo({ top, behavior: 'smooth' })
+  }
+
+  const handleAccordionToggle = (index) => {
+    const next = activeService === index ? -1 : index
+    setActiveService(next)
+  }
 
   return (
     <section className="relative overflow-hidden bg-[#0B1120] py-16 md:py-20">
@@ -109,7 +124,66 @@ const ProductionPreview = () => {
           </h2>
         </div>
 
-        <div className="grid lg:grid-cols-[340px_1fr] gap-8 lg:gap-10 items-start">
+        {/* Mobile Accordion */}
+        <div className="lg:hidden space-y-4 mb-0">
+          {productionServiceItems.map((item, index) => (
+            <div
+              key={item.button}
+              ref={(el) => (accordionRefs.current[index] = el)}
+              className={`border rounded-2xl overflow-hidden transition-all duration-300 ${
+                activeService === index
+                  ? 'border-[#F2A020] shadow-[0_0_24px_rgba(242,160,32,0.25)]'
+                  : 'border-white/10 hover:border-[#F2A020]/50 hover:shadow-[0_0_24px_rgba(242,160,32,0.15)]'
+              }`}
+            >
+              <button
+                onClick={() => handleAccordionToggle(index)}
+                className="w-full px-5 py-4 flex items-center justify-between bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm hover:from-white/15 hover:to-white/8 text-left transition-colors duration-200"
+                aria-expanded={activeService === index}
+              >
+                <span
+                  className={`font-heading font-semibold text-base sm:text-lg transition-colors duration-200 ${
+                    activeService === index ? 'text-[#F2A020]' : 'text-white'
+                  }`}
+                >
+                  {toSentenceCase(item.button)}
+                </span>
+                <svg
+                  className={`w-6 h-6 transition-all duration-300 flex-shrink-0 ml-4 ${
+                    activeService === index ? 'text-[#F2A020] rotate-180' : 'text-[#F2A020]'
+                  }`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <AnimatePresence initial={false}>
+                {activeService === index && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    className="overflow-hidden"
+                    onAnimationComplete={() => { if (activeService === index) scrollToRef(index) }}
+                  >
+                    <div className="px-5 py-6 bg-[#0B1120]/40 border-t border-white/10">
+                      <p className="text-white/80 text-sm sm:text-base leading-relaxed">
+                        {item.body}
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop Layout */}
+        <div className="hidden lg:grid lg:grid-cols-[340px_1fr] gap-8 lg:gap-10 items-start">
           <div className="flex flex-col gap-3 max-h-[600px] overflow-y-auto hide-scrollbar pr-1">
             {productionServiceItems.map((item, index) => (
               <button

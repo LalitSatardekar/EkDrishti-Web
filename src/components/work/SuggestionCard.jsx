@@ -25,16 +25,16 @@ const SuggestionCard = ({   project }) => {
         <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/60 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
         
         <div className="absolute inset-0 p-6 flex flex-col justify-end">
-          <span className="inline-block px-3 py-1 bg-accent/10 text-accentLight text-xs font-medium rounded-full mb-3 w-fit">
+         {/* <span className="inline-block px-3 py-1 bg-accent/10 text-[rgb(242,160,32)] text-xs font-medium rounded-full mb-3 w-fit">
             {project.category}
-          </span>
-          <h3 className="text-2xl font-heading font-bold text-textPrimary mb-2 group-hover:text-accent transition-colors duration-300">
+          </span> */}
+          <h3 className="text-2xl font-heading font-bold text-[rgb(231,231,231)] mb-2 group-hover:text-[rgb(242,160,32)] transition-colors duration-300">
             {project.title}
           </h3>
-          <p className="text-textSecondary text-sm line-clamp-2 mb-4">
+        {/*  <p className="text-textSecondary text-sm line-clamp-2 mb-4">
             {project.description}
-          </p>
-          <div className="flex items-center text-accent text-sm font-medium">
+          </p>  */}
+          <div className="flex items-center text-[rgb(242,160,32)] text-sm font-medium">
             View Project
             <svg
               className="w-4 h-4 ml-2 group-hover:translate-x-2 transition-transform duration-300"

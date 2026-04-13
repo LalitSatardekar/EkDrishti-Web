@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 const servicePreviewData = [
@@ -161,7 +161,22 @@ const ItemGroups = ({ items, showDividers = true, formatItem }) => {
 
 const ServicesPreview = () => {
   const [activeService, setActiveService] = useState(0)
-  const currentService = servicePreviewData[activeService]
+  const currentService = servicePreviewData[activeService] ?? servicePreviewData[0]
+  const accordionRefs = useRef([])
+
+  const scrollToRef = (index) => {
+    if (window.innerWidth >= 1024) return
+    const el = accordionRefs.current[index]
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const top = rect.top + window.pageYOffset - window.innerHeight * 0.25
+    window.scrollTo({ top, behavior: 'smooth' })
+  }
+
+  const handleAccordionToggle = (index) => {
+    const next = activeService === index ? -1 : index
+    setActiveService(next)
+  }
 
   return (
     <section className="relative  overflow-hidden bg-[#0B1120]">
@@ -174,7 +189,7 @@ const ServicesPreview = () => {
       <div className="section-container relative z-10 max-w-[1440px]">
         {/* Header */}
         <div className="text-center mb-12 md:mb-16">
-          <h2 className="text-[28px] sm:text-3xl md:text-[34px] lg:text-[38px] font-heading font-black text-white leading-tight">
+          <h2 className="text-[28px] sm:text-3xl md:text-[34px] lg:text-[32px] font-heading font-black text-white leading-tight">
             What We Do
           </h2>
           <motion.p
@@ -188,26 +203,28 @@ const ServicesPreview = () => {
         </div>
       </div>
         {/* Services Tabs Layout - Desktop */}
-        <div className="hidden lg:grid lg:grid-cols-[290px_1fr] gap-6 lg:gap-8 mb-16 section-container max-w-[1440px]">
-          {/* Left Side - Service Buttons */}
-          <div className="flex flex-col gap-3">
+        <div className="hidden lg:flex lg:flex-col gap-2 mb-16 section-container max-w-[1440px]">
+          {/* Top - Service Tabs (equal width, flush with panel) */}
+          <div className="grid gap-[20px] mb-5" style={{ gridTemplateColumns: `repeat(${servicePreviewData.length}, 1fr)` }}>
             {servicePreviewData.map((service, index) => (
-              <button
+              <motion.button
                 key={service.id}
                 onClick={() => setActiveService(index)}
-                className={`w-full px-6 py-4 rounded-xl text-left transition-all duration-300 ease-out transform-gpu hover:scale-[1.02] ${
+                whileTap={{ scale: 0.97 }}
+                transition={{ duration: 0.15 }}
+                className={`px-6 py-5 text-center transition-all duration-300 ease-out rounded-3xl ${
                   activeService === index
-                    ? 'bg-[#F2A020] text-[#0B1120] shadow-md shadow-[#F2A020]/35'
-                    : 'bg-[#F2A020]/15 text-white/95 hover:bg-[#F2A020]/25 hover:shadow-md hover:shadow-[#F2A020]/20'
+                    ? 'bg-[#F2A020] text-[#0B1120]'
+                    : 'bg-[#F2A020]/15 text-white/95 hover:bg-[#F2A020]/25'
                 }`}
               >
                 <span className="text-base font-semibold leading-tight tracking-wide">{toSentenceCase(service.buttonTitle)}</span>
-              </button>
+              </motion.button>
             ))}
           </div>
 
-          {/* Right Side - Content Area */}
-          <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-3xl p-8 md:p-10 lg:p-12 border border-white/10 min-h-[520px] overflow-hidden">
+          {/* Bottom - Content Area */}
+          <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-3xl p-8 md:p-10 lg:p-12 border border-white/10 overflow-hidden">
             <div className="pointer-events-none absolute inset-0">
               <div
                 className="absolute inset-0"
@@ -253,46 +270,51 @@ const ServicesPreview = () => {
               <div className="absolute right-10 bottom-12 h-px w-24 bg-gradient-to-r from-transparent via-[#F2A020]/55 to-transparent" />
             </div>
             <ServiceCornerIcon title={currentService.panelTitle} />
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentService.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.3, ease: 'easeInOut' }}
-                className="relative z-10 space-y-8"
-              >
-                <h3 className="text-lg lg:text-xl font-heading font-bold text-white">
-                  {toSentenceCase(currentService.panelTitle)}
-                </h3>
+            <div className="grid">
+              {servicePreviewData.map((service, index) => (
+                <motion.div
+                  key={service.id}
+                  animate={{ opacity: activeService === index ? 1 : 0 }}
+                  transition={{ duration: 0.35, ease: 'easeInOut' }}
+                  style={{
+                    gridArea: '1 / 1',
+                    pointerEvents: activeService === index ? 'auto' : 'none',
+                  }}
+                  aria-hidden={activeService !== index}
+                  className="space-y-8"
+                >
+                  <h3 className="text-lg lg:text-xl font-heading font-bold text-white">
+                    {toSentenceCase(service.panelTitle)}
+                  </h3>
 
-                <div className="grid md:grid-cols-[1fr_auto_1fr] gap-6 lg:gap-8 items-start">
-                  <div className="space-y-5">
-                    <h4 className="text-[#F2A020] text-base font-medium tracking-wide">
-                      {toSentenceCase(currentService.leftColumnTitle)}:
-                    </h4>
-                    <ItemGroups
-                      items={currentService.leftItems}
-                      showDividers={false}
-                      formatItem={toSentenceCase}
-                    />
+                  <div className="grid md:grid-cols-[1fr_auto_1fr] gap-6 lg:gap-8 items-start">
+                    <div className="space-y-5">
+                      <h4 className="text-[#F2A020] text-base font-medium tracking-wide">
+                        {toSentenceCase(service.leftColumnTitle)}:
+                      </h4>
+                      <ItemGroups
+                        items={service.leftItems}
+                        showDividers={false}
+                        formatItem={toSentenceCase}
+                      />
+                    </div>
+
+                    <div className="hidden md:block w-px self-stretch bg-white/15" />
+
+                    <div className="space-y-5">
+                      <h4 className="text-[#F2A020] text-base font-medium tracking-wide">
+                        {toSentenceCase(service.rightColumnTitle)}:
+                      </h4>
+                      <ItemGroups
+                        items={service.rightItems}
+                        showDividers={false}
+                        formatItem={toSentenceCase}
+                      />
+                    </div>
                   </div>
-
-                  <div className="hidden md:block w-px self-stretch bg-white/15" />
-
-                  <div className="space-y-5">
-                    <h4 className="text-[#F2A020] text-base font-medium tracking-wide">
-                      {toSentenceCase(currentService.rightColumnTitle)}:
-                    </h4>
-                    <ItemGroups
-                      items={currentService.rightItems}
-                      showDividers={false}
-                      formatItem={toSentenceCase}
-                    />
-                  </div>
-                </div>
-              </motion.div>
-            </AnimatePresence>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -302,6 +324,7 @@ const ServicesPreview = () => {
             {servicePreviewData.map((service, index) => (
               <div
                 key={service.id}
+                ref={(el) => (accordionRefs.current[index] = el)}
                 className={`border rounded-2xl overflow-hidden transition-all duration-300 ${
                   activeService === index
                     ? 'border-[#F2A020] shadow-[0_0_24px_rgba(242,160,32,0.25)]'
@@ -309,7 +332,7 @@ const ServicesPreview = () => {
                 }`}
               >
                 <button
-                  onClick={() => setActiveService(activeService === index ? -1 : index)}
+                  onClick={() => handleAccordionToggle(index)}
                   className="w-full px-5 py-4 flex items-center justify-between bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm hover:from-white/15 hover:to-white/8 text-left transition-colors duration-200"
                   aria-expanded={activeService === index}
                   aria-controls={`service-content-${service.id}`}
@@ -334,7 +357,7 @@ const ServicesPreview = () => {
                   </svg>
                 </button>
 
-                <AnimatePresence>
+                <AnimatePresence initial={false}>
                   {activeService === index && (
                     <motion.div
                       id={`service-content-${service.id}`}
@@ -342,6 +365,11 @@ const ServicesPreview = () => {
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.3, ease: 'easeInOut' }}
+                      onAnimationComplete={() => {
+                        if (activeService === index) {
+                          scrollToRef(index)
+                        }
+                      }}
                       className="overflow-hidden"
                     >
                       <div className="px-5 py-6 bg-[#0B1120]/40 border-t border-white/10 space-y-6">

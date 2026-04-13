@@ -21,6 +21,7 @@ const Work = () => {
   const [hoveredItem, setHoveredItem] = useState(null)
   const [hoveredEl,   setHoveredEl]   = useState(null)
   const cleanupRef = useRef(null)
+  const gridRef = useRef(null)
 
   const clear = () => {
     setHoveredItem(null)
@@ -57,6 +58,12 @@ const Work = () => {
   const handleCategoryChange = (name) => {
     setActiveCategory(name)
     setActiveSubFilter('All')
+    setTimeout(() => {
+    if (!gridRef.current) return
+    const NAVBAR_H = 80 // matches h-20 in Navbar.jsx
+    const top = gridRef.current.getBoundingClientRect().top + window.scrollY - NAVBAR_H - 16
+    window.scrollTo({ top, behavior: 'smooth' })
+  }, 50)
   }
 
   // Run through engine: filter by category (and optionally subCategory), sort by priority
@@ -101,20 +108,20 @@ const Work = () => {
               
               {/* Category Name */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <h3 className={`text-textPrimary font-heading font-bold text-3xl tracking-wide transition-all duration-300 ${
+                <p className={`text-textPrimary font-heading font-bold tracking-wide transition-all duration-300 text-2xl lg:text-4xl md:text-2xl ${
                   activeCategory === category.name
                     ? 'drop-shadow-[0_0_15px_rgba(242,160,32,0.8)]'
                     : 'group-hover:drop-shadow-[0_0_15px_rgba(242,160,32,0.8)]'
                 }`}>
                   {category.name}
-                </h3>
+                </p>
               </div>
             </button>
           ))}
         </div>
 
         {/* Divider */}
-        <div className="max-w-[1300px] mx-auto px-4">
+        <div ref={gridRef} className="max-w-[1300px] mx-auto px-4">
           <div className="h-px w-full bg-borderSubtle/60" />
         </div>
 

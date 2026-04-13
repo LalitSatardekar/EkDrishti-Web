@@ -40,13 +40,13 @@ const Testimonials = () => (
   <section className="py-16 md:py-24">
     <div className="section-container">
       <div className="text-center mb-12">
-        <span className="inline-block px-4 py-1.5 mb-4 text-xs font-semibold tracking-widest uppercase rounded-full bg-accent/10 border border-accent/20 text-accentLight">
+       {/* <span className="inline-block px-4 py-1.5 mb-4 text-xs font-semibold tracking-widest uppercase rounded-full bg-accent/10 border border-accent/20 text-accentLight">
           Client Stories
-        </span>
+        </span> */}
         <h2 className="text-3xl md:text-4xl font-heading font-bold text-textPrimary mb-4">
-          Trusted by{' '}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-accentLight">
-            Industry Leaders
+          {' '}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-amber-400">
+            Testimonials
           </span>
         </h2>
         <p className="text-textSecondary max-w-xl mx-auto">

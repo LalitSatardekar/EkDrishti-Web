@@ -117,8 +117,43 @@ const MindMapHero = ({ serviceType = 'events' }) => {
         }}
       />
 
-      {/* Mind map container */}
-      <div className="relative w-full max-w-7xl mx-auto px-4 py-20">
+      {/* ── Mobile / Tablet layout (< lg) ── */}
+      <div className="lg:hidden relative z-10 w-full flex flex-col items-center justify-center px-6 py-24 sm:py-28 gap-10">
+        {/* Center badge */}
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/25 via-accent/20 to-amber-500/25 rounded-3xl blur-2xl" />
+          <div className="relative px-8 py-5 bg-surface/60 backdrop-blur-xl border-2 border-amber-500/40 rounded-3xl shadow-[0_0_40px_rgba(245,158,11,0.2)]">
+            <h1 className="text-3xl sm:text-4xl font-heading font-bold tracking-wider text-center" style={{ color: '#F2A020' }}>
+              {config.centerText}
+            </h1>
+          </div>
+        </div>
+
+        {/* Service pills grid */}
+        <div className="flex flex-wrap justify-center gap-3 max-w-lg sm:max-w-xl">
+          {config.services.map((service) => (
+            <div key={service.id} className="relative group">
+              <div className="absolute inset-0 bg-amber-500/10 rounded-full blur-lg group-hover:bg-amber-500/20 transition-all duration-300" />
+              <div className="relative px-4 py-2 bg-surface/50 backdrop-blur-md border border-amber-500/30 rounded-full shadow-[0_0_14px_rgba(245,158,11,0.12)] group-hover:border-amber-500/55 transition-all duration-300">
+                <span className="text-xs sm:text-sm font-medium text-textPrimary whitespace-nowrap tracking-wide">
+                  {service.label}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Scroll indicator */}
+        <div className="flex flex-col items-center gap-2 opacity-60">
+          <span className="text-xs text-textSecondary uppercase tracking-widest">Scroll to explore</span>
+          <div className="w-6 h-10 border-2 border-amber-500/30 rounded-full flex items-start justify-center p-2">
+            <div className="w-1.5 h-3 bg-amber-500/50 rounded-full animate-bounce" />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Desktop mind map (lg+) ── */}
+      <div className="hidden lg:block relative w-full max-w-7xl mx-auto px-4 py-20">
         <div className="relative w-full aspect-[16/10] max-h-[80vh]">
           {/* SVG for connecting lines */}
           <svg
@@ -219,7 +254,7 @@ const MindMapHero = ({ serviceType = 'events' }) => {
             <div className="w-1.5 h-3 bg-amber-500/50 rounded-full animate-bounce" />
           </div>
         </div>
-      </div>
+        </div>
 
       {/* Accessibility */}
       <div className="sr-only">
