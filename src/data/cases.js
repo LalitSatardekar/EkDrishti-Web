@@ -285,7 +285,7 @@ export const allCases = [
       asset('Events', 'Hiva_s Naming Ceremony/Photos', '_CSP4431.jpg'),
     ],
     hasVideo: true,
-    youtubeUrl: 'https://youtu.be/eLuvzEK4Yak',
+    youtubeUrl: 'https://youtu.be/HNQ41RByH74',
     video: asset('Events', 'Hiva_s Naming Ceremony/VID', 'Highlight HIVA.mov'),
     height: 'h-56',
     results: {
@@ -634,7 +634,8 @@ export const allCases = [
 
 
     ],
-    hasVideo: false,
+    hasVideo: true,
+    youtubeUrl: 'https://youtu.be/VA_9Wz9AO-4',
     height: 'h-56',
     results: {
       metric1: 'Mom-to-be portraits',
