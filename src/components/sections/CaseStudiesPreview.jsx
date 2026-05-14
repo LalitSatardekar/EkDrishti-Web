@@ -54,7 +54,7 @@ const CaseStudiesPreview = () => {
       <div className="section-container">
         <div className="text-center mb-16">
           <span className="text-amber-400 font-medium mb-4 block">Success Stories</span>
-          <h2 className="text-3xl md:text-4xl lg:text-5 font-heading font-bold text-textPrimary mb-4 md:mb-6">
+          <h2 className="text-3xl md:text-4xl lg:text-5  font-heading font-bold text-textPrimary mb-4 md:mb-6">
             Dreams we built, together
           </h2>
           <p className="text-xl text-textSecondary max-w-2xl mx-auto">

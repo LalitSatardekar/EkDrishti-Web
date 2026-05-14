@@ -1,3 +1,16 @@
+whatsapp , scroll to top btn 
+transform the contact btn to a pop up contact form 
+services preview - gutter space inc -20px 
+space between the btns and the content -20-24px
+  home screen - remove from min-vh
+  
+
+
+
+
+
+
+
 to implement:(proiority:high)**
 
 
@@ -134,3 +147,26 @@ theme: {
 className="bg-brand-orange text-brand-navy"
 ```
 
+
+
+
+
+setActiveService(next)
+    if (next !== -1) {
+      setTimeout(() => {
+        accordionRefs.current[next]?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 50)
+    }
+  }
+
+
+
+  line 185 
+  <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, ease: 'easeInOut' }}
+            className="text-base font-normal italic text-white/75 mt-2 mb-2"
+          >
+            To achieve your dream.
+          </motion.p>

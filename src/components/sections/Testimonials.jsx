@@ -5,7 +5,7 @@ export const TestimonialCard = ({ t, featured = false }) => (
     className={`glass-card p-6 md:p-8 flex flex-col gap-5 md:gap-6 rounded-2xl border transition-all duration-300 ${
       featured
         ? 'border-accent/30 shadow-[0_0_32px_rgba(37,99,235,0.15)]'
-        : 'border-borderSubtle hover:border-accent/20 hover:shadow-[0_0_18px_rgba(37,99,235,0.08)]'
+        : 'border-borderSubtle hover:border-amber-500/20 hover:shadow-[0_0_28px_rgba(245,158,11,0.10)]'
     }`}
   >
     {/* Stars */}

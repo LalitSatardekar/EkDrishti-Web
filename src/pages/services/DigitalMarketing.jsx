@@ -84,7 +84,7 @@ const DigitalMarketing = () => (
 
     <MindMapHero serviceType="digitalMarketing" />
     <DigitalMarketingPreview />
-    <ServicesGrid />
+   {/*} <ServicesGrid /> */}
     <StorySection />
     <ReelsSection />
     <StaticsSection />
