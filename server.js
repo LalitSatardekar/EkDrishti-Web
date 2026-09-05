@@ -124,7 +124,7 @@ app.use((req, res, next) => {
 })
 
 const PORT = process.env.PORT || 3000
-app.listen(PORT, async () => {
+app.listen(PORT, () => {
   console.log(`🚀 EkDrishti server running on port ${PORT} (process.env.PORT = ${process.env.PORT || 'default 3000'})`)
-  await bootstrapAdmin()
+  bootstrapAdmin().catch(e => console.warn('Bootstrap admin warning:', e.message))
 })
