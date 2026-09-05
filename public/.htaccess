@@ -2,15 +2,24 @@ DirectoryIndex dist/index.html index.html index.php
 Options -Indexes +FollowSymLinks
 RewriteEngine On
 
-# 1. Serve existing static files in public_html, dist/, or public/
+# 1. Direct /assets/* requests to dist/assets/*
+RewriteCond %{DOCUMENT_ROOT}/dist/assets/$1 -f
+RewriteRule ^assets/(.*)$ dist/assets/$1 [L]
+
+# 2. Direct any dist static asset files
+RewriteCond %{DOCUMENT_ROOT}/dist/$1 -f
+RewriteRule ^(.*)$ dist/$1 [L]
+
+# 3. Direct existing static files in public_html
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
 
-# 2. Route root request directly to dist/index.html
+# 4. Route root request directly to dist/index.html
 RewriteRule ^$ dist/index.html [L]
 
-# 3. SPA Fallback for all other routes to dist/index.html
+# 5. SPA Fallback for all other routes to dist/index.html
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ dist/index.html [L]
+
 
