@@ -89,6 +89,6 @@ export default async function handler(req, res) {
     })
   } catch (error) {
     console.error('Login API error:', error)
-    return res.status(500).json({ success: false, message: 'An internal server error occurred' })
+    return res.status(500).json({ success: false, message: 'Database error: ' + error.message })
   }
 }

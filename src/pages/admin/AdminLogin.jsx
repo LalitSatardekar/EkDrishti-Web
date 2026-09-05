@@ -22,7 +22,14 @@ export default function AdminLogin() {
         body: JSON.stringify({ username, password })
       })
 
-      const data = await res.json()
+      let data
+      const contentType = res.headers.get('content-type') || ''
+      if (contentType.includes('application/json')) {
+        data = await res.json()
+      } else {
+        const rawText = await res.text()
+        throw new Error(`Server returned HTTP ${res.status} (${res.statusText || 'Error'}). Check backend logs.`)
+      }
 
       if (!res.ok || !data.success) {
         throw new Error(data.message || 'Login failed')
