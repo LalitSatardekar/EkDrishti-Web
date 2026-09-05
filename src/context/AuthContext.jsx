@@ -24,22 +24,32 @@ export const AuthContextProvider = ({ children }) => {
       }
 
       try {
-        const response = await fetch('/api/v1/auth/me', {
+        const response = await fetch('/v1/auth/me', {
           headers: {
             Authorization: `Bearer ${token}`
           }
         })
 
         if (!response.ok) {
-          throw new Error('Session expired')
+          if (response.status === 401 || response.status === 403) {
+            throw new Error('Session expired')
+          }
+          console.warn('Backend verification returned non-401 status:', response.status)
+          return
         }
 
         const data = await response.json()
-        setUser(data.user)
-        localStorage.setItem('user', JSON.stringify(data.user))
+        if (data && data.user) {
+          setUser(data.user)
+          localStorage.setItem('user', JSON.stringify(data.user))
+        }
       } catch (err) {
-        console.warn('Session verification failed, logging out:', err)
-        logout()
+        if (err.message === 'Session expired') {
+          console.warn('Session expired, logging out.')
+          logout()
+        } else {
+          console.warn('Session verification non-fatal error:', err)
+        }
       } finally {
         setLoading(false)
       }

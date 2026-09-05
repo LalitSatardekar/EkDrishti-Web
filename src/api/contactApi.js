@@ -15,7 +15,7 @@ export const submitContactForm = async (formData) => {
     ...attribution
   }
 
-  const response = await fetch('/api/v1/contact', {
+  const response = await fetch('/v1/contact', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify(payload),

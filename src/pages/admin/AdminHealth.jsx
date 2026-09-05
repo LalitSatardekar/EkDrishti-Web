@@ -19,7 +19,7 @@ export default function AdminHealth() {
     setChecking(true)
     const startTime = performance.now()
     try {
-      const res = await fetch('/api/v1/auth/me', {
+      const res = await fetch('/v1/auth/me', {
         headers: { Authorization: `Bearer ${token}` }
       })
       const endTime = performance.now()
@@ -53,7 +53,7 @@ export default function AdminHealth() {
     setRunningMaintenance(true)
     setMaintenanceResult(null)
     try {
-      const res = await fetch('/api/v1/maintenance', {
+      const res = await fetch('/v1/maintenance', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`

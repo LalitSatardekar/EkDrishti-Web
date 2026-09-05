@@ -23,7 +23,7 @@ export default function AdminCasesListing() {
     setLoading(true)
     setError('')
     try {
-      const res = await fetch('/api/v1/cases', {
+      const res = await fetch('/v1/cases', {
         headers: { Authorization: `Bearer ${token}` }
       })
       const data = await res.json()
@@ -42,7 +42,7 @@ export default function AdminCasesListing() {
   const handleToggleStatus = async (item) => {
     const nextStatus = item.status === 'published' ? 'draft' : 'published'
     try {
-      const res = await fetch(`/api/v1/cases?id=${item._id}`, {
+      const res = await fetch(`/v1/cases?id=${item._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -64,7 +64,7 @@ export default function AdminCasesListing() {
   const handleToggleFeatured = async (item) => {
     const nextFeatured = !item.featured
     try {
-      const res = await fetch(`/api/v1/cases?id=${item._id}`, {
+      const res = await fetch(`/v1/cases?id=${item._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -89,7 +89,7 @@ export default function AdminCasesListing() {
     }
 
     try {
-      const res = await fetch(`/api/v1/cases?id=${id}`, {
+      const res = await fetch(`/v1/cases?id=${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -120,7 +120,7 @@ export default function AdminCasesListing() {
         updated_at: undefined
       }
 
-      const res = await fetch('/api/v1/cases', {
+      const res = await fetch('/v1/cases', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -146,7 +146,7 @@ export default function AdminCasesListing() {
     setCreateError('')
 
     try {
-      const res = await fetch('/api/v1/cases', {
+      const res = await fetch('/v1/cases', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -113,7 +113,7 @@ export default function AdminCaseEditor() {
     reader.onload = async (event) => {
       try {
         const base64 = event.target.result
-        const res = await fetch('/api/v1/upload', {
+        const res = await fetch('/v1/upload', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -149,7 +149,7 @@ export default function AdminCaseEditor() {
     setLoading(true)
     setError('')
     try {
-      const res = await fetch(`/api/v1/cases?id=${id}`, {
+      const res = await fetch(`/v1/cases?id=${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       const data = await res.json()
@@ -199,7 +199,7 @@ export default function AdminCaseEditor() {
     }
 
     try {
-      const res = await fetch(`/api/v1/cases?id=${id}`, {
+      const res = await fetch(`/v1/cases?id=${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

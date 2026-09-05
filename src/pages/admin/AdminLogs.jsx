@@ -17,7 +17,7 @@ export default function AdminLogs() {
     setLoading(true)
     setError('')
     try {
-      const res = await fetch('/api/v1/logs', {
+      const res = await fetch('/v1/logs', {
         headers: { Authorization: `Bearer ${token}` }
       })
       const data = await res.json()

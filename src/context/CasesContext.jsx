@@ -39,7 +39,7 @@ export const CasesContextProvider = ({ children }) => {
 
   const refreshCases = async () => {
     try {
-      const response = await fetch('/api/v1/cases')
+      const response = await fetch('/v1/cases')
       if (response.ok) {
         const data = await response.json()
         if (data.success && Array.isArray(data.data) && data.data.length > 0) {

@@ -65,7 +65,7 @@ export default function AdminMedia() {
     reader.onload = async (event) => {
       try {
         const base64 = event.target.result
-        const res = await fetch('/api/v1/upload', {
+        const res = await fetch('/v1/upload', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -73,7 +73,7 @@ const WorkDetail = ({ isPreview: isPreviewProp = false, previewCase = null }) =>
           headers.Authorization = `Bearer ${token}`
         }
 
-        const res = await fetch(`/api/v1/cases?slug=${slug}`, { headers })
+        const res = await fetch(`/v1/cases?slug=${slug}`, { headers })
         if (!res.ok) {
           if (localMatch) {
             setProject(normalizeCase(localMatch))

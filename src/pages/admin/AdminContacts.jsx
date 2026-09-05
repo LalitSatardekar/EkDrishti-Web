@@ -18,7 +18,7 @@ export default function AdminContacts() {
     setLoading(true)
     setError('')
     try {
-      const res = await fetch('/api/v1/contact', {
+      const res = await fetch('/v1/contact', {
         headers: { Authorization: `Bearer ${token}` }
       })
       const data = await res.json()
@@ -40,7 +40,7 @@ export default function AdminContacts() {
 
   const handleUpdateStatus = async (item, nextStatus) => {
     try {
-      const res = await fetch(`/api/v1/contact?id=${item._id}`, {
+      const res = await fetch(`/v1/contact?id=${item._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -69,7 +69,7 @@ export default function AdminContacts() {
     }
 
     try {
-      const res = await fetch(`/api/v1/contact?id=${id}`, {
+      const res = await fetch(`/v1/contact?id=${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       })

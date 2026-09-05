@@ -33,7 +33,7 @@ export default function AdminDashboard() {
       try {
         const headers = { Authorization: `Bearer ${token}` }
         
-        const res = await fetch('/api/v1/dashboard', { headers })
+        const res = await fetch('/v1/dashboard', { headers })
         if (res.status === 401) {
           logout()
           navigate('/ownercontrols_panel/login')

@@ -128,7 +128,7 @@ app.use(express.static(distPath))
 
 // Client-side routing fallback for React Router SPA
 app.use((req, res, next) => {
-  if (req.method !== 'GET' || req.path.startsWith('/api') || req.path.startsWith('/health')) {
+  if (req.method !== 'GET' || req.path.startsWith('/api') || req.path.startsWith('/v1') || req.path.startsWith('/health')) {
     return next()
   }
   const indexPath = path.join(distPath, 'index.html')
