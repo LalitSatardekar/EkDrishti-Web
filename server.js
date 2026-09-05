@@ -32,21 +32,21 @@ try {
 }
 
 // Load database connection & model
-import { connectToDatabase } from './api/lib/db.js'
-import User from './api/models/User.js'
+import { connectToDatabase } from './server_api/lib/db.js'
+import User from './server_api/models/User.js'
 
 // Import API route handlers directly
-import loginHandler from './api/v1/auth/login.js'
-import meHandler from './api/v1/auth/me.js'
-import casesHandler from './api/v1/cases.js'
-import contactHandler from './api/v1/contact.js'
-import dashboardHandler from './api/v1/dashboard.js'
-import healthHandler from './api/v1/health.js'
-import logsHandler from './api/v1/logs.js'
-import maintenanceHandler from './api/v1/maintenance.js'
-import robotsHandler from './api/v1/robots.js'
-import sitemapHandler from './api/v1/sitemap.js'
-import uploadHandler from './api/v1/upload.js'
+import loginHandler from './server_api/v1/auth/login.js'
+import meHandler from './server_api/v1/auth/me.js'
+import casesHandler from './server_api/v1/cases.js'
+import contactHandler from './server_api/v1/contact.js'
+import dashboardHandler from './server_api/v1/dashboard.js'
+import healthHandler from './server_api/v1/health.js'
+import logsHandler from './server_api/v1/logs.js'
+import maintenanceHandler from './server_api/v1/maintenance.js'
+import robotsHandler from './server_api/v1/robots.js'
+import sitemapHandler from './server_api/v1/sitemap.js'
+import uploadHandler from './server_api/v1/upload.js'
 
 const app = express()
 app.use(express.json({ limit: '50mb' }))
