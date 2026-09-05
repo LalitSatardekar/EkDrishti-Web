@@ -1,11 +1,16 @@
-Options -MultiViews
+DirectoryIndex dist/index.html index.html index.php
+Options -Indexes +FollowSymLinks
 RewriteEngine On
 
-# If a static file exists in public/ or dist/, serve it
+# 1. Serve existing static files in public_html, dist/, or public/
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
 
-# For all other requests (including /api/*, /health, and client routes), route to server
+# 2. Route root request directly to dist/index.html
+RewriteRule ^$ dist/index.html [L]
+
+# 3. SPA Fallback for all other routes to dist/index.html
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^ index.html [QSA,L]
+RewriteRule ^(.*)$ dist/index.html [L]
+
