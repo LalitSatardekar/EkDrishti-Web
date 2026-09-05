@@ -7,7 +7,7 @@ import bcrypt from 'bcryptjs'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-// Automatically load .env file if present (supports PM2 and standalone node runs)
+// Server entry point for full-stack deployment on Hostinger and local dev
 try {
   const envPath = path.join(__dirname, '.env')
   if (fs.existsSync(envPath)) {
