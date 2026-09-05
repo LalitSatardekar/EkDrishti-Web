@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { trackCaseClick } from '../../lib/analytics'
 
 const SuggestionCard = ({   project }) => {
   const thumb = project.thumbnail || project.thumbnail169 || project.thumbnail32 || project.image || (project.album && project.album[0])
@@ -6,6 +7,7 @@ const SuggestionCard = ({   project }) => {
   return (
     <Link
       to={`/work/${project.slug}`}
+      onClick={() => trackCaseClick(project, 'case_suggestions')}
       className="group relative block rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-[1.02]"
     >
       <div className="relative h-80 overflow-hidden">

@@ -1,239 +1,208 @@
 /**
  * Hero Selector Utility
- * Smart image selection for hero grid based on aspect ratio requirements
+ * Dynamic image selection for hero grid supporting 1 to 20 images of any orientation.
  */
 
-import { analyzeImagesCached, getBestMatches, matchesRatio } from './imageAnalyzer'
-
 /**
- * Default hero grid requirements for event pages
- */
-const DEFAULT_REQUIREMENTS = {
-  landscape: {
-    count: 2,
-    ratio: 3 / 2,  // 1.5
-    tolerance: 0.15
-  },
-  portrait: {
-    count: 3,
-    ratio: 9 / 16,  // 0.5625
-    tolerance: 0.15
-  }
-}
-
-/**
- * Select hero images based on aspect ratio requirements
+ * Select dynamic hero images (between min and max images)
  * 
  * @param {Object} project - Case study project data
- * @param {Object} requirements - Grid requirements (optional)
- * @returns {Promise<Object>} Selected images categorized by orientation
+ * @param {Object} options - { min: 1, max: 20 }
+ * @returns {Object} Selected images array and deduplication info
  */
-export const selectHeroImages = async (project, requirements = DEFAULT_REQUIREMENTS) => {
+export const selectDynamicHeroImages = (project, options = {}) => {
+  const min = options.min ?? 1
+  const max = options.max ?? 20
+
   if (!project) {
     return {
-      landscape: [],
-      portrait: [],
+      images: [],
       allSelected: [],
-      fallbackUsed: false
+      totalAvailable: 0
     }
   }
-  
-  // Step 1: Determine source images
-  // Priority: explicit hero array > album > fallback to thumbnail
-  let sourceImages = []
-  
-  if (project.hero && project.hero.length > 0) {
-    sourceImages = project.hero
-  } else if (project.album && project.album.length > 0) {
-    sourceImages = project.album
-  } else if (project.image) {
-    sourceImages = [project.image]
+
+  // 1. Check explicit hero images
+  let explicitHero = []
+  if (Array.isArray(project.hero) && project.hero.length > 0) {
+    explicitHero = project.hero.filter(Boolean)
   }
-  
-  // Remove duplicates
-  sourceImages = Array.from(new Set(sourceImages.filter(Boolean)))
-  
-  if (sourceImages.length === 0) {
-    return {
-      landscape: [],
-      portrait: [],
-      allSelected: [],
-      fallbackUsed: false
+
+  // 2. Check album images
+  let albumImages = []
+  if (Array.isArray(project.album) && project.album.length > 0) {
+    albumImages = project.album.filter(Boolean)
+  }
+
+  // 3. Fallback image
+  const coverImage = project.image ? [project.image] : []
+
+  // Combine while preserving order and uniqueness
+  let selected = []
+  const seen = new Set()
+
+  const getImgKey = (img) => {
+    if (!img) return ''
+    if (typeof img === 'string') return img
+    if (typeof img === 'object') return img.url || img.src || JSON.stringify(img)
+    return String(img)
+  }
+
+  const addUnique = (list) => {
+    for (const img of list) {
+      const key = getImgKey(img)
+      if (!key || seen.has(key)) continue
+      seen.add(key)
+      selected.push(img)
+      if (selected.length >= max) break
     }
   }
-  
-  // Step 2: Analyze all source images
-  const analyzed = await analyzeImagesCached(sourceImages, { forceLoad: false })
-  
-  // Step 3: Get best matches for each requirement
-  const landscapeMatches = getBestMatches(
-    analyzed,
-    requirements.landscape.ratio,
-    requirements.landscape.count,
-    requirements.landscape.tolerance
-  )
-  
-  const portraitMatches = getBestMatches(
-    analyzed,
-    requirements.portrait.ratio,
-    requirements.portrait.count,
-    requirements.portrait.tolerance
-  )
-  
-  // Step 4: Track selected images to avoid duplicates
-  const selectedSrcs = new Set([
-    ...landscapeMatches.map(img => img.src),
-    ...portraitMatches.map(img => img.src)
-  ])
-  
-  // Step 5: Fill gaps with fallback strategy if needed
-  let fallbackUsed = false
-  
-  // Fill landscape gaps
-  if (landscapeMatches.length < requirements.landscape.count) {
-    const needed = requirements.landscape.count - landscapeMatches.length
-    const available = analyzed.filter(img => !selectedSrcs.has(img.src))
-    
-    // Prefer square images, then any available
-    const fallbacks = [
-      ...available.filter(img => img.orientation === 'square'),
-      ...available.filter(img => img.orientation !== 'square')
-    ].slice(0, needed)
-    
-    fallbacks.forEach(img => {
-      landscapeMatches.push(img)
-      selectedSrcs.add(img.src)
-    })
-    
-    if (fallbacks.length > 0) fallbackUsed = true
+
+  // First add all explicit hero images (up to max)
+  addUnique(explicitHero)
+
+  // If fewer than min images (or if explicit hero was empty), fill from album and cover
+  if (selected.length < min) {
+    addUnique(albumImages)
+    if (selected.length < min) {
+      addUnique(coverImage)
+    }
   }
-  
-  // Fill portrait gaps
-  if (portraitMatches.length < requirements.portrait.count) {
-    const needed = requirements.portrait.count - portraitMatches.length
-    const available = analyzed.filter(img => !selectedSrcs.has(img.src))
-    
-    // Prefer square images, then any available
-    const fallbacks = [
-      ...available.filter(img => img.orientation === 'square'),
-      ...available.filter(img => img.orientation !== 'square')
-    ].slice(0, needed)
-    
-    fallbacks.forEach(img => {
-      portraitMatches.push(img)
-      selectedSrcs.add(img.src)
-    })
-    
-    if (fallbacks.length > 0) fallbackUsed = true
-  }
-  
-  // Step 6: Return organized results
+
+  // Cap at max (20)
+  const finalImages = selected.slice(0, max)
+
   return {
-    landscape: landscapeMatches.map(img => img.src),
-    portrait: portraitMatches.map(img => img.src),
-    allSelected: Array.from(selectedSrcs),
-    fallbackUsed,
+    images: finalImages,
+    allSelected: finalImages,
+    totalAvailable: seen.size
+  }
+}
+
+/**
+ * Async selector for hero images (backwards-compatible with WorkDetail)
+ */
+export const selectHeroImages = async (project, options = {}) => {
+  const result = selectDynamicHeroImages(project, options)
+  return {
+    landscape: result.images.filter((_, idx) => idx % 2 === 0),
+    portrait: result.images.filter((_, idx) => idx % 2 !== 0),
+    images: result.images,
+    allSelected: result.images,
+    fallbackUsed: false,
     metadata: {
-      totalAnalyzed: analyzed.length,
-      landscapeFound: landscapeMatches.length,
-      portraitFound: portraitMatches.length,
-      landscapeNeeded: requirements.landscape.count,
-      portraitNeeded: requirements.portrait.count
+      totalSelected: result.images.length
     }
   }
 }
 
 /**
- * Validate if project has sufficient images for hero grid
+ * Synchronous selector
  */
-export const validateHeroRequirements = (project, requirements = DEFAULT_REQUIREMENTS) => {
-  const totalNeeded = requirements.landscape.count + requirements.portrait.count
-  
-  let availableCount = 0
-  if (project.hero && project.hero.length > 0) {
-    availableCount = project.hero.length
-  } else if (project.album && project.album.length > 0) {
-    availableCount = project.album.length
-  } else if (project.image) {
-    availableCount = 1
-  }
-  
+export const selectHeroImagesSync = (project, options = {}) => {
+  return selectDynamicHeroImages(project, options)
+}
+
+/**
+ * Validate if project has sufficient images for hero grid (min 1, max 20)
+ */
+export const validateHeroRequirements = (project, { min = 1, max = 20 } = {}) => {
+  const heroCount = Array.isArray(project?.hero) ? project.hero.length : 0
+  const albumCount = Array.isArray(project?.album) ? project.album.length : 0
+  const totalAvailable = Math.max(heroCount, albumCount + (project?.image ? 1 : 0))
+
   return {
-    isValid: availableCount >= totalNeeded,
-    available: availableCount,
-    needed: totalNeeded,
-    deficit: Math.max(0, totalNeeded - availableCount)
+    isValid: totalAvailable >= min,
+    available: totalAvailable,
+    needed: min,
+    deficit: Math.max(0, min - totalAvailable)
   }
 }
 
 /**
- * Get hero images synchronously using quick filename analysis
- * Useful for SSR or when you need immediate results
+ * Shuffle images randomly using Fisher-Yates algorithm
  */
-export const selectHeroImagesSync = (project, requirements = DEFAULT_REQUIREMENTS) => {
-  if (!project) {
-    return {
-      landscape: [],
-      portrait: [],
-      allSelected: []
-    }
+export const shuffleGridImages = (images = []) => {
+  if (!images || images.length <= 1) return [...images]
+  const shuffled = [...images]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
   }
-  
-  // Determine source
-  let sourceImages = []
-  if (project.hero && project.hero.length > 0) {
-    sourceImages = project.hero
-  } else if (project.album && project.album.length > 0) {
-    sourceImages = project.album
-  } else if (project.image) {
-    sourceImages = [project.image]
-  }
-  
-  sourceImages = Array.from(new Set(sourceImages.filter(Boolean)))
-  
-  // Quick categorization by filename
-  const categorized = {
-    landscape: [],
-    portrait: [],
-    unknown: []
-  }
-  
-  sourceImages.forEach(src => {
-    const name = src.toLowerCase()
-    if (name.includes('long') || name.includes('landscape') || name.includes('wide')) {
-      categorized.landscape.push(src)
-    } else if (name.includes('short') || name.includes('portrait') || name.includes('vertical')) {
-      categorized.portrait.push(src)
+  return shuffled
+}
+
+/**
+ * Smart balance: Shuffles and arranges images into relevant placements
+ * by interleaving different orientations and avoiding clumping in masonry columns.
+ */
+export const balanceGridImages = (images = [], orientationMap = {}) => {
+  if (!images || images.length <= 2) return shuffleGridImages(images)
+
+  // 1. Classify images based on known orientation or filename hints
+  const portraits = []
+  const landscapes = []
+  const others = []
+
+  images.forEach((src) => {
+    const label = orientationMap[src] || ''
+    const lower = (src || '').toLowerCase()
+    if (label.includes('Portrait') || lower.includes('short') || lower.includes('portrait')) {
+      portraits.push(src)
+    } else if (label.includes('Landscape') || lower.includes('long') || lower.includes('wide')) {
+      landscapes.push(src)
     } else {
-      categorized.unknown.push(src)
+      others.push(src)
     }
   })
-  
-  // Select required counts
-  const landscape = categorized.landscape.slice(0, requirements.landscape.count)
-  const portrait = categorized.portrait.slice(0, requirements.portrait.count)
-  
-  // Fill gaps from unknown
-  const selectedSet = new Set([...landscape, ...portrait])
-  const remaining = categorized.unknown.filter(src => !selectedSet.has(src))
-  
-  while (landscape.length < requirements.landscape.count && remaining.length > 0) {
-    const img = remaining.shift()
-    landscape.push(img)
-    selectedSet.add(img)
+
+  // If we have distinct portraits and landscapes, interleave them evenly
+  if (portraits.length > 0 && landscapes.length > 0) {
+    const pShuffled = shuffleGridImages(portraits)
+    const lShuffled = shuffleGridImages(landscapes)
+    const oShuffled = shuffleGridImages(others)
+
+    const result = []
+    let pIdx = 0, lIdx = 0, oIdx = 0
+    let pickPortrait = pShuffled.length >= lShuffled.length
+
+    while (pIdx < pShuffled.length || lIdx < lShuffled.length || oIdx < oShuffled.length) {
+      if (pickPortrait && pIdx < pShuffled.length) {
+        result.push(pShuffled[pIdx++])
+      } else if (!pickPortrait && lIdx < lShuffled.length) {
+        result.push(lShuffled[lIdx++])
+      } else if (pIdx < pShuffled.length) {
+        result.push(pShuffled[pIdx++])
+      } else if (lIdx < lShuffled.length) {
+        result.push(lShuffled[lIdx++])
+      } else if (oIdx < oShuffled.length) {
+        result.push(oShuffled[oIdx++])
+      }
+      pickPortrait = !pickPortrait
+    }
+
+    return result
   }
-  
-  while (portrait.length < requirements.portrait.count && remaining.length > 0) {
-    const img = remaining.shift()
-    portrait.push(img)
-    selectedSet.add(img)
+
+  // Fallback: smart rotation/stride shuffle to guarantee a different relevant placement
+  const stride = Math.max(2, Math.floor(images.length / 3))
+  const rearranged = []
+  const used = new Set()
+
+  for (let s = 0; s < stride; s++) {
+    for (let i = s; i < images.length; i += stride) {
+      if (!used.has(i)) {
+        used.add(i)
+        rearranged.push(images[i])
+      }
+    }
   }
-  
-  return {
-    landscape,
-    portrait,
-    allSelected: Array.from(selectedSet)
+
+  // If identical, do random shuffle
+  if (rearranged.every((img, idx) => img === images[idx])) {
+    return shuffleGridImages(images)
   }
+
+  return rearranged
 }
 
-// Made with Bob

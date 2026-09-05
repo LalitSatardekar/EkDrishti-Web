@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import MindMapHero from '../../components/hero/MindMapHero'
@@ -6,8 +6,10 @@ import DigitalMarketingPreview from '../../components/services/DigitalMarketingP
 import StorySection from '../../components/digital/StorySection'
 import ReelsSection from '../../components/digital/ReelsSection'
 import StaticsSection from '../../components/digital/StaticsSection'
+import { trackButtonClick } from '../../lib/analytics'
 import InsightsSection from '../../components/digital/InsightsSection'
 import FAQ from '../../components/sections/FAQ'
+import ContactModal from '../../components/ui/ContactModal'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -77,40 +79,56 @@ const ServicesGrid = () => {
 }
 
 /* ─── Page ────────────────────────────────────────────────────── */
-const DigitalMarketing = () => (
-  <div className="bg-primary">
-    {/* smooth scroll behaviour */}
-    <style>{`html { scroll-behavior: smooth; }`}</style>
+const DigitalMarketing = () => {
+  const [isContactOpen, setIsContactOpen] = useState(false)
 
-    <MindMapHero serviceType="digitalMarketing" />
-    <DigitalMarketingPreview />
-   {/*} <ServicesGrid /> */}
-    <StorySection />
-    <ReelsSection />
-    <StaticsSection />
-    <div id="insights">
-      <InsightsSection />
-    </div>
-    <div className="section-container pb-24">
-      <FAQ />
-      <div className="mt-20 text-center glass-card p-12 rounded-3xl border-borderSubtle hover:border-accent/20 transition-all duration-300">
-        <h3 className="text-3xl font-heading font-bold text-textPrimary mb-4">
-          Ready to Scale Your Brand?
-        </h3>
-        <p className="text-textSecondary mb-8 max-w-2xl mx-auto">
-          Let's build a data-driven strategy tailored to your goals. Our team is ready when you are.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <a href="/contact" className="btn-primary inline-block px-8 py-4 shadow-[0_0_24px_rgba(37,99,235,0.3)]">
-            Get a Free Audit
-          </a>
-          <a href="/work" className="btn-secondary inline-block px-8 py-4">
-            View Our Work
-          </a>
+  return (
+    <div className="bg-primary">
+      {/* smooth scroll behaviour */}
+      <style>{`html { scroll-behavior: smooth; }`}</style>
+
+      <MindMapHero serviceType="digitalMarketing" />
+      <DigitalMarketingPreview />
+     {/*} <ServicesGrid /> */}
+      <StorySection />
+      <ReelsSection />
+      <StaticsSection />
+      <div id="insights">
+        <InsightsSection />
+      </div>
+      <div className="section-container pb-24">
+        <FAQ />
+        <div className="mt-20 text-center glass-card p-12 rounded-3xl border-borderSubtle hover:border-accent/20 transition-all duration-300">
+          <h3 className="text-3xl font-heading font-bold text-textPrimary mb-4">
+            Ready to Scale Your Brand?
+          </h3>
+          <p className="text-textSecondary mb-8 max-w-2xl mx-auto">
+            Let's build a data-driven strategy tailored to your goals. Our team is ready when you are.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              type="button"
+              onClick={() => {
+                trackButtonClick('Get a Free Audit', 'digital_marketing_cta')
+                setIsContactOpen(true)
+              }}
+              className="inline-flex items-center justify-center px-8 py-4 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-semibold transition-all duration-300 shadow-[0_0_24px_rgba(245,158,11,0.35)]"
+            >
+              Get a Free Audit
+            </button>
+            <a
+              href="/work"
+              onClick={() => trackButtonClick('View Our Work', 'digital_marketing_cta')}
+              className="btn-secondary inline-block px-8 py-4"
+            >
+              View Our Work
+            </a>
+          </div>
         </div>
       </div>
+      <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
     </div>
-  </div>
-)
+  )
+}
 
 export default DigitalMarketing

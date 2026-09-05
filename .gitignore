@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Environment variables
+.env
+.env.*
+!.env.example
+!.env.local.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -28,3 +34,6 @@ dist-ssr
 # Media assets (images/videos — served separately, not tracked in git)
 src/assets/
 public/assets/
+public/uploads/
+backups/
+scratch/

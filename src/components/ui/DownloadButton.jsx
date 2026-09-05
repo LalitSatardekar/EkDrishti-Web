@@ -1,11 +1,14 @@
-const DownloadButton = ({ 
-  label = "Download Photos", 
-  driveLink, 
+import { trackButtonClick } from '../../lib/analytics'
+
+const DownloadButton = ({
+  label = "Download Photos",
+  driveLink,
   variant = "primary",
   icon = "download"
 }) => {
   const handleDownload = () => {
     if (driveLink) {
+      trackButtonClick(label, 'download_button', { icon })
       window.open(driveLink, '_blank')
     }
   }

@@ -18,7 +18,7 @@ const getPos = (el) => {
   return { boxW, boxH, left, top }
 }
 
-const WorkHoverPreview = ({ item, anchorEl }) => {
+const WorkHoverPreview = ({ item, anchorEl, activeCategory }) => {
   const iframeRef = useRef(null)
   const rafRef    = useRef(null)
   const t0Ref     = useRef(null)
@@ -28,6 +28,16 @@ const WorkHoverPreview = ({ item, anchorEl }) => {
   const { boxW, boxH, left, top } = pos
   const scale   = boxW / IFRAME_W
   const iframeH = Math.round(boxH / scale)
+
+  const isMarketing = activeCategory === 'DIGITAL MARKETING'
+  const isProduction = activeCategory === 'PRODUCTION'
+
+  let shadowBorder = '0 0 0 2px rgba(242,160,32,0.6), 0 24px 64px rgba(0,0,0,0.85)'
+  if (isMarketing) {
+    shadowBorder = '0 0 0 2px rgba(255,255,255,0.6), 0 24px 64px rgba(0,0,0,0.85)'
+  } else if (isProduction) {
+    shadowBorder = '0 0 0 2px rgba(208,28,30,0.7), 0 24px 64px rgba(0,0,0,0.85)'
+  }
 
   // Keep preview glued to card on scroll / resize
   useEffect(() => {
@@ -86,8 +96,8 @@ const WorkHoverPreview = ({ item, anchorEl }) => {
         zIndex:        9999,
         borderRadius:  16,
         overflow:      'hidden',
-        boxShadow:     '0 0 0 2px rgba(99,179,237,0.5), 0 24px 64px rgba(0,0,0,0.85)',
-        background:    '#0d0f1e',
+        boxShadow:     shadowBorder,
+        background:    (isMarketing || isProduction) ? '#1A1A1A' : '#0B1120',
         animation:     'hoverIn 380ms cubic-bezier(0.34,1.56,0.64,1) both',
         pointerEvents: 'none',
       }}

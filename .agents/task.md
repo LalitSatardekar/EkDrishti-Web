@@ -1,0 +1,6 @@
+- [x] Extend Mongoose schema `Log.js` with structured severity, request_id, and duration
+- [x] Update log writer signature `logActivity` in `api/lib/log.js`
+- [x] Create serverless health checks endpoint `/api/v1/health.js`
+- [x] Setup continuous integration GHA pipeline in `.github/workflows/ci.yml`
+- [x] Add dynamic health checks and proxy routing shortcut in `vercel.json` and `server.js`
+- [x] Run production build verification

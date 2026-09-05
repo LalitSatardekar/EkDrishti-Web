@@ -1,7 +1,12 @@
+import { useState } from 'react'
 import MindMapHero from '../../components/hero/MindMapHero'
 import ProductionPreview from '../../components/services/ProductionPreview'
+import ContactModal from '../../components/ui/ContactModal'
+import { trackButtonClick } from '../../lib/analytics'
 
 const Production = () => {
+  const [isContactOpen, setIsContactOpen] = useState(false)
+
   return (
     <div className="bg-primary">
       {/* Mind Map Hero */}
@@ -32,9 +37,19 @@ const Production = () => {
 
         {/* CTA */}
         <div className="text-center">
-          <a href="/contact" className="btn-primary inline-block">Start a Production Project</a>
+          <button
+            type="button"
+            onClick={() => {
+              trackButtonClick('Start a Production Project', 'production_cta')
+              setIsContactOpen(true)
+            }}
+            className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-semibold transition-all duration-300"
+          >
+            Start a Production Project
+          </button>
         </div>
       </div>
+      <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
     </div>
   )
 }

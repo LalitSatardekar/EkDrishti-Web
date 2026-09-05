@@ -18,17 +18,17 @@ const MOCKUP_IMAGES = [
   {
     src: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&q=80',
     alt: 'Campaign analytics dashboard',
-    classes: 'w-full h-48 object-cover rounded-2xl',
+    classes: 'w-full h-48 object-contain bg-surface rounded-2xl',
   },
   {
     src: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80',
     alt: 'Marketing data visualisation',
-    classes: 'w-3/4 h-36 object-cover rounded-2xl ml-auto',
+    classes: 'w-3/4 h-36 object-contain bg-surface rounded-2xl ml-auto',
   },
   {
     src: 'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=600&q=80',
     alt: 'Growth metrics overview',
-    classes: 'w-5/6 h-40 object-cover rounded-2xl',
+    classes: 'w-5/6 h-40 object-contain bg-surface rounded-2xl',
   },
 ]
 

@@ -1,8 +1,12 @@
-import { allCases } from '../../data/cases'
+import { useCases } from '../../context/CasesContext'
 import { getSortedCases } from '../../lib/sortingEngine'
 import SuggestionCard from './SuggestionCard'
 
 const SuggestionSection = ({ currentProjectSlug, currentCategory }) => {
+  const { allCases, loading } = useCases()
+
+  if (loading) return null
+
   const getSuggestedProjects = () => {
     // Same category, sorted by priority, excluding current item
     const same = getSortedCases(allCases, { category: currentCategory, sortBy: 'priority' })

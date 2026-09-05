@@ -2,6 +2,15 @@ import { useState } from 'react'
 import DOMPurify from 'dompurify'
 import SEO from '../components/ui/SEO'
 import { submitContactForm } from '../api/contactApi'
+import {
+  applyContactValidationMessage,
+  EMAIL_PATTERN,
+  NAME_PATTERN,
+  PHONE_PATTERN,
+  validateContactForm,
+} from '../lib/contactValidation'
+import SuccessPopup from '../components/ui/SuccessPopup'
+import { trackFormSubmit } from '../lib/analytics'
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -11,11 +20,14 @@ const Contact = () => {
     phone: '',
     service: '',
     message: '',
+    _website: '', // Honeypot field for bot trapping
   })
   const [status, setStatus] = useState({ type: '', message: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false)
 
   const handleChange = (e) => {
+    e.target.setCustomValidity('')
     // Sanitize input to prevent XSS attacks
     const sanitizedValue = DOMPurify.sanitize(e.target.value, {
       ALLOWED_TAGS: [], // Strip all HTML tags
@@ -30,6 +42,11 @@ const Contact = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    if (!validateContactForm(e.currentTarget)) {
+      return
+    }
+
     setIsSubmitting(true)
     setStatus({ type: '', message: '' })
 
@@ -44,6 +61,10 @@ const Contact = () => {
         service: '',
         message: '',
       })
+      trackFormSubmit('contact_page', {
+        service: formData.service || 'unspecified',
+      })
+      setShowSuccessPopup(true)
     } catch (error) {
       setStatus({ type: 'error', message: error.message || 'Something went wrong. Please try again.' })
     } finally {
@@ -74,6 +95,20 @@ const Contact = () => {
           {/* Contact Form */}
           <div className="glass-card p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Honeypot field (hidden from real users, traps bots) */}
+              <div style={{ display: 'none', opacity: 0, position: 'absolute', left: '-9999px' }} aria-hidden="true">
+                <label htmlFor="website">Website</label>
+                <input
+                  type="text"
+                  id="website"
+                  name="_website"
+                  value={formData._website || ''}
+                  onChange={handleChange}
+                  tabIndex={-1}
+                  autoComplete="off"
+                />
+              </div>
+
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="name" className="block text-textPrimary font-medium mb-2">
@@ -85,7 +120,11 @@ const Contact = () => {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
+                    onInvalid={(e) => applyContactValidationMessage(e.target)}
+                    pattern={NAME_PATTERN}
+                    title="Name should use only letters, spaces, dots, apostrophes, or hyphens."
                     required
+                    placeholder="Riya Sharma"
                     className="w-full px-4 py-3 bg-surface border border-borderSubtle rounded-lg text-textPrimary focus:outline-none focus:border-accent transition-colors duration-200"
                   />
                 </div>
@@ -99,7 +138,11 @@ const Contact = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
+                    onInvalid={(e) => applyContactValidationMessage(e.target)}
+                    pattern={EMAIL_PATTERN}
+                    title="Enter a valid email address (e.g. name@company.com)."
                     required
+                    placeholder="name@company.com"
                     className="w-full px-4 py-3 bg-surface border border-borderSubtle rounded-lg text-textPrimary focus:outline-none focus:border-accent transition-colors duration-200"
                   />
                 </div>
@@ -108,7 +151,7 @@ const Contact = () => {
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="company" className="block text-textPrimary font-medium mb-2">
-                    Company
+                    Company / Brand <span className="text-textSecondary text-xs font-normal">(optional)</span>
                   </label>
                   <input
                     type="text"
@@ -116,12 +159,13 @@ const Contact = () => {
                     name="company"
                     value={formData.company}
                     onChange={handleChange}
+                    placeholder="Company or Personal"
                     className="w-full px-4 py-3 bg-surface border border-borderSubtle rounded-lg text-textPrimary focus:outline-none focus:border-accent transition-colors duration-200"
                   />
                 </div>
                 <div>
                   <label htmlFor="phone" className="block text-textPrimary font-medium mb-2">
-                    Phone
+                    Phone *
                   </label>
                   <input
                     type="tel"
@@ -129,6 +173,12 @@ const Contact = () => {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
+                    onInvalid={(e) => applyContactValidationMessage(e.target)}
+                    pattern={PHONE_PATTERN}
+                    title="Please enter a valid phone number (e.g. +91 98765 43210)"
+                    placeholder="+91 98765 43210"
+                    autoComplete="tel"
+                    required
                     className="w-full px-4 py-3 bg-surface border border-borderSubtle rounded-lg text-textPrimary focus:outline-none focus:border-accent transition-colors duration-200"
                   />
                 </div>
@@ -305,6 +355,10 @@ const Contact = () => {
         </div>
       </div>
     </div>
+      <SuccessPopup
+        isOpen={showSuccessPopup}
+        onClose={() => setShowSuccessPopup(false)}
+      />
     </>
   )
 }

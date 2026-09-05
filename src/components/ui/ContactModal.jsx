@@ -18,6 +18,15 @@ import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import DOMPurify from 'dompurify'
 import { submitContactForm } from '../../api/contactApi'
+import { trackFormSubmit } from '../../lib/analytics'
+import {
+  applyContactValidationMessage,
+  EMAIL_PATTERN,
+  NAME_PATTERN,
+  PHONE_PATTERN,
+  validateContactForm,
+} from '../../lib/contactValidation'
+import SuccessPopup from './SuccessPopup'
 
 // ── SERVICE OPTIONS ───────────────────────────────────────────
 const SERVICE_OPTIONS = [
@@ -37,8 +46,10 @@ const INITIAL_FORM = {
   name: '',
   email: '',
   phone: '',
+  company: '',
   service: '',
   message: '',
+  _website: '', // Invisible honeypot field
 }
 
 // ── SHARED INPUT CLASS ────────────────────────────────────────
@@ -68,68 +79,11 @@ const modalVariants = {
   },
 }
 
-const successVariants = {
-  hidden: { opacity: 0, scale: 0.85 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: { type: 'spring', stiffness: 260, damping: 22, delay: 0.05 },
-  },
-}
-
-// ── SUCCESS SCREEN ────────────────────────────────────────────
-function SuccessScreen({ onClose }) {
-  return (
-    <motion.div
-      key="success"
-      variants={successVariants}
-      initial="hidden"
-      animate="visible"
-      className="flex flex-col items-center justify-center text-center py-10 px-6 min-h-[340px]"
-    >
-      {/* Animated check circle */}
-      <div className="w-20 h-20 rounded-full bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mb-6">
-        <svg
-          className="w-9 h-9 text-amber-400"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2.5}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <motion.path
-            d="M5 13l4 4L19 7"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: 0.45, delay: 0.25, ease: 'easeOut' }}
-          />
-        </svg>
-      </div>
-
-      <h3 className="text-2xl font-heading font-bold text-textPrimary mb-3">
-        Message Sent!
-      </h3>
-      <p className="text-textSecondary text-sm leading-relaxed max-w-xs mb-8">
-        Thanks for reaching out. We'll review your message and get back to you
-        within <span className="text-amber-400 font-medium">24 hours</span>.
-      </p>
-
-      <button
-        onClick={onClose}
-        className="px-8 py-2.5 rounded-full bg-amber-500 hover:bg-amber-400 text-black text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-amber-500/30"
-      >
-        Close
-      </button>
-    </motion.div>
-  )
-}
-
 export default function ContactModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState(INITIAL_FORM)
-  const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false)
 
   // ── ESC KEY CLOSE ─────────────────────────────────────────
   const handleKeyDown = useCallback(
@@ -155,13 +109,13 @@ export default function ContactModal({ isOpen, onClose }) {
   useEffect(() => {
     if (isOpen) {
       setFormData(INITIAL_FORM)
-      setSubmitted(false)
       setError('')
     }
   }, [isOpen])
 
   // ── FIELD CHANGE ──────────────────────────────────────────
   const handleChange = (e) => {
+    e.target.setCustomValidity('')
     const sanitized = DOMPurify.sanitize(e.target.value, {
       ALLOWED_TAGS: [],
       ALLOWED_ATTR: [],
@@ -172,13 +126,22 @@ export default function ContactModal({ isOpen, onClose }) {
   // ── FORM SUBMIT ───────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    if (!validateContactForm(e.currentTarget)) {
+      return
+    }
+
     setIsSubmitting(true)
     setError('')
 
     try {
       await submitContactForm(formData)
       setFormData(INITIAL_FORM)
-      setSubmitted(true)
+      trackFormSubmit('contact_modal', {
+        service: formData.service || 'unspecified',
+      })
+      setShowSuccessPopup(true)
+      onClose()
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.')
     } finally {
@@ -187,10 +150,12 @@ export default function ContactModal({ isOpen, onClose }) {
   }
 
   // ── PORTAL TARGET ─────────────────────────────────────────
-  return createPortal(
-    <AnimatePresence>
-      {isOpen && (
-        <>
+  return (
+    <>
+      {createPortal(
+        <AnimatePresence>
+          {isOpen && (
+            <>
           {/* ── BACKDROP ────────────────────────────────── */}
           <motion.div
             key="backdrop"
@@ -311,16 +276,13 @@ export default function ContactModal({ isOpen, onClose }) {
                 </button>
 
                 <AnimatePresence mode="wait">
-                  {submitted ? (
-                    <SuccessScreen key="success" onClose={onClose} />
-                  ) : (
-                    <motion.div
-                      key="form"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0, transition: { duration: 0.12 } }}
-                      className="p-6"
-                    >
+                  <motion.div
+                    key="form"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0, transition: { duration: 0.12 } }}
+                    className="p-6"
+                  >
                       {/* Mobile-only header */}
                       <div className="md:hidden mb-4">
                         <div className="text-amber-400 text-xs font-semibold tracking-[0.18em] uppercase mb-1">
@@ -345,7 +307,7 @@ export default function ContactModal({ isOpen, onClose }) {
                       </div>
 
                       {/* ── FORM ──────────────────────────── */}
-                      <form onSubmit={handleSubmit} className="space-y-3" noValidate>
+                      <form onSubmit={handleSubmit} className="space-y-3">
 
                         {/* Name + Email */}
                         <div className="grid sm:grid-cols-2 gap-3">
@@ -359,6 +321,9 @@ export default function ContactModal({ isOpen, onClose }) {
                               name="name"
                               value={formData.name}
                               onChange={handleChange}
+                              onInvalid={(e) => applyContactValidationMessage(e.target)}
+                              pattern={NAME_PATTERN}
+                              title="Name should use only letters, spaces, dots, apostrophes, or hyphens."
                               required
                               autoComplete="name"
                               placeholder="Riya Sharma"
@@ -375,6 +340,9 @@ export default function ContactModal({ isOpen, onClose }) {
                               name="email"
                               value={formData.email}
                               onChange={handleChange}
+                              onInvalid={(e) => applyContactValidationMessage(e.target)}
+                              pattern={EMAIL_PATTERN}
+                              title="Enter a valid email like name@domain.com."
                               required
                               autoComplete="email"
                               placeholder="you@example.com"
@@ -383,11 +351,25 @@ export default function ContactModal({ isOpen, onClose }) {
                           </div>
                         </div>
 
-                        {/* Phone + Service */}
+                        {/* Honeypot field (hidden from real users, traps bots) */}
+                        <div style={{ display: 'none', opacity: 0, position: 'absolute', left: '-9999px' }} aria-hidden="true">
+                          <label htmlFor="modal-website">Website</label>
+                          <input
+                            type="text"
+                            id="modal-website"
+                            name="_website"
+                            value={formData._website}
+                            onChange={handleChange}
+                            tabIndex={-1}
+                            autoComplete="off"
+                          />
+                        </div>
+
+                        {/* Phone + Company */}
                         <div className="grid sm:grid-cols-2 gap-3">
                           <div>
                             <label htmlFor="modal-phone" className="block text-textSecondary text-xs font-medium mb-1 uppercase tracking-wide">
-                              Phone
+                              Phone *
                             </label>
                             <input
                               type="tel"
@@ -395,29 +377,49 @@ export default function ContactModal({ isOpen, onClose }) {
                               name="phone"
                               value={formData.phone}
                               onChange={handleChange}
+                              onInvalid={(e) => applyContactValidationMessage(e.target)}
+                              pattern={PHONE_PATTERN}
+                              title="Please enter a valid phone number (e.g. +91 98765 43210)"
                               autoComplete="tel"
                               placeholder="+91 98765 43210"
+                              required
                               className={INPUT_CLASS}
                             />
                           </div>
                           <div>
-                            <label htmlFor="modal-service" className="block text-textSecondary text-xs font-medium mb-1 uppercase tracking-wide">
-                              Service
+                            <label htmlFor="modal-company" className="block text-textSecondary text-xs font-medium mb-1 uppercase tracking-wide">
+                              Company / Brand <span className="text-textSecondary/40 text-[10px] font-normal lowercase">(optional)</span>
                             </label>
-                            <select
-                              id="modal-service"
-                              name="service"
-                              value={formData.service}
+                            <input
+                              type="text"
+                              id="modal-company"
+                              name="company"
+                              value={formData.company}
                               onChange={handleChange}
+                              placeholder="Acme Corp / Personal"
                               className={INPUT_CLASS}
-                            >
-                              {SERVICE_OPTIONS.map((opt) => (
-                                <option key={opt.value} value={opt.value}>
-                                  {opt.label}
-                                </option>
-                              ))}
-                            </select>
+                            />
                           </div>
+                        </div>
+
+                        {/* Service Selection */}
+                        <div>
+                          <label htmlFor="modal-service" className="block text-textSecondary text-xs font-medium mb-1 uppercase tracking-wide">
+                            Service Needed
+                          </label>
+                          <select
+                            id="modal-service"
+                            name="service"
+                            value={formData.service}
+                            onChange={handleChange}
+                            className={INPUT_CLASS}
+                          >
+                            {SERVICE_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
                         </div>
 
                         {/* Message */}
@@ -472,15 +474,20 @@ export default function ContactModal({ isOpen, onClose }) {
                           )}
                         </button>
                       </form>
-                    </motion.div>
-                  )}
+                  </motion.div>
                 </AnimatePresence>
               </div>
             </motion.div>
           </div>
-        </>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body
       )}
-    </AnimatePresence>,
-    document.body
+      <SuccessPopup
+        isOpen={showSuccessPopup}
+        onClose={() => setShowSuccessPopup(false)}
+      />
+    </>
   )
 }

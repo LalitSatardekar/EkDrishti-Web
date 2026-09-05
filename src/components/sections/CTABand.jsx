@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import ContactModal from '../ui/ContactModal'
+import { trackButtonClick } from '../../lib/analytics'
 
 const CONTACT_ITEMS = [
   {
@@ -86,7 +87,10 @@ const CTABand = () => {
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <button
-                    onClick={() => setIsContactOpen(true)}
+                    onClick={() => {
+                      setIsContactOpen(true)
+                      trackButtonClick('Contact Us', 'cta_band')
+                    }}
                     className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-amber-500 hover:text-white-400 text-black font-semibold text-sm transition-all duration-200 shadow-lg hover:shadow-amber-500/30"
                   >
                     Contact Us
@@ -96,6 +100,7 @@ const CTABand = () => {
                   </button>
                   <Link
                     to="/work"
+                    onClick={() => trackButtonClick('View Our Work', 'cta_band')}
                     className="inline-flex items-center gap-2 px-7 py-3 rounded-full border border-amber-500/15 text-textSecondary hover:text-amber-500 hover:border-amber-500/30 text-sm font-medium transition-all duration-200"
                   >
                     View Our Work

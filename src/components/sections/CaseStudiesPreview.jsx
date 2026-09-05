@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom'
-import { allCases } from '../../data/cases'
+import { useCases } from '../../context/CasesContext'
 import { getSortedCases } from '../../lib/sortingEngine'
+import { trackButtonClick, trackCaseClick } from '../../lib/analytics'
 
 const CaseStudyCard = ({ study }) => {
   return (
     <Link
       to={`/work/${study.slug}`}
+      onClick={() => trackCaseClick(study, 'home_case_preview')}
       className="group relative block rounded-2xl overflow-hidden aspect-[4/3]"
     >
       <img
@@ -46,6 +48,16 @@ const CaseStudyCard = ({ study }) => {
 }
 
 const CaseStudiesPreview = () => {
+  const { allCases, loading } = useCases()
+
+  if (loading) {
+    return (
+      <div className="py-20 text-center">
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mb-2"></div>
+      </div>
+    )
+  }
+
   const featured = getSortedCases(allCases, { featured: true, sortBy: 'priority', limit: 6 })
   const fallback = featured.length > 0 ? featured : getSortedCases(allCases, { sortBy: 'priority', limit: 6 })
 
@@ -64,12 +76,16 @@ const CaseStudiesPreview = () => {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
           {fallback.map((study) => (
-            <CaseStudyCard key={study.id} study={study} />
+            <CaseStudyCard key={study.id || study._id || study.slug} study={study} />
           ))}
         </div>
 
         <div className="text-center">
-          <Link to="/work" className="btn-secondary inline-block">
+          <Link
+            to="/work"
+            onClick={() => trackButtonClick('View All Projects', 'home_case_studies')}
+            className="btn-secondary inline-block"
+          >
             View All Projects
           </Link>
         </div>

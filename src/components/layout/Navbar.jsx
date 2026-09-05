@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useScrollPosition } from '../../hooks/useScrollPosition'
 import { cn } from '../../lib/utils'
 import ContactModal from '../ui/ContactModal'
+import { trackButtonClick } from '../../lib/analytics'
 
 const serviceLinks = [
   { name: 'Family Events', path: '/services/family-events'},
@@ -184,7 +185,10 @@ const Navbar = () => {
             ))}
             {/* TWEAK: change button label, padding, or colors below */}
             <button
-              onClick={() => setIsContactOpen(true)}
+              onClick={() => {
+                setIsContactOpen(true)
+                trackButtonClick('Contact Us', 'navbar_desktop')
+              }}
               className="px-5 py-2 rounded-full bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm transition-all duration-200 whitespace-nowrap shadow-sm hover:shadow-amber-500/30 hover:shadow-md"
             >
               Contact Us
@@ -296,7 +300,11 @@ const Navbar = () => {
               ))}
               {/* TWEAK: mobile Contact button label/style below */}
               <button
-                onClick={() => { closeMobileMenu(); setIsContactOpen(true) }}
+                onClick={() => {
+                  closeMobileMenu()
+                  setIsContactOpen(true)
+                  trackButtonClick('Contact Us', 'navbar_mobile')
+                }}
                 className="mt-1 w-full text-left px-2 py-2.5 font-semibold text-amber-400 hover:text-amber-300 transition-colors duration-200 rounded-lg"
               >
                 Contact Us

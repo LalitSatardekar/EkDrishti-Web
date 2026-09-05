@@ -10,26 +10,39 @@ const REELS = [
     thumbnail: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=400&q=80',
     label: 'Brand Campaign',
     views: '1.2M',
+    reelUrl: '',
   },
   {
     id: 2,
     thumbnail: 'https://images.unsplash.com/photo-1533750349088-cd871a92f312?w=400&q=80',
     label: 'Lead Gen Ad',
     views: '847K',
+    reelUrl: '',
   },
   {
     id: 3,
     thumbnail: 'https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?w=400&q=80',
     label: 'Product Launch',
     views: '2.4M',
+    reelUrl: '',
   },
   {
     id: 4,
     thumbnail: 'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=400&q=80',
     label: 'Analytics Reel',
     views: '631K',
+    reelUrl: '',
   },
 ]
+
+const toInstagramEmbedUrl = (value = '') => {
+  const trimmed = String(value).trim()
+  if (!trimmed) return ''
+  if (trimmed.includes('/embed')) return trimmed
+  const match = trimmed.match(/instagram\.com\/reel\/([^/?#]+)/i)
+  if (!match) return ''
+  return `https://www.instagram.com/reel/${match[1]}/embed`
+}
 
 /* Play icon SVG */
 const PlayIcon = () => (
@@ -39,50 +52,68 @@ const PlayIcon = () => (
   </svg>
 )
 
-const ReelCard = ({ reel, cardRef }) => (
-  <div
-    ref={cardRef}
-    className="group relative rounded-3xl overflow-hidden cursor-pointer
-               shadow-[0_4px_32px_rgba(0,0,0,0.4)]
-               hover:shadow-[0_8px_48px_rgba(245,158,11,0.18)]
-               transition-shadow duration-500"
-    style={{ aspectRatio: '9/16' }}
-  >
-    {/* Background image */}
-    <img
-      src={reel.thumbnail}
-      alt={reel.label}
-      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-    />
+const ReelCard = ({ reel, cardRef }) => {
+  const embedUrl = reel.embedUrl || toInstagramEmbedUrl(reel.reelUrl)
+  const hasEmbed = Boolean(embedUrl)
 
-    {/* Overlay */}
-    <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/30 to-transparent" />
+  return (
+    <div
+      ref={cardRef}
+      className="group relative rounded-3xl overflow-hidden
+                 shadow-[0_4px_32px_rgba(0,0,0,0.4)]
+                 hover:shadow-[0_8px_48px_rgba(245,158,11,0.18)]
+                 transition-shadow duration-500"
+      style={{ aspectRatio: '9/16' }}
+    >
+      {hasEmbed ? (
+        <iframe
+          src={embedUrl}
+          title={reel.label}
+          className="absolute inset-0 w-full h-full"
+          allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+          allowFullScreen
+          loading="lazy"
+        />
+      ) : (
+        <>
+          {/* Background image */}
+          <img
+            src={reel.thumbnail}
+            alt={reel.label}
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
 
-    {/* Play button — fades in on hover */}
-    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-      <PlayIcon />
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/30 to-transparent" />
+
+          {/* Play button — fades in on hover */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <PlayIcon />
+          </div>
+        </>
+      )}
+
+      {/* Bottom meta */}
+      <div className="absolute bottom-0 left-0 right-0 px-5 py-5 pointer-events-none">
+        <p className="text-textPrimary font-heading font-semibold text-sm">{reel.label}</p>
+        <p className="text-textSecondary text-xs mt-0.5 flex items-center gap-1">
+          <svg className="w-3 h-3 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+            <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+          </svg>
+          {reel.views} views
+        </p>
+      </div>
+
+      {/* Top badge */}
+      <div className="absolute top-4 left-4 pointer-events-none">
+        <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400">
+          Reel
+        </span>
+      </div>
     </div>
-
-    {/* Bottom meta */}
-    <div className="absolute bottom-0 left-0 right-0 px-5 py-5">
-      <p className="text-textPrimary font-heading font-semibold text-sm">{reel.label}</p>
-      <p className="text-textSecondary text-xs mt-0.5 flex items-center gap-1">
-        <svg className="w-3 h-3 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-          <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-        </svg>
-        {reel.views} views
-      </p>
-    </div>
-
-    {/* Top badge */}
-    <div className="absolute top-4 left-4">
-      <span className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400">
-        Reel
-      </span>
-    </div>
-  </div>
-)
+  )
+}
 
 const ReelsSection = () => {
   const sectionRef = useRef(null)
@@ -137,7 +168,7 @@ const ReelsSection = () => {
         </div>
 
         <p className="text-center text-xs text-textSecondary mt-8">
-          Hover to preview · Click to watch full case study
+          Tap to play · Reels play inline
         </p>
       </div>
     </section>

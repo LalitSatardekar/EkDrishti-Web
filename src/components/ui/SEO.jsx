@@ -6,9 +6,35 @@ const SEO = ({
   keywords = 'digital marketing, event photography, brand strategy, wedding photography, corporate events, production services',
   image = '/logo.png',
   url = 'https://ekdrishti.com',
-  type = 'website'
+  type = 'website',
+  schema = null
 }) => {
   const fullTitle = title.includes('Ekdrishti') ? title : `${title} | Ekdrishti Studios`
+
+  // 1. Organization Schema Configuration
+  const orgSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Ekdrishti Studios",
+    "url": "https://ekdrishti.com",
+    "logo": "https://ekdrishti.com/logo.png",
+    "sameAs": [
+      "https://www.instagram.com/ekdrishti",
+      "https://www.linkedin.com/company/ekdrishti"
+    ]
+  }
+
+  // 2. WebPage Schema Configuration
+  const webpageSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": fullTitle,
+    "description": description,
+    "url": url
+  }
+
+  // Choose schema to output
+  const activeSchema = schema || (type === 'website' || url === 'https://ekdrishti.com' || url === 'https://ekdrishti.com/' ? orgSchema : webpageSchema)
   
   return (
     <Helmet>
@@ -34,10 +60,13 @@ const SEO = ({
       
       {/* Canonical URL */}
       <link rel="canonical" href={url} />
+
+      {/* JSON-LD Structured Data Schema */}
+      <script type="application/ld+json">
+        {JSON.stringify(activeSchema)}
+      </script>
     </Helmet>
   )
 }
 
 export default SEO
-
-// Made with Bob

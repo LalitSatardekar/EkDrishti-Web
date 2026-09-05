@@ -8,7 +8,7 @@
  */
 import React from 'react'
 
-export default function PackageCard({ item = {}, isActive = false }) {
+export default function PackageCard({ item = {}, isActive = false, onCtaClick }) {
   const { title, subtitle, description, icon, image, features = [], price, period, badge } = item
 
   return (
@@ -22,7 +22,7 @@ export default function PackageCard({ item = {}, isActive = false }) {
       {/* Top image / icon block */}
       {image ? (
         <div className="relative w-full h-32 overflow-hidden">
-          <img src={image} alt={title} className="w-full h-full object-cover" />
+          <img src={image} alt={title} className="w-full h-full object-contain bg-surface" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-surface/80" />
         </div>
       ) : (
@@ -98,7 +98,14 @@ export default function PackageCard({ item = {}, isActive = false }) {
 
         {/* CTA */}
         <div className="pt-1">
-          <button className="btn-primary w-full text-center text-sm py-2.5">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onCtaClick?.(item)
+            }}
+            className="w-full text-center text-sm py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-semibold transition-all duration-300"
+          >
             Learn More
           </button>
         </div>

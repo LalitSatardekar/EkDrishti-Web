@@ -115,7 +115,7 @@ const StorySection = () => {
               <img
                 src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=900&q=85"
                 alt="Ekdrishti digital campaign"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain bg-[#0B1120]"
               />
               {/* Gradient overlay */}
               <div className="absolute inset-0 bg-gradient-to-tr from-primary/70 via-primary/20 to-transparent" />

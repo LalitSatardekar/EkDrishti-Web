@@ -2,7 +2,7 @@ import {
   ASSET_DEFAULT_VARIANT,
   ASSET_ORIGINAL_BASE_URL,
   ASSET_WEBP_BASE_URL,
-} from '../lib/config'
+} from '../lib/config.js'
 
 /**
  * cases.js — Centralized work/case-study data store.

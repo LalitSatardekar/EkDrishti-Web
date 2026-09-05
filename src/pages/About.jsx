@@ -65,7 +65,7 @@ const About = () => {
             <img
               src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80"
               alt="Ekdrishti Studios team collaboration"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain bg-[#0B1120]"
               loading="lazy"
             />
           </div>
@@ -143,19 +143,10 @@ const About = () => {
               style={{
                 bottom: "-10px",          // creates top breathing space
                 width: "80%",             // prevents head touching arch
-                filter:
-                  "drop-shadow(0 14px 28px rgba(0,0,0,0.38)) grayscale(100%)",
+                filter: "drop-shadow(0 14px 28px rgba(0,0,0,0.38))",
                 transition: "all 300ms ease",
                 zIndex: 2,
               }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.filter =
-                  "drop-shadow(0 14px 28px rgba(0,0,0,0.38)) grayscale(0%)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.filter =
-                  "drop-shadow(0 14px 28px rgba(0,0,0,0.38)) grayscale(100%)")
-              }
             />
 
             {/* Designation — always visible */}
@@ -205,7 +196,6 @@ const About = () => {
             className="
               w-full aspect-square object-cover
               transition duration-300 ease-in-out
-              grayscale hover:grayscale-0
             "
             loading="lazy"
           />

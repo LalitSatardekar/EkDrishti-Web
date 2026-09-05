@@ -88,6 +88,15 @@
     }
   }
 
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
   .animate-gradient-x {
     background-size: 200% auto;
     animation: gradient-x 3s ease infinite;
@@ -95,5 +104,9 @@
 
   .animate-fade-in {
     animation: fade-in 0.8s ease-out;
+  }
+
+  .animate-shimmer {
+    animation: shimmer 1.8s infinite;
   }
 }

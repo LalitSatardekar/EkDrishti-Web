@@ -18,6 +18,8 @@ import React, {
 } from 'react'
 import gsap from 'gsap'
 import PackageCard from './PackageCard'
+import ContactModal from '../ui/ContactModal'
+import { trackButtonClick } from '../../lib/analytics'
 
 // ─── Slot definitions ────────────────────────────────────────────────────────
 // All x values are in "%". GSAP's `x` with "%" is relative to the element width.
@@ -145,6 +147,7 @@ export default function CinematicStackedCarousel({ items = [] }) {
 
   // Only state that React cares about (for dots + PackageCard isActive prop)
   const [activeIndex, setActiveIndex] = useState(0)
+  const [isContactOpen, setIsContactOpen] = useState(false)
 
   // ── Utility: resolve container half-width ──
   const halfWidth = useCallback(() => {
@@ -395,6 +398,7 @@ export default function CinematicStackedCarousel({ items = [] }) {
   if (N === 0) return null
 
   return (
+    <>
     <section
       className="w-full py-6 overflow-hidden select-none cursor-grab active:cursor-grabbing"
       ref={containerRef}
@@ -422,7 +426,16 @@ export default function CinematicStackedCarousel({ items = [] }) {
               ref={(el) => (parallaxRefs.current[idx] = el)}
               className="w-full"
             >
-              <PackageCard item={item} isActive={idx === activeIndex} />
+              <PackageCard
+                item={item}
+                isActive={idx === activeIndex}
+                onCtaClick={() => {
+                  trackButtonClick('Learn More', 'packages_carousel', {
+                    package_title: item?.title,
+                  })
+                  setIsContactOpen(true)
+                }}
+              />
             </div>
           </div>
         ))}
@@ -493,5 +506,7 @@ export default function CinematicStackedCarousel({ items = [] }) {
         </button>
       </div>
     </section>
+    <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
+    </>
   )
 }

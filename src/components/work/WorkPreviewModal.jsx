@@ -1,12 +1,11 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { trackCaseClick } from '../../lib/analytics'
+import { selectDynamicHeroImages } from '../../lib/heroSelector'
 
 /**
  * WorkPreviewModal
- * Netflix-style quick-preview lightbox.
- * Photos [0,1] fill the top row (portrait).
- * Photos [2,3,4] fill the bottom row (landscape).
- * If hasVideo, a "Video" chip sits below the grid.
+ * Quick-preview modal with dynamic image placement (zero cropping).
  */
 const WorkPreviewModal = ({ item, onClose }) => {
   // Close on Escape
@@ -22,9 +21,9 @@ const WorkPreviewModal = ({ item, onClose }) => {
     return () => { document.body.style.overflow = '' }
   }, [])
 
-  const photos = item.album ?? [item.image]
-  const top    = photos.slice(0, 2)
-  const bottom = photos.slice(2, 5)
+  const heroImages = (item?.hero && item.hero.length > 0)
+    ? item.hero.slice(0, 6)
+    : selectDynamicHeroImages(item, { min: 5, max: 6 }).images
 
   return (
     /* Backdrop */
@@ -35,7 +34,7 @@ const WorkPreviewModal = ({ item, onClose }) => {
     >
       {/* Card — stop propagation so clicks inside don't close */}
       <div
-        className="relative w-full max-w-[420px] rounded-3xl overflow-hidden"
+        className="relative w-full max-w-[480px] rounded-3xl overflow-hidden"
         style={{
           background: '#0f1123',
           border: '2px solid rgba(99,179,237,0.55)',
@@ -44,7 +43,7 @@ const WorkPreviewModal = ({ item, onClose }) => {
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Corner dots (decorative, like the screenshot) */}
+        {/* Corner dots (decorative) */}
         <span className="absolute top-2.5 left-2.5 w-2 h-2 rounded-full bg-blue-400/60 z-10" />
         <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-blue-400/60 z-10" />
 
@@ -59,37 +58,18 @@ const WorkPreviewModal = ({ item, onClose }) => {
           </svg>
         </button>
 
-        {/* Photo grid */}
-        <div className="p-2.5 pb-0 flex flex-col gap-2">
-          {/* Top row — 2 portrait images */}
-          {top.length > 0 && (
-            <div className="flex gap-2">
-              {top.map((src, i) => (
-                <div key={i} className="flex-1 rounded-2xl overflow-hidden" style={{ aspectRatio: '3/4' }}>
-                  <img src={src} alt="" className="w-full h-full object-cover" />
-                </div>
-              ))}
-              {/* Fill empty slot if only 1 photo */}
-              {top.length === 1 && (
-                <div className="flex-1 rounded-2xl overflow-hidden bg-white/5" style={{ aspectRatio: '3/4' }} />
-              )}
-            </div>
-          )}
-
-          {/* Bottom row — up to 3 landscape images */}
-          {bottom.length > 0 && (
-            <div className="flex gap-2">
-              {bottom.map((src, i) => (
-                <div key={i} className="flex-1 rounded-xl overflow-hidden" style={{ aspectRatio: '3/2' }}>
-                  <img src={src} alt="" className="w-full h-full object-cover" />
-                </div>
-              ))}
-              {/* fill empty slots */}
-              {[...Array(Math.max(0, 3 - bottom.length))].map((_, i) => (
-                <div key={`empty-${i}`} className="flex-1 rounded-xl bg-white/5" style={{ aspectRatio: '3/2' }} />
-              ))}
-            </div>
-          )}
+        {/* Photo grid - dynamic images fully visible */}
+        <div className="p-3 pb-0">
+          <div className="grid grid-cols-3 gap-2">
+            {heroImages.slice(0, 6).map((src, i) => (
+              <div
+                key={i}
+                className="rounded-xl overflow-hidden bg-black/40 flex items-center justify-center aspect-[3/4] border border-white/5"
+              >
+                <img src={src} alt="" className="w-full h-full object-contain" />
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Video chip */}
@@ -122,7 +102,10 @@ const WorkPreviewModal = ({ item, onClose }) => {
           </div>
           <Link
             to={`/work/${item.slug}`}
-            onClick={onClose}
+            onClick={() => {
+              trackCaseClick(item, 'work_preview_modal')
+              onClose()
+            }}
             className="flex-shrink-0 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-full transition-colors"
           >
             View Case →
