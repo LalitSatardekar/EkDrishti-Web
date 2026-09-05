@@ -6,8 +6,8 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const LOCAL_URI = process.env.LOCAL_MONGODB_URI || 'mongodb://127.0.0.1:27017/ekdrishti_test'
-const ATLAS_URI = process.env.ATLAS_MONGODB_URI || 'mongodb+srv://tanmayjare13_db_user:tanmayjare29@edcluster.g6tbxhr.mongodb.net/ekdrishti?retryWrites=true&w=majority'
+const LOCAL_URI = process.env.LOCAL_MONGODB_URI || process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/ekdrishti'
+const ATLAS_URI = process.env.ATLAS_MONGODB_URI || process.env.MONGODB_URI
 
 const BACKUP_DIR = path.join(__dirname, '..', 'backups')
 

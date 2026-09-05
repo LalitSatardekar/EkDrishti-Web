@@ -31,9 +31,10 @@ dist-ssr
 
 .vercel
 
-# Media assets (images/videos — served separately, not tracked in git)
-src/assets/
-public/assets/
+# Large Media Dumps (Raw footage and source images hosted externally on S3)
+src/assets/Events/
+src/assets/Production/
+public/assets/webp/
 public/uploads/
 backups/
 scratch/
