@@ -1,2 +1,15 @@
-# Hostinger Node.js Express Application
-# Static assets and API routing are handled by server.js
+RewriteEngine On
+RewriteBase /
+
+# 1. Forward /api and /health requests to Node.js Express backend
+RewriteRule ^api/(.*)$ http://127.0.0.1:3000/api/$1 [P,L]
+RewriteRule ^health(.*)$ http://127.0.0.1:3000/health$1 [P,L]
+
+# 2. Existing static files in dist/ or public/
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# 3. SPA Fallback for client-side pages
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ /index.html [QSA,L]
