@@ -1,7 +1,7 @@
 import express from 'express'
 import path from 'path'
 import fs from 'fs'
-import { fileURLToPath } from 'url'
+import { fileURLToPath, pathToFileURL } from 'url'
 import bcrypt from 'bcryptjs'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -69,24 +69,30 @@ async function bootstrapAdmin() {
 
 // Express emulator shortcut for Vercel /health redirect
 app.get('/health', async (req, res) => {
-  const handlerFilePath = path.join(process.cwd(), 'api', 'v1', 'health.js')
+  const handlerFilePath = path.join(__dirname, 'api', 'v1', 'health.js')
   try {
-    const module = await import(`file://${handlerFilePath}`)
+    const handlerUrl = pathToFileURL(handlerFilePath).href
+    const module = await import(handlerUrl)
     const handler = module.default
     await handler(req, res)
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Health check emulator error: ' + error.message })
+    res.status(500).json({ success: false, message: 'Health check error: ' + error.message })
   }
 })
 
 // Router routing to Vercel serverless files dynamically
 app.use('/api', async (req, res) => {
   // Resolve path from URL /api/v1/auth/login -> api/v1/auth/login.js
-  const relativePath = path.join('api', req.path)
-  const handlerFilePath = path.join(process.cwd(), relativePath + '.js')
+  const cleanPath = req.path.replace(/^\//, '')
+  const handlerFilePath = path.join(__dirname, 'api', cleanPath + '.js')
 
   try {
-    const module = await import(`file://${handlerFilePath}?t=${Date.now()}`)
+    if (!fs.existsSync(handlerFilePath)) {
+      return res.status(404).json({ success: false, message: `API route /api/${cleanPath} not found` })
+    }
+
+    const handlerUrl = pathToFileURL(handlerFilePath).href
+    const module = await import(handlerUrl)
     const handler = module.default
 
     // Adapt standard express req/res to Vercel serverless interface
@@ -113,8 +119,8 @@ app.use('/api', async (req, res) => {
 
     await handler(vercelReq, vercelRes)
   } catch (error) {
-    console.error(`Local backend error on ${req.method} ${req.path}:`, error)
-    res.status(500).json({ success: false, message: 'Serverless emulator crash: ' + error.message })
+    console.error(`Backend error on ${req.method} ${req.path}:`, error)
+    res.status(500).json({ success: false, message: 'API execution error: ' + error.message })
   }
 })
 
