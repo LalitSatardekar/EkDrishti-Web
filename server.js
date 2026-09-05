@@ -52,11 +52,11 @@ const app = express()
 app.use(express.json({ limit: '50mb' }))
 app.use(express.urlencoded({ extended: true, limit: '50mb' }))
 
-app.get(['/ping', '/api/ping', '/api/v1/ping'], (req, res) => {
+app.get(['/ping', '/v1/ping', '/api/ping', '/api/v1/ping'], (req, res) => {
   res.json({ success: true, message: 'pong', time: new Date().toISOString() })
 })
 
-app.get('/api/v1/db-test', async (req, res) => {
+app.get(['/v1/db-test', '/api/v1/db-test'], async (req, res) => {
   const start = Date.now()
   try {
     const conn = await connectToDatabase()
@@ -107,18 +107,18 @@ const adapt = (handler) => async (req, res) => {
   }
 }
 
-// API Routes (mounted explicitly)
-app.all(['/health', '/api/v1/health', '/api/health'], adapt(healthHandler))
-app.all('/api/v1/auth/login', adapt(loginHandler))
-app.all('/api/v1/auth/me', adapt(meHandler))
-app.all(['/api/v1/cases', '/api/cases'], adapt(casesHandler))
-app.all(['/api/v1/contact', '/api/contact'], adapt(contactHandler))
-app.all(['/api/v1/dashboard', '/api/dashboard'], adapt(dashboardHandler))
-app.all(['/api/v1/logs', '/api/logs'], adapt(logsHandler))
-app.all(['/api/v1/maintenance', '/api/maintenance'], adapt(maintenanceHandler))
-app.all(['/api/v1/robots', '/api/robots'], adapt(robotsHandler))
-app.all(['/api/v1/sitemap', '/api/sitemap'], adapt(sitemapHandler))
-app.all(['/api/v1/upload', '/api/upload'], adapt(uploadHandler))
+// API Routes (mounted with /v1 and /api/v1 aliases)
+app.all(['/health', '/v1/health', '/api/v1/health', '/api/health'], adapt(healthHandler))
+app.all(['/v1/auth/login', '/api/v1/auth/login'], adapt(loginHandler))
+app.all(['/v1/auth/me', '/api/v1/auth/me'], adapt(meHandler))
+app.all(['/v1/cases', '/api/v1/cases', '/api/cases'], adapt(casesHandler))
+app.all(['/v1/contact', '/api/v1/contact', '/api/contact'], adapt(contactHandler))
+app.all(['/v1/dashboard', '/api/v1/dashboard', '/api/dashboard'], adapt(dashboardHandler))
+app.all(['/v1/logs', '/api/v1/logs', '/api/logs'], adapt(logsHandler))
+app.all(['/v1/maintenance', '/api/v1/maintenance', '/api/maintenance'], adapt(maintenanceHandler))
+app.all(['/v1/robots', '/api/v1/robots', '/api/robots'], adapt(robotsHandler))
+app.all(['/v1/sitemap', '/api/v1/sitemap', '/api/sitemap'], adapt(sitemapHandler))
+app.all(['/v1/upload', '/api/v1/upload', '/api/upload'], adapt(uploadHandler))
 
 // Serve public and dist static files
 const publicPath = path.join(__dirname, 'public')
