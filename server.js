@@ -56,6 +56,18 @@ app.get(['/ping', '/api/ping', '/api/v1/ping'], (req, res) => {
   res.json({ success: true, message: 'pong', time: new Date().toISOString() })
 })
 
+app.get('/api/v1/db-test', async (req, res) => {
+  const start = Date.now()
+  try {
+    const conn = await connectToDatabase()
+    const duration = Date.now() - start
+    res.json({ success: true, message: 'MongoDB Connected Successfully!', durationMs: duration, readyState: conn.readyState })
+  } catch (err) {
+    const duration = Date.now() - start
+    res.status(500).json({ success: false, error: err.message, stack: err.stack, durationMs: duration })
+  }
+})
+
 // Set fallback credentials and secrets if not defined in .env
 process.env.MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/ekdrishti_test'
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'ekdrishti_dev_jwt_secret_token_123'
