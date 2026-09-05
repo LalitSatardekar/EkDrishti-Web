@@ -144,7 +144,7 @@ app.use((req, res, next) => {
   })
 })
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT || 3000
 app.listen(PORT, async () => {
   console.log(`🚀 EkDrishti server running on port ${PORT}`)
   await bootstrapAdmin()

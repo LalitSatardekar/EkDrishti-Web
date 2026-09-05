@@ -1,22 +1,16 @@
-PassengerAppRoot "/home/u374186957/domains/ekdrishti.com/public_html"
-PassengerAppType node
-PassengerStartupFile server.js
-
 Options -MultiViews
 RewriteEngine On
+RewriteBase /
 
-# 1. Bypass rewrite for API and Health requests so Node/Passenger handles them
-RewriteCond %{REQUEST_URI} ^/api/ [OR]
-RewriteCond %{REQUEST_URI} ^/health
-RewriteRule ^ - [L]
+# 1. Proxy API & Health endpoints to local Node.js server
+RewriteRule ^api/(.*)$ http://127.0.0.1:3000/api/$1 [P,L]
+RewriteRule ^health(.*)$ http://127.0.0.1:3000/health$1 [P,L]
 
 # 2. Direct static assets
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
 
-# 3. SPA Fallback for client-side pages
+# 3. SPA Fallback for client-side routing
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ /index.html [QSA,L]
-
-
