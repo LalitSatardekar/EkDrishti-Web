@@ -1,14 +1,39 @@
 import express from 'express'
 import path from 'path'
+import fs from 'fs'
 import { fileURLToPath } from 'url'
 import bcrypt from 'bcryptjs'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+// Automatically load .env file if present (supports PM2 and standalone node runs)
+try {
+  const envPath = path.join(__dirname, '.env')
+  if (fs.existsSync(envPath)) {
+    if (typeof process.loadEnvFile === 'function') {
+      process.loadEnvFile(envPath)
+    } else {
+      const envContent = fs.readFileSync(envPath, 'utf8')
+      envContent.split('\n').forEach(line => {
+        const trimmed = line.trim()
+        if (trimmed && !trimmed.startsWith('#') && trimmed.includes('=')) {
+          const [key, ...rest] = trimmed.split('=')
+          const val = rest.join('=').replace(/(^["']|["']$)/g, '').trim()
+          if (key && !process.env[key.trim()]) {
+            process.env[key.trim()] = val
+          }
+        }
+      })
+    }
+  }
+} catch (e) {
+  console.warn('Could not auto-load .env:', e.message)
+}
 
 // Load schemas to perform default seeding
 import { connectToDatabase } from './api/lib/db.js'
 import User from './api/models/User.js'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 
 const app = express()
 app.use(express.json({ limit: '50mb' }))
