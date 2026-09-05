@@ -69,8 +69,8 @@ app.get('/api/v1/db-test', async (req, res) => {
 })
 
 // Set fallback credentials and secrets if not defined in .env
-process.env.MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/ekdrishti_test'
-process.env.JWT_SECRET = process.env.JWT_SECRET || 'ekdrishti_dev_jwt_secret_token_123'
+process.env.MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://tanmayjare13_db_user:tanmayjare29@edcluster.g6tbxhr.mongodb.net/ekdrishti?retryWrites=true&w=majority'
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'ekdrishti_dev_jwt_secret_token_ed_scrl_non'
 process.env.ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'edadmin'
 process.env.ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || bcrypt.hashSync('Ekdrishtiadmin@0112', 10)
 
