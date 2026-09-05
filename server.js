@@ -52,6 +52,10 @@ const app = express()
 app.use(express.json({ limit: '50mb' }))
 app.use(express.urlencoded({ extended: true, limit: '50mb' }))
 
+app.get(['/ping', '/api/ping', '/api/v1/ping'], (req, res) => {
+  res.json({ success: true, message: 'pong', time: new Date().toISOString() })
+})
+
 // Set fallback credentials and secrets if not defined in .env
 process.env.MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/ekdrishti_test'
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'ekdrishti_dev_jwt_secret_token_123'
