@@ -1,18 +1,11 @@
 Options -MultiViews
 RewriteEngine On
 
-# 1. Reverse proxy API and health routes to Node.js on port 3001
-RewriteRule ^api/(.*)$ http://127.0.0.1:3001/api/$1 [P,L]
-RewriteRule ^health$ http://127.0.0.1:3001/health [P,L]
-
-# 2. Direct static assets
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d
+# If a static file exists in public/ or dist/, serve it
+RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
 
-# 3. SPA fallback to compiled index.html
-RewriteCond %{DOCUMENT_ROOT}/dist/index.html -f
-RewriteRule ^ dist/index.html [QSA,L]
-
-RewriteCond %{DOCUMENT_ROOT}/index.html -f
+# For all other requests (including /api/*, /health, and client routes), route to server
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ index.html [QSA,L]
