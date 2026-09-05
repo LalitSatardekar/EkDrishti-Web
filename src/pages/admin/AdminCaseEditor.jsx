@@ -563,7 +563,7 @@ export default function AdminCaseEditor() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-4">
         <div>
           <div className="flex items-center gap-2 text-xs text-textSecondary mb-1">
-            <Link to="/admin/cases" className="hover:text-amber-400">Case Studies</Link>
+            <Link to="/ownercontrols_panel/cases" className="hover:text-amber-400">Case Studies</Link>
             <span>/</span>
             <span className="text-textPrimary truncate max-w-[150px]">{project.title}</span>
           </div>

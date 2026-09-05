@@ -159,7 +159,7 @@ export default function AdminCasesListing() {
       if (data.success) {
         setShowCreateModal(false)
         setNewCaseData({ title: '', slug: '', service: 'family-events', category: 'EVENTS' })
-        navigate(`/admin/cases/${data.data._id}`)
+        navigate(`/ownercontrols_panel/cases/${data.data._id}`)
       } else {
         throw new Error(data.message || 'Creation failed')
       }
@@ -278,7 +278,7 @@ export default function AdminCasesListing() {
                     </td>
                     <td className="p-4 text-right space-x-2">
                       <Link
-                        to={`/admin/cases/${item._id}`}
+                        to={`/ownercontrols_panel/cases/${item._id}`}
                         className="inline-block bg-white/5 hover:bg-amber-500/20 text-textPrimary hover:text-amber-400 font-bold py-1.5 px-3 rounded transition-all"
                       >
                         ⚙️  Edit

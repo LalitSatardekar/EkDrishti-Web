@@ -10,6 +10,7 @@ export default function handler(req, res) {
   if (isProduction) {
     robotsTxt += `User-agent: *\n`
     robotsTxt += `Allow: /\n`
+    robotsTxt += `Disallow: /ownercontrols_panel/\n`
     robotsTxt += `Disallow: /admin/\n`
     robotsTxt += `Disallow: /api/\n`
     robotsTxt += `\n`

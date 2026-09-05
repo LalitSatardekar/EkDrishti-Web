@@ -16,7 +16,7 @@ export default function AdminRoute({ children }) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/admin/login" replace />
+    return <Navigate to="/ownercontrols_panel/login" replace />
   }
 
   return children

@@ -29,7 +29,7 @@ export default function AdminLogin() {
       }
 
       login(data.token, data.user)
-      navigate('/admin')
+      navigate('/ownercontrols_panel')
     } catch (err) {
       setError(err.message || 'Something went wrong')
     } finally {

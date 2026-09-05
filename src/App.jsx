@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom'
 import { useEffect, useRef, lazy, Suspense } from 'react'
 import Layout from './components/layout/Layout'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -96,17 +96,21 @@ function App() {
           <ErrorBoundary>
             <Suspense fallback={<PageLoader />}>
               <Routes>
-                {/* Admin standalone endpoints */}
-                <Route path="/admin/login" element={<AdminLogin />} />
-                <Route path="/admin" element={<AdminRoute><AdminLayout><AdminDashboard /></AdminLayout></AdminRoute>} />
-                <Route path="/admin/cases" element={<AdminRoute><AdminLayout><AdminCasesListing /></AdminLayout></AdminRoute>} />
-                <Route path="/admin/cases/:id" element={<AdminRoute><AdminLayout><AdminCaseEditor /></AdminLayout></AdminRoute>} />
-                <Route path="/admin/media" element={<AdminRoute><AdminLayout><AdminMedia /></AdminLayout></AdminRoute>} />
-                <Route path="/admin/contacts" element={<AdminRoute><AdminLayout><AdminContacts /></AdminLayout></AdminRoute>} />
-                <Route path="/admin/logs" element={<AdminRoute><AdminLayout><AdminLogs /></AdminLayout></AdminRoute>} />
-                <Route path="/admin/memory" element={<AdminRoute><AdminLayout><AdminMemory /></AdminLayout></AdminRoute>} />
-                <Route path="/admin/health" element={<AdminRoute><AdminLayout><AdminHealth /></AdminLayout></AdminRoute>} />
-                <Route path="/admin/settings" element={<AdminRoute><AdminLayout><AdminSettings /></AdminLayout></AdminRoute>} />
+                {/* Admin / Owner Controls Panel standalone endpoints */}
+                <Route path="/ownercontrols_panel/login" element={<AdminLogin />} />
+                <Route path="/ownercontrols_panel" element={<AdminRoute><AdminLayout><AdminDashboard /></AdminLayout></AdminRoute>} />
+                <Route path="/ownercontrols_panel/cases" element={<AdminRoute><AdminLayout><AdminCasesListing /></AdminLayout></AdminRoute>} />
+                <Route path="/ownercontrols_panel/cases/:id" element={<AdminRoute><AdminLayout><AdminCaseEditor /></AdminLayout></AdminRoute>} />
+                <Route path="/ownercontrols_panel/media" element={<AdminRoute><AdminLayout><AdminMedia /></AdminLayout></AdminRoute>} />
+                <Route path="/ownercontrols_panel/contacts" element={<AdminRoute><AdminLayout><AdminContacts /></AdminLayout></AdminRoute>} />
+                <Route path="/ownercontrols_panel/logs" element={<AdminRoute><AdminLayout><AdminLogs /></AdminLayout></AdminRoute>} />
+                <Route path="/ownercontrols_panel/memory" element={<AdminRoute><AdminLayout><AdminMemory /></AdminLayout></AdminRoute>} />
+                <Route path="/ownercontrols_panel/health" element={<AdminRoute><AdminLayout><AdminHealth /></AdminLayout></AdminRoute>} />
+                <Route path="/ownercontrols_panel/settings" element={<AdminRoute><AdminLayout><AdminSettings /></AdminLayout></AdminRoute>} />
+
+                {/* Legacy /admin redirects */}
+                <Route path="/admin/*" element={<Navigate to="/ownercontrols_panel" replace />} />
+                <Route path="/admin" element={<Navigate to="/ownercontrols_panel" replace />} />
 
                 {/* Public frontend endpoints wrapped in default Layout */}
                 <Route path="/*" element={

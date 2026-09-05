@@ -8,23 +8,23 @@ export default function AdminLayout({ children }) {
 
   const handleLogout = () => {
     logout()
-    navigate('/admin/login')
+    navigate('/ownercontrols_panel/login')
   }
 
   const navItems = [
-    { path: '/admin', label: '📊  Dashboard', exact: true },
-    { path: '/admin/cases', label: '📁  Case Studies' },
-    { path: '/admin/media', label: '🖼️  Media Library' },
-    { path: '/admin/contacts', label: '📩  Contact Forms' },
-    { path: '/admin/logs', label: '📋  Activity Logs' },
-    { path: '/admin/memory', label: '🧠  Project Memory' },
-    { path: '/admin/health', label: '❤️  System Health' },
-    { path: '/admin/settings', label: '⚙️  Settings' }
+    { path: '/ownercontrols_panel', label: '📊  Dashboard', exact: true },
+    { path: '/ownercontrols_panel/cases', label: '📁  Case Studies' },
+    { path: '/ownercontrols_panel/media', label: '🖼️  Media Library' },
+    { path: '/ownercontrols_panel/contacts', label: '📩  Contact Forms' },
+    { path: '/ownercontrols_panel/logs', label: '📋  Activity Logs' },
+    { path: '/ownercontrols_panel/memory', label: '🧠  Project Memory' },
+    { path: '/ownercontrols_panel/health', label: '❤️  System Health' },
+    { path: '/ownercontrols_panel/settings', label: '⚙️  Settings' }
   ]
 
   const isActive = (item) => {
     if (item.exact) return location.pathname === item.path
-    return location.pathname.startsWith(item.path) && location.pathname !== '/admin'
+    return location.pathname.startsWith(item.path) && location.pathname !== '/ownercontrols_panel'
   }
 
   return (
