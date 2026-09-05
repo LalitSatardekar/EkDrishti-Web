@@ -11,7 +11,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, message: `Method ${req.method} not allowed` })
   }
 
-  const { username, password } = req.body
+  const { username, password } = req.body || {}
 
   // 1. Defend against NoSQL query injections (OWASP Top 10 Injection Mitigation)
   if (typeof username !== 'string' || typeof password !== 'string') {

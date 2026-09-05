@@ -1,7 +1,7 @@
 import express from 'express'
 import path from 'path'
 import fs from 'fs'
-import { fileURLToPath, pathToFileURL } from 'url'
+import { fileURLToPath } from 'url'
 import bcrypt from 'bcryptjs'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -31,18 +31,31 @@ try {
   console.warn('Could not auto-load .env:', e.message)
 }
 
-// Load schemas to perform default seeding
+// Load database connection & model
 import { connectToDatabase } from './api/lib/db.js'
 import User from './api/models/User.js'
 
+// Import API route handlers directly
+import loginHandler from './api/v1/auth/login.js'
+import meHandler from './api/v1/auth/me.js'
+import casesHandler from './api/v1/cases.js'
+import contactHandler from './api/v1/contact.js'
+import dashboardHandler from './api/v1/dashboard.js'
+import healthHandler from './api/v1/health.js'
+import logsHandler from './api/v1/logs.js'
+import maintenanceHandler from './api/v1/maintenance.js'
+import robotsHandler from './api/v1/robots.js'
+import sitemapHandler from './api/v1/sitemap.js'
+import uploadHandler from './api/v1/upload.js'
+
 const app = express()
 app.use(express.json({ limit: '50mb' }))
+app.use(express.urlencoded({ extended: true, limit: '50mb' }))
 
 // Set fallback credentials and secrets if not defined in .env
 process.env.MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/ekdrishti_test'
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'ekdrishti_dev_jwt_secret_token_123'
 process.env.ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'edadmin'
-// hash for default password: 'Ekdrishtiadmin@0112'
 process.env.ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || bcrypt.hashSync('Ekdrishtiadmin@0112', 10)
 
 // Helper: Ensure default Admin account exists in database
@@ -58,71 +71,38 @@ async function bootstrapAdmin() {
       })
       console.log('   ✓ Seeded default admin credentials:')
       console.log(`     Username: ${process.env.ADMIN_USERNAME}`)
-      console.log(`     Password: adminpassword123`)
     } else {
       console.log('   ✓ Admin account already present.')
     }
   } catch (err) {
-    console.warn('⚠️ MongoDB connection/seeding failed (check if local Mongo is running):', err.message)
+    console.warn('⚠️ MongoDB connection/seeding failed:', err.message)
   }
 }
 
-// Express emulator shortcut for Vercel /health redirect
-app.get('/health', async (req, res) => {
-  const handlerFilePath = path.join(__dirname, 'api', 'v1', 'health.js')
+// Universal Express Adapter for Serverless Handlers
+const adapt = (handler) => async (req, res) => {
   try {
-    const handlerUrl = pathToFileURL(handlerFilePath).href
-    const module = await import(handlerUrl)
-    const handler = module.default
     await handler(req, res)
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Health check error: ' + error.message })
-  }
-})
-
-// Router routing to Vercel serverless files dynamically
-app.use('/api', async (req, res) => {
-  // Resolve path from URL /api/v1/auth/login -> api/v1/auth/login.js
-  const cleanPath = req.path.replace(/^\//, '')
-  const handlerFilePath = path.join(__dirname, 'api', cleanPath + '.js')
-
-  try {
-    if (!fs.existsSync(handlerFilePath)) {
-      return res.status(404).json({ success: false, message: `API route /api/${cleanPath} not found` })
+  } catch (err) {
+    console.error(`Backend error on ${req.method} ${req.originalUrl}:`, err)
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, message: 'Internal server error: ' + err.message })
     }
-
-    const handlerUrl = pathToFileURL(handlerFilePath).href
-    const module = await import(handlerUrl)
-    const handler = module.default
-
-    // Adapt standard express req/res to Vercel serverless interface
-    const vercelReq = req
-
-    const vercelRes = {
-      status: (code) => {
-        res.status(code)
-        return vercelRes
-      },
-      json: (data) => {
-        res.json(data)
-        return vercelRes
-      },
-      send: (data) => {
-        res.send(data)
-        return vercelRes
-      },
-      setHeader: (key, val) => {
-        res.setHeader(key, val)
-        return vercelRes
-      }
-    }
-
-    await handler(vercelReq, vercelRes)
-  } catch (error) {
-    console.error(`Backend error on ${req.method} ${req.path}:`, error)
-    res.status(500).json({ success: false, message: 'API execution error: ' + error.message })
   }
-})
+}
+
+// API Routes (mounted explicitly)
+app.all(['/health', '/api/v1/health', '/api/health'], adapt(healthHandler))
+app.all('/api/v1/auth/login', adapt(loginHandler))
+app.all('/api/v1/auth/me', adapt(meHandler))
+app.all(['/api/v1/cases', '/api/cases'], adapt(casesHandler))
+app.all(['/api/v1/contact', '/api/contact'], adapt(contactHandler))
+app.all(['/api/v1/dashboard', '/api/dashboard'], adapt(dashboardHandler))
+app.all(['/api/v1/logs', '/api/logs'], adapt(logsHandler))
+app.all(['/api/v1/maintenance', '/api/maintenance'], adapt(maintenanceHandler))
+app.all(['/api/v1/robots', '/api/robots'], adapt(robotsHandler))
+app.all(['/api/v1/sitemap', '/api/sitemap'], adapt(sitemapHandler))
+app.all(['/api/v1/upload', '/api/upload'], adapt(uploadHandler))
 
 // Serve public and dist static files
 const publicPath = path.join(__dirname, 'public')
@@ -130,16 +110,15 @@ const distPath = path.join(__dirname, 'dist')
 app.use(express.static(publicPath))
 app.use(express.static(distPath))
 
-// Client-side routing fallback for React Router (Single Page Application)
+// Client-side routing fallback for React Router SPA
 app.use((req, res, next) => {
-  // If request is not GET or starts with /api or /health, proceed to next
-  if (req.method !== 'GET' || req.path.startsWith('/api') || req.path === '/health') {
+  if (req.method !== 'GET' || req.path.startsWith('/api') || req.path.startsWith('/health')) {
     return next()
   }
   const indexPath = path.join(distPath, 'index.html')
   res.sendFile(indexPath, (err) => {
     if (err) {
-      res.status(200).send('EkDrishti Backend API running. Run "npm run build" to generate frontend bundle.')
+      res.status(200).send('EkDrishti Backend running. Build frontend to view site.')
     }
   })
 })

@@ -1,18 +1,16 @@
 import jwt from 'jsonwebtoken'
 
-const JWT_SECRET = process.env.JWT_SECRET
-
-if (!JWT_SECRET) {
-  throw new Error('Please define the JWT_SECRET environment variable inside .env')
+function getJwtSecret() {
+  return process.env.JWT_SECRET || 'ekdrishti_dev_jwt_secret_token_123'
 }
 
 export function signToken(payload) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' })
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: '1d' })
 }
 
 export function verifyToken(token) {
   try {
-    return jwt.verify(token, JWT_SECRET)
+    return jwt.verify(token, getJwtSecret())
   } catch (e) {
     return null
   }
