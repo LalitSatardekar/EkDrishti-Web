@@ -60,6 +60,12 @@ export default function AdminMedia() {
     const file = e.target.files[0]
     if (!file) return
 
+    if (file.size > 30 * 1024 * 1024) {
+      alert('Selected file is larger than the 30MB maximum limit. Please select an image under 30MB.')
+      e.target.value = ''
+      return
+    }
+
     setUploading(true)
     const reader = new FileReader()
     reader.onload = async (event) => {

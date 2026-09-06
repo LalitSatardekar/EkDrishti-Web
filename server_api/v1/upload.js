@@ -42,10 +42,10 @@ export default async function handler(req, res) {
     })
   }
 
-  // 3. Payload size check (Max 10MB)
+  // 3. Payload size check (Max 30MB)
   const sizeBytes = (content.length * 3) / 4
-  if (sizeBytes > 10 * 1024 * 1024) {
-    return res.status(400).json({ success: false, message: 'Security error: Upload capacity exceeds limit of 10MB.' })
+  if (sizeBytes > 30 * 1024 * 1024) {
+    return res.status(400).json({ success: false, message: 'Security error: Upload capacity exceeds limit of 30MB.' })
   }
 
   try {

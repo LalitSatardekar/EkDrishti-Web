@@ -35,7 +35,7 @@ export default function AdminLayout({ children }) {
           {/* Logo */}
           <div className="mb-8">
             <Link to="/" className="text-amber-400 text-sm font-semibold tracking-[0.2em] uppercase block hover:opacity-85">
-              Ekdrishti Studios
+              Ekdrishti Group
             </Link>
             <span className="text-[10px] text-textSecondary uppercase tracking-widest block mt-1">CMS Admin Panel</span>
           </div>
@@ -48,11 +48,10 @@ export default function AdminLayout({ children }) {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                    active
-                      ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                      : 'text-textSecondary hover:bg-white/5 hover:text-textPrimary border border-transparent'
-                  }`}
+                  className={`block px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${active
+                    ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                    : 'text-textSecondary hover:bg-white/5 hover:text-textPrimary border border-transparent'
+                    }`}
                 >
                   {item.label}
                 </Link>
@@ -72,7 +71,7 @@ export default function AdminLayout({ children }) {
               <p className="text-[10px] text-textSecondary capitalize">{user?.role || 'Administrator'}</p>
             </div>
           </div>
-          
+
           <button
             onClick={handleLogout}
             className="w-full text-left px-4 py-2 rounded-xl text-xs font-semibold text-red-400 hover:bg-red-500/10 transition-all duration-200 flex items-center gap-2 border border-transparent hover:border-red-500/20"

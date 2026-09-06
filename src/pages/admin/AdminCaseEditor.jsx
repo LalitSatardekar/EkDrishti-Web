@@ -106,6 +106,12 @@ export default function AdminCaseEditor() {
     const file = e.target.files[0]
     if (!file) return
 
+    if (file.size > 30 * 1024 * 1024) {
+      alert('Selected file is larger than the 30MB maximum limit. Please select an image under 30MB.')
+      e.target.value = ''
+      return
+    }
+
     const fieldName = e.target.name || 'general'
     setUploadingField(fieldName)
 

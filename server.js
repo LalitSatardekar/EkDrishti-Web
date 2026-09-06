@@ -49,8 +49,8 @@ import sitemapHandler from './server_api/v1/sitemap.js'
 import uploadHandler from './server_api/v1/upload.js'
 
 const app = express()
-app.use(express.json({ limit: '50mb' }))
-app.use(express.urlencoded({ extended: true, limit: '50mb' }))
+app.use(express.json({ limit: '60mb' }))
+app.use(express.urlencoded({ extended: true, limit: '60mb' }))
 
 app.get(['/ping', '/v1/ping', '/api/ping', '/api/v1/ping'], (req, res) => {
   res.json({ success: true, message: 'pong', time: new Date().toISOString() })
