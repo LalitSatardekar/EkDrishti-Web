@@ -6,6 +6,7 @@ import VisualImageArranger from '../../components/work/VisualImageArranger'
 import { selectDynamicHeroImages, shuffleGridImages, balanceGridImages } from '../../lib/heroSelector'
 import { SUPPORTED_RATIOS, detectClosestRatio } from '../../lib/aspectRatios'
 import { normalizeCase } from '../../lib/config'
+import BulkPhotoImporterModal from '../../components/admin/BulkPhotoImporterModal'
 
 export default function AdminCaseEditor() {
   const { id } = useParams()
@@ -21,6 +22,8 @@ export default function AdminCaseEditor() {
   const [activeTab, setActiveTab] = useState('metadata') // 'metadata', 'hero', 'sections'
   const [showAddSection, setShowAddSection] = useState(false)
   const [showAlbumPicker, setShowAlbumPicker] = useState(false)
+  const [showBulkImporter, setShowBulkImporter] = useState(false)
+  const [bulkImporterTarget, setBulkImporterTarget] = useState('album')
   const [albumPickerTarget, setAlbumPickerTarget] = useState('hero') // 'hero', 'gallery'
   const [albumRatioFilter, setAlbumRatioFilter] = useState('ALL') // 'ALL', '3:4', '4:3', '3:2', '2:3', '16:9', '9:16', '1:1'
   const [imageRatios, setImageRatios] = useState({})
@@ -145,6 +148,29 @@ export default function AdminCaseEditor() {
       }
     }
     reader.readAsDataURL(file)
+  }
+
+  const handleBulkImportComplete = (newUrls, target) => {
+    if (!newUrls || newUrls.length === 0) return
+    setIsDirty(true)
+    setProject(prev => {
+      let updated = { ...prev }
+      const existingAlbum = updated.album || []
+      const existingHero = updated.hero || []
+
+      if (target === 'album' || target === 'both') {
+        const uniqueAlbum = [...new Set([...existingAlbum, ...newUrls])]
+        updated.album = uniqueAlbum
+      }
+
+      if (target === 'hero' || target === 'both') {
+        const availableSlots = 20 - existingHero.length
+        const toAdd = newUrls.slice(0, Math.max(0, availableSlots))
+        updated.hero = [...existingHero, ...toAdd]
+      }
+
+      return updated
+    })
   }
 
   useEffect(() => {
@@ -701,34 +727,47 @@ export default function AdminCaseEditor() {
 
               {/* Action Buttons */}
               <div className="space-y-2">
-                <label className="w-full py-2.5 px-3 bg-amber-500 hover:bg-amber-400 text-primary font-bold rounded-xl transition-all cursor-pointer text-center text-xs flex items-center justify-center gap-2 shadow-lg shadow-amber-500/10">
-                  {uploadingField === 'hero-upload' ? 'Uploading...' : '📁 Upload New to Hero'}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    name="hero-upload"
-                    onChange={(e) => handleFileUpload(e, (webpUrl) => {
-                      setIsDirty(true)
-                      setProject(prev => {
-                        const current = prev.hero || []
-                        if (current.length >= 20) {
-                          alert('Maximum 20 hero images allowed.')
-                          return prev
-                        }
-                        return { ...prev, hero: [...current, webpUrl] }
-                      })
-                    })}
-                    className="hidden"
-                  />
-                </label>
-
                 <button
                   type="button"
-                  onClick={() => setShowAlbumPicker(true)}
-                  className="w-full py-2.5 px-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold rounded-xl transition-all text-xs flex items-center justify-center gap-2"
+                  onClick={() => {
+                    setBulkImporterTarget('hero')
+                    setShowBulkImporter(true)
+                  }}
+                  className="w-full py-2.5 px-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-primary font-black rounded-xl transition-all shadow-lg shadow-amber-500/10 text-xs flex items-center justify-center gap-2"
                 >
-                  📚 Pick from Album ({project?.album?.length || 0})
+                  <span>⚡</span> Bulk Import to Hero (Drive & Dropzone)
                 </button>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="py-2 px-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold rounded-xl transition-all cursor-pointer text-center text-xs flex items-center justify-center gap-1.5">
+                    {uploadingField === 'hero-upload' ? '...' : '📁 Single File'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      name="hero-upload"
+                      onChange={(e) => handleFileUpload(e, (webpUrl) => {
+                        setIsDirty(true)
+                        setProject(prev => {
+                          const current = prev.hero || []
+                          if (current.length >= 20) {
+                            alert('Maximum 20 hero images allowed.')
+                            return prev
+                          }
+                          return { ...prev, hero: [...current, webpUrl] }
+                        })
+                      })}
+                      className="hidden"
+                    />
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowAlbumPicker(true)}
+                    className="py-2 px-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold rounded-xl transition-all text-xs flex items-center justify-center gap-1.5"
+                  >
+                    📚 From Album ({project?.album?.length || 0})
+                  </button>
+                </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -995,21 +1034,33 @@ export default function AdminCaseEditor() {
               <div className="border-t border-white/5 pt-3 space-y-2">
                 <div className="flex justify-between items-center">
                   <label className="block text-textSecondary font-semibold uppercase tracking-wide">Album / Gallery Library</label>
-                  <label className="text-[10px] text-amber-400 hover:underline cursor-pointer">
-                    {uploadingField === 'album-add' ? 'Uploading...' : '＋ Add Image'}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      name="album-add"
-                      onChange={(e) => handleFileUpload(e, (webpUrl) => {
-                        setProject(prev => ({
-                          ...prev,
-                          album: prev.album ? [...prev.album, webpUrl] : [webpUrl]
-                        }))
-                      })}
-                      className="hidden"
-                    />
-                  </label>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBulkImporterTarget('album')
+                        setShowBulkImporter(true)
+                      }}
+                      className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-primary font-bold rounded-lg text-[10px] flex items-center gap-1 shadow"
+                    >
+                      <span>⚡</span> Bulk Import (Drive & Drop)
+                    </button>
+                    <label className="text-[10px] text-amber-400 hover:underline cursor-pointer bg-white/5 px-2 py-1 rounded-lg border border-white/5">
+                      {uploadingField === 'album-add' ? '...' : '＋ Single'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        name="album-add"
+                        onChange={(e) => handleFileUpload(e, (webpUrl) => {
+                          setProject(prev => ({
+                            ...prev,
+                            album: prev.album ? [...prev.album, webpUrl] : [webpUrl]
+                          }))
+                        })}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
                 </div>
                 <div className="grid grid-cols-4 gap-2 max-h-[140px] overflow-y-auto p-1 bg-[#0B1120] rounded-xl border border-white/5">
                   {(!project.album || project.album.length === 0) ? (
@@ -2020,6 +2071,16 @@ export default function AdminCaseEditor() {
           </div>
         )
       })()}
+
+      {/* BULK PHOTO IMPORTER MODAL (GOOGLE DRIVE & LOCAL BATCH DROPZONE) */}
+      <BulkPhotoImporterModal
+        isOpen={showBulkImporter}
+        onClose={() => setShowBulkImporter(false)}
+        token={token}
+        defaultTarget={bulkImporterTarget}
+        maxHeroLimit={20}
+        onImportComplete={handleBulkImportComplete}
+      />
     </div>
   )
 }

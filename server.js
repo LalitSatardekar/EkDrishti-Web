@@ -47,6 +47,7 @@ import maintenanceHandler from './server_api/v1/maintenance.js'
 import robotsHandler from './server_api/v1/robots.js'
 import sitemapHandler from './server_api/v1/sitemap.js'
 import uploadHandler from './server_api/v1/upload.js'
+import gdriveImportHandler from './server_api/v1/gdrive-import.js'
 
 const app = express()
 app.use(express.json({ limit: '60mb' }))
@@ -119,6 +120,7 @@ app.all(['/v1/maintenance', '/api/v1/maintenance', '/api/maintenance'], adapt(ma
 app.all(['/v1/robots', '/api/v1/robots', '/api/robots'], adapt(robotsHandler))
 app.all(['/v1/sitemap', '/api/v1/sitemap', '/api/sitemap'], adapt(sitemapHandler))
 app.all(['/v1/upload', '/api/v1/upload', '/api/upload'], adapt(uploadHandler))
+app.all(['/v1/gdrive-import', '/api/v1/gdrive-import', '/api/gdrive-import'], adapt(gdriveImportHandler))
 
 // Serve public and dist static files
 const publicPath = path.join(__dirname, 'public')

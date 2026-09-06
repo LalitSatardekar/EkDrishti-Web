@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useCases } from '../../context/CasesContext'
+import BulkPhotoImporterModal from '../../components/admin/BulkPhotoImporterModal'
 
 export default function AdminMedia() {
   const { token } = useAuth()
@@ -17,6 +18,7 @@ export default function AdminMedia() {
   const [uploading, setUploading] = useState(false)
   const [search, setSearch] = useState('')
   const [copiedIndex, setCopiedIndex] = useState(null)
+  const [showBulkModal, setShowBulkModal] = useState(false)
 
   // Aggregate S3/local images from the database case studies album
   const aggregatedImages = () => {
@@ -127,16 +129,25 @@ export default function AdminMedia() {
           <h1 className="text-2xl md:text-3xl font-heading font-black text-white">Media Library</h1>
           <p className="text-textSecondary text-xs">Browse all website graphics, compress WebP assets, and copy absolute URLs</p>
         </div>
-        <label className="bg-amber-500 hover:bg-amber-400 text-primary font-bold py-2.5 px-5 rounded-xl transition-all text-xs cursor-pointer flex items-center gap-2">
-          {uploading ? 'Uploading...' : '＋ Upload Image'}
-          <input
-            type="file"
-            accept="image/*"
-            disabled={uploading}
-            onChange={handleUpload}
-            className="hidden"
-          />
-        </label>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowBulkModal(true)}
+            className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-primary font-black py-2.5 px-4 rounded-xl transition-all text-xs flex items-center gap-1.5 shadow"
+          >
+            <span>⚡</span> Bulk Import (Drive & Drop)
+          </button>
+          <label className="bg-white/10 hover:bg-white/20 border border-white/10 text-white font-bold py-2.5 px-4 rounded-xl transition-all text-xs cursor-pointer flex items-center gap-1.5">
+            {uploading ? 'Uploading...' : '＋ Single File'}
+            <input
+              type="file"
+              accept="image/*"
+              disabled={uploading}
+              onChange={handleUpload}
+              className="hidden"
+            />
+          </label>
+        </div>
       </div>
 
       {/* FILTER / SEARCH */}
@@ -183,6 +194,25 @@ export default function AdminMedia() {
           ))}
         </div>
       )}
+
+      {/* BULK PHOTO IMPORTER MODAL */}
+      <BulkPhotoImporterModal
+        isOpen={showBulkModal}
+        onClose={() => setShowBulkModal(false)}
+        token={token}
+        defaultTarget="media"
+        onImportComplete={(newUrls) => {
+          if (!newUrls || newUrls.length === 0) return
+          const newEntries = newUrls.map(url => ({
+            url,
+            filename: url.substring(url.lastIndexOf('/') + 1),
+            uploaded_at: new Date().toISOString()
+          }))
+          const updated = [...newEntries, ...localHistory]
+          setLocalHistory(updated)
+          localStorage.setItem('ekdrishti_uploaded_media', JSON.stringify(updated))
+        }}
+      />
     </div>
   )
 }
