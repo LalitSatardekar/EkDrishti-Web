@@ -67,45 +67,50 @@ export default async function handler(req, res) {
     let originalUrl = ''
 
     // 4. AWS S3 Upload or Local Mock Upload Fallback
+    let uploadedToS3 = false
     if (AWS_ACCESS_KEY_ID && AWS_SECRET_ACCESS_KEY && AWS_S3_BUCKET) {
-      // Connect AWS Client
-      const s3 = new S3Client({
-        region: AWS_REGION,
-        credentials: {
-          accessKeyId: AWS_ACCESS_KEY_ID,
-          secretAccessKey: AWS_SECRET_ACCESS_KEY
-        }
-      })
+      try {
+        const s3 = new S3Client({
+          region: AWS_REGION,
+          credentials: {
+            accessKeyId: AWS_ACCESS_KEY_ID,
+            secretAccessKey: AWS_SECRET_ACCESS_KEY
+          }
+        })
 
-      // Upload compressed WebP to S3
-      await s3.send(new PutObjectCommand({
-        Bucket: AWS_S3_BUCKET,
-        Key: `webp/${webpFilename}`,
-        Body: webpBuffer,
-        ContentType: 'image/webp'
-      }))
+        // Upload compressed WebP to S3
+        await s3.send(new PutObjectCommand({
+          Bucket: AWS_S3_BUCKET,
+          Key: `webp/${webpFilename}`,
+          Body: webpBuffer,
+          ContentType: 'image/webp'
+        }))
 
-      // Upload original file format to S3
-      await s3.send(new PutObjectCommand({
-        Bucket: AWS_S3_BUCKET,
-        Key: `original/${filename}`,
-        Body: buffer,
-        ContentType: fileType
-      }))
+        // Upload original file format to S3
+        await s3.send(new PutObjectCommand({
+          Bucket: AWS_S3_BUCKET,
+          Key: `original/${filename}`,
+          Body: buffer,
+          ContentType: fileType
+        }))
 
-      webpUrl = `https://${AWS_S3_BUCKET}.s3.${AWS_REGION}.amazonaws.com/webp/${webpFilename}`
-      originalUrl = `https://${AWS_S3_BUCKET}.s3.${AWS_REGION}.amazonaws.com/original/${filename}`
-      
-      console.log(`Successfully uploaded ${filename} to AWS S3 bucket: ${AWS_S3_BUCKET}`)
-    } else {
-      console.warn('AWS S3 credentials not fully configured. Falling back to local public storage mock...')
-      
+        webpUrl = `https://${AWS_S3_BUCKET}.s3.${AWS_REGION}.amazonaws.com/webp/${webpFilename}`
+        originalUrl = `https://${AWS_S3_BUCKET}.s3.${AWS_REGION}.amazonaws.com/original/${filename}`
+        uploadedToS3 = true
+        console.log(`Successfully uploaded ${filename} to AWS S3 bucket: ${AWS_S3_BUCKET}`)
+      } catch (s3Err) {
+        console.warn('AWS S3 upload failed, falling back to local public storage:', s3Err.message)
+      }
+    }
+
+    if (!uploadedToS3) {
+      console.warn('Saving to local storage...')
       const uploadDir = path.join(process.cwd(), 'public', 'uploads')
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true })
       }
 
-      // Save files to local dev server directory
+      // Save files to local server directory
       fs.writeFileSync(path.join(uploadDir, webpFilename), webpBuffer)
       fs.writeFileSync(path.join(uploadDir, filename), buffer)
 
