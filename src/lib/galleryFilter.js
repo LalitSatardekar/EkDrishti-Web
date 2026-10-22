@@ -1,3 +1,5 @@
+import { mediaAsset } from './media.js'
+
 /**
  * Gallery Filter Utility
  * Handles deduplication between hero grid and gallery images
@@ -20,10 +22,10 @@ export const deduplicateGallery = (albumImages, heroImages) => {
   }
   
   // Use Set for O(1) lookup performance
-  const heroSet = new Set(heroImages.filter(Boolean))
+  const heroSet = new Set(heroImages.filter(Boolean).map(value => mediaAsset(value).src))
   
   // Filter out any image that appears in hero
-  return albumImages.filter(img => img && !heroSet.has(img))
+  return albumImages.filter(img => img && !heroSet.has(mediaAsset(img).src))
 }
 
 /**
@@ -40,11 +42,10 @@ export const prepareGalleryImages = (albumImages, heroImages, project) => {
   const deduplicated = deduplicateGallery(albumImages, heroImages)
   
   // Format for AlbumGrid component
-  return deduplicated.map((src, index) => ({
-    id: index + 1,
-    src,
+  return deduplicated.map((value, index) => ({
+    ...mediaAsset(value, index),
     title: project?.title ?? 'Album',
-    alt: `${project?.title ?? 'Album'} photo ${index + 1}`,
+    alt: mediaAsset(value, index).alt || `${project?.title ?? 'Album'} photo ${index + 1}`,
   }))
 }
 

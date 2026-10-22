@@ -2,7 +2,6 @@ import express from 'express'
 import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
-import bcrypt from 'bcryptjs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -69,14 +68,13 @@ app.get(['/v1/db-test', '/api/v1/db-test'], async (req, res) => {
   }
 })
 
-// Set fallback credentials and secrets if not defined in .env
-process.env.MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://tanmayjare13_db_user:tanmayjare29@edcluster.g6tbxhr.mongodb.net/ekdrishti?retryWrites=true&w=majority'
-process.env.JWT_SECRET = process.env.JWT_SECRET || 'ekdrishti_dev_jwt_secret_token_ed_scrl_non'
-process.env.ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'edadmin'
-process.env.ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || bcrypt.hashSync('Ekdrishtiadmin@0112', 10)
-
 // Helper: Ensure default Admin account exists in database
 async function bootstrapAdmin() {
+  if (process.env.BOOTSTRAP_ADMIN !== 'true') return
+  if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD_HASH) {
+    console.warn('Admin bootstrap requires ADMIN_USERNAME and ADMIN_PASSWORD_HASH.')
+    return
+  }
   try {
     await connectToDatabase()
     const adminCount = await User.countDocuments({ role: 'admin' })
@@ -142,7 +140,8 @@ app.use((req, res, next) => {
 })
 
 const PORT = process.env.PORT || 3000
-app.listen(PORT, () => {
+const HOST = process.env.HOST || '0.0.0.0'
+app.listen(PORT, HOST, () => {
   console.log(`🚀 EkDrishti server running on port ${PORT} (process.env.PORT = ${process.env.PORT || 'default 3000'})`)
   bootstrapAdmin().catch(e => console.warn('Bootstrap admin warning:', e.message))
 })

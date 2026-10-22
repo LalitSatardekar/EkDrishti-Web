@@ -1,30 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { allCases as rawFallbackCases } from '../data/cases'
-import { encodeAssetUrl } from '../lib/config'
-
-const normalizeCase = (item) => {
-  if (!item) return item
-  const id = item.id || item._id
-  const _id = item._id || String(item.id)
-  const image = encodeAssetUrl(item.image)
-  const thumbnail = encodeAssetUrl(item.thumbnail || item.image)
-  const thumbnail169 = encodeAssetUrl(item.thumbnail169 || thumbnail)
-  const thumbnail32 = encodeAssetUrl(item.thumbnail32 || thumbnail)
-  const album = Array.isArray(item.album) ? item.album.map(encodeAssetUrl) : []
-  const hero = Array.isArray(item.hero) ? item.hero.map(encodeAssetUrl) : []
-
-  return {
-    ...item,
-    id,
-    _id,
-    image,
-    hero,
-    thumbnail,
-    thumbnail169,
-    thumbnail32,
-    album,
-  }
-}
+import { normalizeCase } from '../lib/config'
 
 const fallbackCases = rawFallbackCases.map(normalizeCase)
 

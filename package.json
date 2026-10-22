@@ -14,6 +14,10 @@
     "db:backup": "node --env-file=.env scripts/db-backup-json.js",
     "db:migrate": "node --env-file=.env scripts/backup-and-migrate-to-atlas.js",
     "audit": "node --env-file=.env scripts/audit-production-readiness.mjs",
+    "test:block-isolation": "node scripts/test-case-block-isolation.mjs",
+    "test:media-system": "node scripts/test-media-system.mjs",
+    "test:case-persistence": "node --env-file=.env scripts/test-case-persistence.mjs",
+    "test:cms-browser": "node --env-file=.env scripts/test-cms-browser.mjs",
     "api": "node --env-file=.env server.js",
     "api:dev": "node --watch --env-file=.env server.js",
     "start": "node server.js"

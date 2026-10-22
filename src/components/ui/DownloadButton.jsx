@@ -1,15 +1,26 @@
+import { accessDestination } from '../../lib/clientAccess'
 import { trackButtonClick } from '../../lib/analytics'
+import TypographyText from '../work/sections/TypographyText'
+
+export function ButtonIcon({ name, size }) {
+  const paths = { folder:'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z', download:'M4 16v3h16v-3M12 3v12m-5-5 5 5 5-5', video:'m15 10 6-3v10l-6-3M3 6h12v12H3z', link:'m10 13 4-4m-6 6-2 2a4 4 0 01-6-6l4-4a4 4 0 016 0m-2 2 2-2a4 4 0 016 6l-4 4a4 4 0 01-6 0', mail:'M3 5h18v14H3z m0 0 9 8 9-8', phone:'M5 3h4l2 5-3 2a14 14 0 006 6l2-3 5 2v4c-12 4-22-6-16-16z', whatsapp:'M20 11a8 8 0 01-12 7l-5 2 2-5A8 8 0 1120 11z M8 7c0 5 3 8 7 8' }
+  if (!paths[name]) return null
+  return <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d={paths[name]} /></svg>
+}
 
 const DownloadButton = ({
   label = "Download Photos",
   driveLink,
   variant = "primary",
-  icon = "download"
+  icon = "download",
+  typographyProject = null,
+  typographySection = null
 }) => {
   const handleDownload = () => {
-    if (driveLink) {
+    const destination = accessDestination({ type: 'external', value: driveLink })
+    if (destination.href) {
       trackButtonClick(label, 'download_button', { icon })
-      window.open(driveLink, '_blank')
+      window.open(destination.href, '_blank', 'noopener,noreferrer')
     }
   }
 
@@ -21,32 +32,15 @@ const DownloadButton = ({
     restricted: "bg-gradient-to-r from-[#F2A020] via-[#E89018] to-[#FF8800] hover:from-[#D89018] hover:via-[#D88010] hover:to-[#E87800] text-[#0B1120] font-medium px-6 py-3 rounded-lg shadow-lg shadow-[#F2A020]/40 hover:shadow-2xl hover:shadow-[#F2A020]/60 hover:scale-[1.02]"
   }
 
-  const icons = {
-    download: (
-      <svg className="w-5 h-5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-        <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-      </svg>
-    ),
-    video: (
-      <svg className="w-5 h-5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-        <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-      </svg>
-    ),
-    folder: (
-      <svg className="w-5 h-5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-        <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-      </svg>
-    )
-  }
 
   return (
     <button
       onClick={handleDownload}
       className={`${baseClasses} ${variantClasses[variant]}`}
-      disabled={!driveLink}
+      disabled={!accessDestination({ type: 'external', value: driveLink }).href}
     >
-      {icons[icon]}
-      <span>{label}</span>
+      <ButtonIcon name={icon} size={20} />
+      <TypographyText as="span" role="button" project={typographyProject} section={typographySection}>{label}</TypographyText>
     </button>
   )
 }

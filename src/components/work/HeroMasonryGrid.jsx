@@ -13,6 +13,8 @@ const HeroMasonryGrid = ({
   editable = false,
   onReorder,
   onRemove,
+  selectedIndex,
+  onSelect,
   title = 'Hero Grid'
 }) => {
   const [draggedIdx, setDraggedIdx] = useState(null)
@@ -170,6 +172,13 @@ const HeroMasonryGrid = ({
             <div
               key={`${src}-${index}`}
               data-hero-card="true"
+              role={editable ? 'button' : undefined}
+              tabIndex={editable ? 0 : undefined}
+              aria-label={editable ? `Select hero image ${index + 1}` : undefined}
+              aria-pressed={editable ? selectedIndex === index : undefined}
+              onKeyDown={event => { if (editable && event.target === event.currentTarget && ['Enter', ' '].includes(event.key)) { event.preventDefault(); onSelect?.(index) } }}
+              data-arrangement-card={editable ? index : undefined}
+              style={selectedIndex === index && editable ? { outline: '3px solid #fbbf24', outlineOffset: -3 } : undefined}
               draggable={editable}
               onDragStart={(e) => handleDragStart(e, index)}
               onDragOver={(e) => handleDragOver(e, index)}
@@ -177,6 +186,7 @@ const HeroMasonryGrid = ({
               onDrop={(e) => handleDrop(e, index)}
               onDragEnd={handleDragEnd}
               onClick={() => {
+                if (editable) onSelect?.(index)
                 if (!editable && onImageClick) {
                   onImageClick(index)
                 }

@@ -99,6 +99,7 @@ const YouTubeEmbed = ({
   url, 
   title = 'YouTube video', 
   aspectRatio = null,
+  autoplay = false,
   className = '',
   containerStyle = {}
 }) => {
@@ -142,7 +143,7 @@ const YouTubeEmbed = ({
     )
   }
   
-  const embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`
+  const embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1${autoplay ? '&autoplay=1&mute=1' : ''}`
   
   // Build responsive container style
   const finalRatio = detectedRatio || COMMON_RATIOS.landscape.css

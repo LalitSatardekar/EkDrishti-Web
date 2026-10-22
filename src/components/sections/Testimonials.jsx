@@ -45,7 +45,7 @@ const Testimonials = () => (
         </span> */}
         <h2 className="text-3xl md:text-4xl font-heading font-bold text-textPrimary mb-4">
           {' '}
-          <span className="text-white">
+          <span className="text-whitex">
             Testimonials
           </span>
         </h2>

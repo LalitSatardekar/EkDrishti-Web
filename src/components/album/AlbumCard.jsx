@@ -1,9 +1,10 @@
 import CachedImage from '../ui/CachedImage'
 
-const AlbumCard = ({ image, onClick }) => {
+const AlbumCard = ({ image, onClick, gap }) => {
   return (
     <div
-      className="relative cursor-pointer break-inside-avoid mb-3 group"
+      className="relative cursor-pointer break-inside-avoid group"
+      style={{ marginBottom: gap }}
       onClick={onClick}
     >
       <div className="relative overflow-hidden rounded-[4px] shadow-lg transition-transform duration-500 ease-out group-hover:scale-[1.02]">

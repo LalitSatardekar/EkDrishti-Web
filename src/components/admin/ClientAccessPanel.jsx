@@ -1,0 +1,75 @@
+import { useState } from 'react'
+import { createBlockId, deepClone } from '../../lib/caseBlocks'
+import { accessAppearance, accessButtons, accessDestination, accessElementId, accessLayout, ACCESS_ACTIONS, ACCESS_ICONS, ACCESS_PRESETS } from '../../lib/clientAccess'
+import { patchTypography, resetTypography, resolveCaseTypography } from '../../lib/caseTypography'
+import TypographyStyleEditor from './TypographyStyleEditor'
+import { projectFonts } from './SectionTypographyPanel'
+import SectionRenderer from '../work/sections/SectionRenderer'
+
+const field='mt-1 w-full rounded border border-white/15 bg-[#0B1120] p-2 text-xs text-white'
+const buttonClass='rounded border border-white/20 px-3 py-2 text-xs text-white disabled:opacity-40'
+const actionLabels={external:'Open External URL',internal:'Internal Navigation',download:'File Download',email:'Email',phone:'Phone',whatsapp:'WhatsApp'}
+export default function ClientAccessPanel({section,project,onUpdate,onUploadFont}) {
+  const buttons=accessButtons(section,project), layout=accessLayout(section)
+  const [selectedId,setSelectedId]=useState(null), [bulk,setBulk]=useState(''), [device,setDevice]=useState('Desktop'), [dragged,setDragged]=useState(null), [over,setOver]=useState(null)
+  const selected=buttons.find(button=>button.id===selectedId)||buttons[0]
+  const id=selected?.id
+  const updateButtons=change=>onUpdate(current=>({...current,content:{...current.content,buttons:change(accessButtons(current,project))}}))
+  const patch=change=>updateButtons(current=>current.map(button=>button.id===id?{...button,...deepClone(change)}:button))
+  const appearance=selected?accessAppearance(selected):{}
+  const patchAppearance=change=>updateButtons(current=>current.map(button=>button.id===id?{...button,appearance:{...button.appearance,...change}}:button))
+  const patchAction=change=>updateButtons(current=>current.map(button=>button.id===id?{...button,action:{...button.action,...change}}:button))
+  const patchLayout=change=>onUpdate(current=>({...current,settings:{...current.settings,accessLayout:{...accessLayout(current),...change}}}))
+  const add=labels=>{const additions=labels.map(label=>({id:createBlockId('access-button'),label,enabled:true,preset:'solid',icon:'link',action:{type:'external',value:'',newTab:true}}));updateButtons(current=>[...current,...additions]);setSelectedId(additions[0]?.id)}
+  const duplicate=()=>{
+    const nextId=createBlockId('access-button')
+    onUpdate(current=>{const list=accessButtons(current,project),source=list.find(button=>button.id===id);if(!source)return current;const index=list.indexOf(source),clone={...deepClone(source),id:nextId,label:source.label+' (Copy)'};list.splice(index+1,0,clone);const overrides={...current.settings?.textOverrides};for(const suffix of ['','-secondary'])if(overrides[accessElementId(id)+suffix])overrides[accessElementId(nextId)+suffix]=deepClone(overrides[accessElementId(id)+suffix]);return{...current,content:{...current.content,buttons:list},settings:{...current.settings,textOverrides:overrides}}});setSelectedId(nextId)
+  }
+  const remove=()=>onUpdate(current=>{const overrides={...current.settings?.textOverrides};delete overrides[accessElementId(id)];delete overrides[accessElementId(id)+'-secondary'];return{...current,content:{...current.content,buttons:accessButtons(current,project).filter(button=>button.id!==id)},settings:{...current.settings,textOverrides:overrides}}})
+  const reorder=order=>updateButtons(current=>{const remaining=[...current],next=[];for(const key of order){const index=remaining.findIndex(button=>button.id===key);if(index>=0)next.push(...remaining.splice(index,1))}return[...next,...remaining]})
+  const text=(key,label)=> <label className="block text-xs text-textSecondary">{label}<input aria-label={label} className={field} value={selected[key]||''} onChange={event=>patch({[key]:event.target.value})}/></label>
+  const select=(label,value,options,onChange)=><label className="block text-xs text-textSecondary">{label}<select aria-label={label} className={field} value={value} onChange={event=>onChange(event.target.value)}>{options.map(([key,title])=><option key={key} value={key}>{title}</option>)}</select></label>
+  const number=(label,value,onChange,min=0,max=2000,step=1)=><label className="block text-xs text-textSecondary">{label}<input aria-label={label} className={field} type="number" min={min} max={max} step={step} value={value??''} onChange={event=>onChange(Math.max(min,Math.min(max,Number(event.target.value))))}/></label>
+  const layoutKey=key=>device==='Desktop'?key:key+device
+  const deviceValue=key=>layout[layoutKey(key)]??layout[key]
+  return <div className="space-y-4" data-client-access-panel={section.id}>
+    <h3 className="font-semibold text-white">Client Access - Button Manager</h3>
+    <div className="flex flex-wrap gap-2"><button type="button" className={buttonClass} onClick={()=>add(['New Button'])}>+ Add Button</button></div>
+    <details className="rounded border border-white/10 p-3"><summary className="text-xs text-white">Add multiple buttons</summary><label className="mt-2 block text-xs text-textSecondary">One label per line<textarea aria-label="Multiple button labels" className={field} rows="3" value={bulk} onChange={event=>setBulk(event.target.value)}/></label><button type="button" className={buttonClass} disabled={!bulk.trim()} onClick={()=>{add(bulk.split(/\r?\n/).map(value=>value.trim()).filter(Boolean));setBulk('')}}>Add Listed Buttons</button></details>
+    <label className="block text-xs text-textSecondary">Section description<textarea aria-label="Client Access description" className={field} rows="2" value={section.content?.description??''} onChange={event=>{const description=event.target.value;onUpdate(current=>({...current,content:{...current.content,description}}))}}/></label>
+    <div className="max-h-64 space-y-2 overflow-y-auto" role="list" aria-label="Client Access buttons">{buttons.map((button,index)=><div key={button.id} role="listitem" data-access-manager-item={button.id} draggable onDragStart={event=>{setDragged(button.id);event.dataTransfer.setData('text/plain',button.id)}} onDragOver={event=>{event.preventDefault();setOver(button.id)}} onDrop={event=>{event.preventDefault();const order=buttons.map(item=>item.id),from=order.indexOf(dragged);if(from>=0){order.splice(index,0,...order.splice(from,1));reorder(order)}setDragged(null);setOver(null)}} onDragEnd={()=>{setDragged(null);setOver(null)}} className={'rounded border p-2 '+(id===button.id||over===button.id?'border-amber-400':'border-white/10')}><button type="button" aria-pressed={id===button.id} className="w-full text-left text-xs text-white" onClick={()=>setSelectedId(button.id)}>{index+1}. {button.label} {button.enabled?'':'(disabled)'}</button></div>)}</div>
+    {selected && <div className="space-y-3 rounded-xl border border-amber-400/30 p-3" data-selected-access-button={id}>
+      <div className="flex flex-wrap gap-2"><button type="button" className={buttonClass} onClick={duplicate}>Duplicate Button</button><button type="button" className={buttonClass} onClick={remove}>Delete Button</button><label className="flex items-center gap-2 text-xs text-white"><input aria-label="Button enabled" type="checkbox" checked={selected.enabled} onChange={event=>patch({enabled:event.target.checked})}/>Enabled</label></div>
+      {text('label','Button label')}{text('secondaryText','Secondary text')}{text('accessibleLabel','Accessible label')}{text('tooltip','Button tooltip')}
+      <div className="grid grid-cols-2 gap-3">{select('Button icon',selected.icon,ACCESS_ICONS.map(value=>[value,value||'None']),value=>patch({icon:value}))}{select('Icon placement',selected.iconPlacement,[['left','Left'],['right','Right']],value=>patch({iconPlacement:value}))}</div>
+      {select('Button action',selected.action.type,ACCESS_ACTIONS.map(value=>[value,actionLabels[value]]),value=>patchAction({type:value}))}
+      <label className="block text-xs text-textSecondary">Destination<input aria-label="Button destination" className={field} value={selected.action.value||''} placeholder={selected.action.type==='internal'?'/contact':selected.action.type==='email'?'client@example.com':selected.action.type==='phone'||selected.action.type==='whatsapp'?'+919876543210':'https://...'} onChange={event=>patchAction({value:event.target.value})} aria-invalid={!!accessDestination(selected.action).error}/></label>
+      {accessDestination(selected.action).error && <p role="status" className="text-xs text-amber-300">{accessDestination(selected.action).error}</p>}
+      {['external','internal','download','whatsapp'].includes(selected.action.type) && <label className="flex items-center gap-2 text-xs text-textSecondary"><input aria-label="Open in new tab" type="checkbox" checked={!!selected.action.newTab} onChange={event=>patchAction({newTab:event.target.checked})}/>Open in new tab</label>}
+      {selected.action.type==='download' && <><label className="block text-xs text-textSecondary">Download filename<input aria-label="Download filename" className={field} value={selected.action.filename||''} onChange={event=>patchAction({filename:event.target.value})}/></label><p className="text-xs text-textSecondary">Same-origin files use browser download. Other hosts control downloading through their response headers; those links open normally.</p></>}
+      <details><summary className="text-xs text-white">Button typography</summary><TypographyStyleEditor style={resolveCaseTypography(project,section,'button',accessElementId(id))} sample={selected.label} availableFonts={projectFonts(project)} onUploadFont={onUploadFont} onChange={changes=>onUpdate(current=>patchTypography(current,'button',changes,accessElementId(id)))} onReset={()=>onUpdate(current=>resetTypography(current,'button',accessElementId(id)))}/></details>
+      {selected.secondaryText && <details><summary className="text-xs text-white">Secondary text typography</summary><TypographyStyleEditor style={resolveCaseTypography(project,section,'caption',accessElementId(id)+'-secondary')} sample={selected.secondaryText} availableFonts={projectFonts(project)} onUploadFont={onUploadFont} onChange={changes=>onUpdate(current=>patchTypography(current,'caption',changes,accessElementId(id)+'-secondary'))} onReset={()=>onUpdate(current=>resetTypography(current,'caption',accessElementId(id)+'-secondary'))}/></details>}
+      <details open><summary className="text-xs text-white">Button appearance</summary><div className="mt-3 grid grid-cols-2 gap-3">
+        {select('Button preset',selected.preset,Object.keys(ACCESS_PRESETS).map(value=>[value,value]),value=>patch({preset:value,appearance:{}}))}
+        {['background','textColor','borderColor','hoverBackground','hoverText','hoverBorder','disabledBackground','disabledText','disabledBorder'].map(key=><label key={key} className="text-xs text-textSecondary">{key}<input aria-label={'Button '+key} className={field} value={appearance[key]||''} onChange={event=>patchAppearance({[key]:event.target.value})}/></label>)}
+        {Object.entries({borderWidth:'Border thickness',radius:'Border radius',height:'Button height',paddingX:'Horizontal padding',paddingY:'Vertical padding',minWidth:'Minimum width',maxWidth:'Maximum width',iconSize:'Icon size'}).map(([key,label])=><div key={key}>{number(label,appearance[key],value=>patchAppearance({[key]:value}),0,key==='iconSize'?100:2000)}</div>)}
+        {select('Button text alignment',appearance.textAlign,[['left','Left'],['center','Center'],['right','Right']],value=>patchAppearance({textAlign:value}))}{number('Disabled opacity',appearance.disabledOpacity,value=>patchAppearance({disabledOpacity:value}),0,1,.05)}
+      </div></details>
+      <details><summary className="text-xs text-white">Custom placement</summary><p className="my-2 text-xs text-textSecondary">Choose Custom in section layout, then drag inside the preview. X/Y use the available space after button size. Arrow keys move a focused button; Shift moves faster. Mobile custom layouts use a safe stack.</p><div className="grid grid-cols-2 gap-3">{['x','y'].map(key=><div key={key}>{number('Button position '+key.toUpperCase(),selected.position[key],value=>patch({position:{...selected.position,[key]:value}}),0,100)}</div>)}</div></details>
+    </div>}
+    <details open className="rounded-xl border border-white/10 p-3"><summary className="text-xs text-white">Button section layout</summary><div className="my-3 flex gap-2">{['Desktop','Tablet','Mobile'].map(value=><button key={value} type="button" aria-pressed={device===value} className={buttonClass} onClick={()=>setDevice(value)}>{value} layout</button>)}</div><div className="grid grid-cols-2 gap-3">
+      {select(device+' button layout',deviceValue('mode'),[['row','Horizontal row'],['stack','Vertical stack'],['grid','Responsive grid'],['custom','Custom placement']],value=>patchLayout({[layoutKey('mode')]:value}))}
+      {select(device+' alignment',deviceValue('align'),[['left','Left'],['center','Center'],['right','Right']],value=>patchLayout({[layoutKey('align')]:value}))}
+      {select(device+' vertical alignment',deviceValue('verticalAlign'),[['top','Top'],['center','Center'],['bottom','Bottom']],value=>patchLayout({[layoutKey('verticalAlign')]:value}))}
+      {number(device+' button gap',deviceValue('gap'),value=>patchLayout({[layoutKey('gap')]:value}),0,200)}
+      {number(device+' button columns',layout['columns'+device],value=>patchLayout({['columns'+device]:Math.round(value)}),1,12)}
+      {number(device+' section padding X',deviceValue('paddingX'),value=>patchLayout({[layoutKey('paddingX')]:value}),0,200)}
+      {number(device+' section padding Y',deviceValue('paddingY'),value=>patchLayout({[layoutKey('paddingY')]:value}),0,200)}
+      {number(device+' section minimum height',deviceValue('minHeight')||0,value=>patchLayout({[layoutKey('minHeight')]:value}),0,2000)}
+      {deviceValue('mode')==='custom' && number(device+' placement area height',deviceValue('canvasHeight'),value=>patchLayout({[layoutKey('canvasHeight')]:value}),160,2000)}
+      <label className="flex items-center gap-2 text-xs text-textSecondary"><input aria-label={device+' full-width buttons'} type="checkbox" checked={!!deviceValue('fullWidth')} onChange={event=>patchLayout({[layoutKey('fullWidth')]:event.target.checked})}/>Full-width buttons</label>
+      <label className="flex items-center gap-2 text-xs text-textSecondary"><input aria-label={device+' wrap buttons'} type="checkbox" checked={deviceValue('wrap')!==false} onChange={event=>patchLayout({[layoutKey('wrap')]:event.target.checked})}/>Wrap buttons</label>
+    </div></details>
+    <details open className="rounded-xl border border-white/10 p-3"><summary className="text-xs text-white">Live section preview</summary><SectionRenderer section={section} project={project} accessEditor={{selectedId:id,onSelect:setSelectedId,onReorder:reorder,onPlace:(buttonId,position)=>updateButtons(current=>current.map(button=>button.id===buttonId?{...button,position:{...button.position,...position}}:button))}}/></details>
+  </div>
+}

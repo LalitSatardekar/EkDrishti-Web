@@ -4,7 +4,7 @@ import AlbumGrid from '../components/album/AlbumGrid'
 import SuggestionSection from '../components/work/SuggestionSection'
 import DownloadButton from '../components/ui/DownloadButton'
 import CachedImage from '../components/ui/CachedImage'
-import YouTubeEmbed from '../components/ui/YouTubeEmbed'
+import MediaVideo from '../components/media/MediaVideo'
 import HeroMasonryGrid from '../components/work/HeroMasonryGrid'
 import SectionRenderer from '../components/work/sections/SectionRenderer'
 import { selectDynamicHeroImages } from '../lib/heroSelector'
@@ -12,6 +12,9 @@ import { prepareGalleryImages } from '../lib/galleryFilter'
 import { trackCaseGalleryOpen, trackCaseView } from '../lib/analytics'
 import { allCases as fallbackCases } from '../data/cases'
 import { normalizeCase } from '../lib/config'
+import { blockId } from '../lib/caseBlocks'
+import TypographyText from '../components/work/sections/TypographyText'
+import { mediaAsset } from '../lib/media'
 
 // Parse ratios like "16/9", "16:9", or "16 / 9" into numeric + css-ready string
 const parseAspectRatio = (value) => {
@@ -52,6 +55,7 @@ const WorkDetail = ({ isPreview: isPreviewProp = false, previewCase = null }) =>
   const { slug } = useParams()
   const [searchParams] = useSearchParams()
   const isPreview = isPreviewProp || searchParams.get('preview') === '1'
+  const previewId = searchParams.get('previewId') || slug
 
   const [project, setProject] = useState(() => {
     if (previewCase) return normalizeCase(previewCase)
@@ -64,6 +68,19 @@ const WorkDetail = ({ isPreview: isPreviewProp = false, previewCase = null }) =>
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
+    if (!isPreview || typeof BroadcastChannel === 'undefined') return undefined
+    const channel = new BroadcastChannel(`ekdrishti-case-preview-${previewId}`)
+    channel.onmessage = event => {
+      if (event.data?.type === 'case-preview:update' && event.data.project?.slug) {
+        setProject(normalizeCase(event.data.project))
+      }
+    }
+    channel.postMessage({ type: 'case-preview:hello' })
+    return () => channel.close()
+  }, [isPreview, previewId, project?.slug])
+
+  useEffect(() => {
+    if (isPreview) return
     const fetchProject = async () => {
       const localMatch = fallbackCases.find((c) => c.slug === slug || String(c.id) === String(slug))
       try {
@@ -103,7 +120,7 @@ const WorkDetail = ({ isPreview: isPreviewProp = false, previewCase = null }) =>
     }
 
     fetchProject()
-  }, [slug])
+  }, [slug, isPreview])
 
   useEffect(() => {
     if (!project || isPreview) return
@@ -163,16 +180,17 @@ const WorkDetail = ({ isPreview: isPreviewProp = false, previewCase = null }) =>
     }
 
     // 1. Hero images
-    heroImages.forEach((src, idx) => {
-      addImg(src, project?.title, `${project?.title ?? 'Hero'} photo ${idx + 1}`, `hero-${idx}`)
+    heroImages.forEach((item, idx) => {
+      addImg(mediaAsset(item, idx).src, project?.title, `${project?.title ?? 'Hero'} photo ${idx + 1}`, `hero-${idx}`)
     })
 
     // 2. Custom Gallery sections
     if (Array.isArray(project?.sections)) {
       project.sections.forEach((sec, sIdx) => {
-        if (sec && sec.enabled !== false && (sec.type === 'Gallery' || sec.type === 'gallery') && Array.isArray(sec.content?.images)) {
+        if (sec && sec.enabled !== false && ['hero', 'gallery', 'image section', 'imagesection', 'image', 'album gallery', 'album'].includes(String(sec.type || '').toLowerCase()) && Array.isArray(sec.content?.images)) {
           sec.content.images.forEach((img, iIdx) => {
-            addImg(img, sec.title || project?.title, `${sec.title || 'Gallery'} photo ${iIdx + 1}`, `sec-${sIdx}-${iIdx}`)
+            const asset = mediaAsset(img, iIdx)
+            addImg(asset.src, sec.title || project?.title, asset.alt || `${sec.title || 'Gallery'} photo ${iIdx + 1}`, asset.id || `sec-${sIdx}-${iIdx}`)
           })
         }
       })
@@ -202,11 +220,11 @@ const WorkDetail = ({ isPreview: isPreviewProp = false, previewCase = null }) =>
   const handleSectionImageClick = (sourceType, idx, imageList = [], title = '') => {
     let targetSrc = ''
     if (sourceType === 'hero') {
-      targetSrc = heroImages[idx]
+      targetSrc = mediaAsset(heroImages[idx], idx).src
     } else if (sourceType === 'album') {
       targetSrc = (albumImages[idx] && albumImages[idx].src) || project?.album?.[idx]
     } else if (sourceType === 'custom-gallery') {
-      targetSrc = imageList[idx]
+      targetSrc = mediaAsset(imageList[idx], idx).src
     }
 
     const foundIdx = allLightboxImages.findIndex(img => img.src === targetSrc)
@@ -285,7 +303,10 @@ const WorkDetail = ({ isPreview: isPreviewProp = false, previewCase = null }) =>
   return (
     <div className="min-h-screen bg-primary py-20">
       <div className="max-w-5xl mx-auto px-5">
-        <Link
+        <TypographyText
+          as={Link}
+          role="navigation"
+          project={project}
           to="/work"
           className="inline-flex items-center text-textSecondary hover:text-accent transition-colors duration-200 mb-12"
         >
@@ -301,11 +322,11 @@ const WorkDetail = ({ isPreview: isPreviewProp = false, previewCase = null }) =>
             <path d="M15 19l-7-7 7-7" />
           </svg>
           Back to Work
-        </Link>
+        </TypographyText>
 
-        <h1 className="text-4xl md:text-5xl text-center mb-10 text-textPrimary" style={{ fontFamily: "'Great Vibes', cursive" }}>
+        <TypographyText role="projectTitle" project={project} as="h1" className="text-4xl md:text-5xl text-center mb-10 text-textPrimary" style={!project.typography?.projectTitle ? { fontFamily: "'Great Vibes', cursive" } : undefined}>
           {project.title}
-        </h1>
+        </TypographyText>
       </div>
 
       {/* DYNAMIC SECTION SEQUENCE RENDERING */}
@@ -313,7 +334,7 @@ const WorkDetail = ({ isPreview: isPreviewProp = false, previewCase = null }) =>
         <div className="space-y-12">
           {customSections.map((sec, idx) => (
             <SectionRenderer
-              key={sec._id || `sec-${idx}`}
+              key={blockId(sec)}
               section={sec}
               project={project}
               index={idx}
@@ -363,13 +384,13 @@ const WorkDetail = ({ isPreview: isPreviewProp = false, previewCase = null }) =>
           {/* 2. Video Player */}
           {project.hasVideo && (project.youtubeUrl || project.video || (project.videos && project.videos.length > 0)) && (
             <div className="max-w-5xl mx-auto px-5 mt-16">
-              <h2 className="text-3xl md:text-4xl text-center mb-8 text-textSecondary font-medium tracking-wide">
+              <TypographyText as="h2" role="sectionHeading" project={project} className="text-3xl md:text-4xl text-center mb-8 text-textSecondary font-medium tracking-wide">
                 Video
-              </h2>
+              </TypographyText>
               
               {project.youtubeUrl ? (
-                <YouTubeEmbed
-                  url={project.youtubeUrl}
+                <MediaVideo
+                  source={project.youtubeUrl}
                   title={`${project.title} - Video`}
                   aspectRatio={project.aspectRatio}
                 />
@@ -379,79 +400,25 @@ const WorkDetail = ({ isPreview: isPreviewProp = false, previewCase = null }) =>
                     const src = typeof item === 'string' ? item : item.src
                     if (!src) return null
                     const poster = typeof item === 'string' ? (project.videoPoster || project.image) : (item.poster || project.videoPoster || project.image)
-                    const ratioKey = src
                     const explicitItem = parseAspectRatio(typeof item === 'object' ? item.aspectRatio : null)
-                    const computed = videoRatios[ratioKey]
                     const projectDefault = parseAspectRatio(project.aspectRatio)
-                    const chosen = explicitItem || (computed ? { numeric: parseFloat(computed.split('/')[0]) / parseFloat(computed.split('/')[1]), css: computed } : null) || projectDefault
+                    const chosen = explicitItem || projectDefault
                     const ratio = chosen ? bucketAspectRatio(chosen.numeric, chosen.css) : undefined
 
                     return (
-                      <div
-                        key={`video-${idx}`}
-                        className="relative rounded-lg overflow-hidden bg-surface w-full"
-                        style={buildVideoBoxStyle(ratio)}
-                      >
-                        <video
-                          controls
-                          poster={poster}
-                          className="w-full h-full object-contain"
-                          preload="metadata"
-                          onLoadedMetadata={(e) => {
-                            const { videoWidth, videoHeight } = e.target
-                            if (videoWidth && videoHeight) {
-                              const numeric = videoWidth / videoHeight
-                              const computed = `${videoWidth} / ${videoHeight}`
-                              const snapped = bucketAspectRatio(numeric, computed)
-                              setVideoRatios((prev) => (prev[ratioKey] === snapped ? prev : { ...prev, [ratioKey]: snapped }))
-                            }
-                          }}
-                        >
-                          <source src={src} type="video/mp4" />
-                          Your browser does not support the video tag.
-                        </video>
-                      </div>
+                      <MediaVideo key={typeof item === 'object' ? item.id || src : src} source={src} title={`${project.title} video ${idx + 1}`} aspectRatio={ratio} poster={poster} />
                     )
                   })}
                 </div>
               ) : (
-                <div
-                  className="relative rounded-lg overflow-hidden bg-surface mb-6 mx-auto"
-                  style={(() => {
-                    const computed = videoRatios.single
-                    const projectDefault = parseAspectRatio(project.aspectRatio)
-                    const chosen = computed
-                      ? { numeric: parseFloat(computed.split('/')[0]) / parseFloat(computed.split('/')[1]), css: computed }
-                      : projectDefault
-                    const ratio = chosen ? bucketAspectRatio(chosen.numeric, chosen.css) : undefined
-                    return buildVideoBoxStyle(ratio)
-                  })()}
-                >
-                  <video
-                    controls
-                    poster={project.videoPoster || project.image}
-                    className="w-full h-full object-contain"
-                    preload="metadata"
-                    onLoadedMetadata={(e) => {
-                      const { videoWidth, videoHeight } = e.target
-                      if (videoWidth && videoHeight) {
-                        const numeric = videoWidth / videoHeight
-                        const computed = `${videoWidth} / ${videoHeight}`
-                        const snapped = bucketAspectRatio(numeric, computed)
-                        setVideoRatios((prev) => (prev.single === snapped ? prev : { ...prev, single: snapped }))
-                      }
-                    }}
-                  >
-                    <source src={project.video} type="video/mp4" />
-                    Your browser does not support the video tag.
-                  </video>
-                </div>
+                <MediaVideo source={project.video} title={`${project.title} - Video`} aspectRatio={project.aspectRatio} poster={project.videoPoster || project.image} />
               )}
               {project.driveLinks?.video && (
                 <div className="flex justify-center mt-6">
                   <DownloadButton
                     label="Download Video"
                     driveLink={project.driveLinks.video}
+                    typographyProject={project}
                     icon="video"
                     variant="primary"
                   />
@@ -463,9 +430,9 @@ const WorkDetail = ({ isPreview: isPreviewProp = false, previewCase = null }) =>
           {/* 3. Album Gallery */}
           {albumImages.length > 0 && (
             <div className="max-w-7xl mx-auto px-5 mt-20">
-              <h2 className="text-3xl md:text-4xl text-center mb-12 text-textSecondary font-medium tracking-wide">
+              <TypographyText as="h2" role="sectionHeading" project={project} className="text-3xl md:text-4xl text-center mb-12 text-textSecondary font-medium tracking-wide">
                 Album Gallery
-              </h2>
+              </TypographyText>
 
               <AlbumGrid
                 images={albumImages}
@@ -477,6 +444,7 @@ const WorkDetail = ({ isPreview: isPreviewProp = false, previewCase = null }) =>
                   <DownloadButton
                     label="Download Album Photos"
                     driveLink={project.driveLinks.albumGallery}
+                    typographyProject={project}
                     icon="download"
                     variant="primary"
                   />
@@ -489,15 +457,16 @@ const WorkDetail = ({ isPreview: isPreviewProp = false, previewCase = null }) =>
           {project.driveLinks?.allFiles && (
             <div className="max-w-5xl mx-auto px-5 mt-20">
               <div className="bg-gradient-to-br from-surface to-secondary p-8 rounded-2xl border border-borderSubtle text-center">
-                <h3 className="text-2xl md:text-3xl font-heading font-bold text-textPrimary mb-4">
+                <TypographyText as="h3" role="sectionHeading" project={project} className="text-2xl md:text-3xl font-heading font-bold text-textPrimary mb-4">
                   Client Access
-                </h3>
-                <p className="text-textSecondary mb-6 max-w-2xl mx-auto">
-                  Download all event files including photos, videos, and albums. This is a restricted access link available only for the client.
-                </p>
+                </TypographyText>
+                <TypographyText as="p" role="body" project={project} className="text-textSecondary mb-6 max-w-2xl mx-auto">
+                  Access photos, videos, albums and other event files using the links below.
+                </TypographyText>
                 <DownloadButton
                   label="Download All Files"
                   driveLink={project.driveLinks.allFiles}
+                  typographyProject={project}
                   icon="folder"
                   variant="restricted"
                 />

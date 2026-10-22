@@ -2,14 +2,27 @@ import express from 'express'
 import http from 'http'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { connectToDatabase } from '../api/lib/db.js'
-import Case from '../api/models/Case.js'
-import Contact from '../api/models/Contact.js'
-import User from '../api/models/User.js'
-import Log from '../api/models/Log.js'
+import mongoose from 'mongoose'
+import healthHandler from '../server_api/v1/health.js'
+import casesHandler from '../server_api/v1/cases.js'
+import loginHandler from '../server_api/v1/auth/login.js'
+import meHandler from '../server_api/v1/auth/me.js'
+import { verifyEmailAddress } from '../server_api/lib/emailVerifier.js'
+import { connectToDatabase } from '../server_api/lib/db.js'
+import Case from '../server_api/models/Case.js'
+import Contact from '../server_api/models/Contact.js'
+import User from '../server_api/models/User.js'
+import Log from '../server_api/models/Log.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+// DNS resolution can outlive MongoDB's selection timeout; bound the full audit.
+const deadline = setTimeout(() => {
+  console.error('Audit exceeded 60 seconds; database connectivity could not be verified.')
+  process.exit(1)
+}, 60000)
+deadline.unref()
 
 const results = {
   timestamp: new Date().toISOString(),
@@ -33,9 +46,9 @@ async function runAudit() {
   console.log('📋 [1/5] Checking Environment Variables & Secrets...')
   const mongoUri = process.env.MONGODB_URI || ''
   if (mongoUri.includes('mongodb+srv://')) {
-    addCheck('Cloud Database URI (MongoDB Atlas)', 'PASS', 'Using high-availability MongoDB Atlas cluster (edcluster.g6tbxhr.mongodb.net)', 'Security & Storage')
+    addCheck('Cloud Database URI (MongoDB Atlas)', 'PASS', 'MongoDB SRV URI configured (availability not verified)', 'Security & Storage')
   } else if (mongoUri) {
-    addCheck('Cloud Database URI (MongoDB Atlas)', 'WARN', `Using non-srv or local URI: ${mongoUri}`, 'Security & Storage')
+    addCheck('Cloud Database URI (MongoDB Atlas)', 'WARN', 'Using a non-SRV or local MongoDB URI (credentials omitted)', 'Security & Storage')
   } else {
     addCheck('Cloud Database URI (MongoDB Atlas)', 'FAIL', 'MONGODB_URI is missing', 'Security & Storage')
   }
@@ -66,16 +79,25 @@ async function runAudit() {
     addCheck('SMTP Mailer Setup', 'WARN', 'SMTP_PASSWORD still contains placeholder "your-16-letter-app-password". Update when ready to dispatch real emails.', 'Email Service')
   }
 
+  let databaseConnected = false
+
   // --- 2. ATLAS DATABASE CONNECTIVITY & DATA HEALTH ---
   console.log('🗄️ [2/5] Testing MongoDB Atlas Live Connection & Collections...')
   try {
-    const conn = await connectToDatabase()
+    let connectionTimer
+    const conn = await Promise.race([
+      connectToDatabase(),
+      new Promise((_, reject) => {
+        connectionTimer = setTimeout(() => reject(new Error('Database connection timed out after 8 seconds')), 8000)
+      })
+    ]).finally(() => clearTimeout(connectionTimer))
+    databaseConnected = true
     addCheck('MongoDB Atlas Handshake', 'PASS', `Connected to database "${conn.connection.db.databaseName}" on Atlas`, 'Database')
 
     const caseCount = await Case.countDocuments()
     const publishedCount = await Case.countDocuments({ status: 'published' })
     const contactCount = await Contact.countDocuments()
-    const userCount = await User.countDocuments()
+    const userCount = await User.countDocuments({ role: 'admin' })
     const logCount = await Log.countDocuments()
 
     if (caseCount > 0) {
@@ -100,31 +122,30 @@ async function runAudit() {
   const app = express()
   app.use(express.json({ limit: '50mb' }))
   
-  app.use('/api', async (req, res) => {
-    const relativePath = path.join('api', req.path)
-    const handlerFilePath = path.join(process.cwd(), relativePath + '.js')
-    try {
-      const module = await import(`file://${handlerFilePath}?t=${Date.now()}`)
-      const handler = module.default
-      const vercelRes = {
-        status: (code) => { res.status(code); return vercelRes },
-        json: (data) => { res.json(data); return vercelRes },
-        send: (data) => { res.send(data); return vercelRes },
-        setHeader: (key, val) => { res.setHeader(key, val); return vercelRes }
+  // Explicit route map mirrors server.js; no credential or contact writes.
+  const routes = {
+    '/api/v1/health': healthHandler,
+    '/api/v1/cases': casesHandler,
+    '/api/v1/auth/login': loginHandler,
+    '/api/v1/auth/me': meHandler
+  }
+  for (const [route, handler] of Object.entries(routes)) {
+    app.all(route, async (req, res) => {
+      try {
+        await handler(req, res)
+      } catch {
+        if (!res.headersSent) res.status(500).json({ success: false, message: 'Audit route failed' })
       }
-      await handler(req, vercelRes)
-    } catch (error) {
-      res.status(500).json({ success: false, message: error.message })
-    }
-  })
+    })
+  }
 
   const server = http.createServer(app)
-  await new Promise((resolve) => server.listen(0, resolve))
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve))
   const port = server.address().port
   const baseUrl = `http://127.0.0.1:${port}`
 
   async function request(path, options = {}) {
-    const res = await fetch(`${baseUrl}${path}`, options)
+    const res = await fetch(`${baseUrl}${path}`, { ...options, signal: AbortSignal.timeout(15000) })
     const text = await res.text()
     try {
       return { status: res.status, json: JSON.parse(text) }
@@ -134,6 +155,7 @@ async function runAudit() {
   }
 
   try {
+    if (databaseConnected) {
     // Health Check
     const healthRes = await request('/api/v1/health')
     if (healthRes.status === 200 && healthRes.json?.subsystems?.database === 'Healthy') {
@@ -150,57 +172,32 @@ async function runAudit() {
       addCheck('Public Cases API (/api/v1/cases)', 'FAIL', `Status: ${casesRes.status}`, 'API & Routing')
     }
 
-    // Auth Login Failure Guard
-    const badLoginRes = await request('/api/v1/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'invalid_admin_probe', password: 'wrongpassword' })
-    })
-    if (badLoginRes.status === 401) {
-      addCheck('Brute-Force & Auth Protection', 'PASS', 'Unauthorized credentials correctly rejected with 401 and logged to Atlas', 'Security & Auth')
     } else {
-      addCheck('Brute-Force & Auth Protection', 'WARN', `Unexpected auth response status: ${badLoginRes.status}`, 'Security & Auth')
+      addCheck('Database-backed API Probes', 'WARN', 'Skipped health and cases probes because database connection failed', 'API & Routing')
     }
 
-    // Anti-Spam Honeypot Guard
-    const spamRes = await request('/api/v1/contact', {
+    // Invalid payload is rejected before the database or failed-login counters.
+    const invalidLogin = await request('/api/v1/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: 'Spam Bot',
-        email: 'bot@spam.com',
-        phone: '1234567890',
-        message: 'Spam test',
-        _website: 'http://spam-trap-triggered.com'
-      })
+      body: JSON.stringify({ username: { $ne: null }, password: [] })
     })
-    if (spamRes.status === 200 && spamRes.json?.success) {
-      addCheck('Honeypot Bot Defense', 'PASS', 'Bot trap silently caught and neutralized without polluting database', 'Anti-Spam & CRM')
-    } else {
-      addCheck('Honeypot Bot Defense', 'WARN', `Honeypot status: ${spamRes.status}`, 'Anti-Spam & CRM')
-    }
+    addCheck('Login Payload Validation', invalidLogin.status === 400 ? 'PASS' : 'FAIL',
+      'Expected invalid credential types to return 400; rate-limit enforcement not tested', 'Security & Auth')
 
-    // DNS MX / Disposable Email Guard
-    const disposableRes = await request('/api/v1/contact', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: 'Fake Lead',
-        email: 'test@mailinator.com',
-        phone: '9876543210',
-        message: 'Testing fake domain'
-      })
-    })
-    if (disposableRes.status === 400 && (disposableRes.json?.message?.includes('disposable') || disposableRes.json?.message?.includes('Temporary'))) {
-      addCheck('Disposable Email Verifier', 'PASS', 'Burner emails (mailinator, tempmail, etc.) actively blocked with 400 rejection', 'Anti-Spam & CRM')
-    } else {
-      addCheck('Disposable Email Verifier', 'WARN', `Verifier returned status ${disposableRes.status}: ${JSON.stringify(disposableRes.json || disposableRes.text)}`, 'Anti-Spam & CRM')
-    }
+    const unauthenticated = await request('/api/v1/auth/me')
+    addCheck('Unauthenticated Admin Access', unauthenticated.status === 401 ? 'PASS' : 'FAIL',
+      'Expected missing authorization to return 401', 'Security & Auth')
+
+    // Pure validation: no contact record, email, or audit log is created.
+    const disposable = await verifyEmailAddress('test@mailinator.com')
+    addCheck('Disposable Email Verifier', !disposable.valid ? 'PASS' : 'FAIL',
+      'Disposable address validation tested directly; contact submission not tested', 'Anti-Spam & CRM')
 
   } catch (err) {
     addCheck('API Route Probing', 'FAIL', err.message, 'API & Routing')
   } finally {
-    server.close()
+    await new Promise(resolve => server.close(resolve))
   }
 
   // --- 4. ASSETS & CDN COMPLIANCE ---
@@ -228,7 +225,14 @@ async function runAudit() {
     console.log(`   ↳ ${c.details}\n`)
   }
 
+  await Promise.race([mongoose.disconnect(), new Promise(resolve => setTimeout(resolve, 2000))])
+  clearTimeout(deadline)
   process.exit(results.failed > 0 ? 1 : 0)
 }
 
-runAudit()
+runAudit().catch(async () => {
+  console.error('Audit aborted unexpectedly; inspect configuration and route imports.')
+  await Promise.race([mongoose.disconnect(), new Promise(resolve => setTimeout(resolve, 2000))])
+  clearTimeout(deadline)
+  process.exit(1)
+})

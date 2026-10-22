@@ -1,6 +1,6 @@
-# Premium Digital Marketing Agency - Frontend
+# Ekdrishti Studios - Website and Case Study CMS
 
-A production-quality React frontend for a premium digital marketing agency website built with modern technologies and best practices.
+React/Vite website and case-study editor with an Express API, MongoDB persistence, admin authentication, media uploads, and configurable case-study sections.
 
 ## 🚀 Tech Stack
 
@@ -8,14 +8,14 @@ A production-quality React frontend for a premium digital marketing agency websi
 - **React 18** - UI library
 - **React Router** - Client-side routing
 - **Tailwind CSS** - Utility-first styling
-- **Axios** - HTTP client (ready for backend integration)
+- **Express / MongoDB** - API and persisted case-study data
 - **Framer Motion** - Animation library (ready for integration)
 
 ## 📁 Project Structure
 
 ```
 src/
-├── api/              # Mock API layer (ready for backend integration)
+├── api/              # API clients for contact forms and media uploads
 │   └── contactApi.js
 ├── components/
 │   ├── layout/      # Layout components
@@ -109,31 +109,83 @@ All image placeholders are clearly labeled so you can easily drop in your own im
 
 ## 📝 Getting Started
 
-### Install Dependencies
+### Prerequisites and environment
 
-```bash
-npm install
+Run commands from the project root. Node.js 22.17.0 and npm 10.9.2 are verified with this project. A reachable MongoDB instance is required for case studies and admin login.
+
+Install dependencies on a fresh checkout:
+
+```powershell
+npm.cmd ci
 ```
 
-### Run Development Server
+The backend reads the root `.env` file. Keep your existing configuration. For a new setup, create `.env` with at least these values (replace the placeholders with your own):
 
-```bash
-npm run dev
+```dotenv
+MONGODB_URI=mongodb://127.0.0.1:27017/ekdrishti
+JWT_SECRET=replace-with-a-long-random-secret
+BOOTSTRAP_ADMIN=false
 ```
 
-The site will open at `http://localhost:3000`
+The example above requires a local MongoDB server; use your Atlas connection string instead when appropriate, with database credentials and network access configured. The existing `.env.example` is an incomplete frontend template, so it does not configure the backend by itself. Never commit your populated `.env`.
 
-### Build for Production
+SMTP settings configure contact-form email delivery. AWS S3 settings configure cloud media uploads; the upload handler also supports local storage in `public/uploads`. These services are separate from starting the frontend and API. Vite reads `VITE_*` settings from root environment files; restart Vite after changing them. The current frontend calls relative `/v1` routes, so local and LAN requests go through Vite's proxy.
 
-```bash
-npm run build
+### Start the full app on Windows PowerShell
+
+Keep both terminals running. Use `npm.cmd` if PowerShell blocks `npm.ps1`.
+
+Terminal 1 - API:
+
+```powershell
+$env:PORT = '3001'
+$env:HOST = '127.0.0.1'
+$env:BOOTSTRAP_ADMIN = 'false'
+npm.cmd run api
 ```
 
-### Preview Production Build
+Terminal 2 - frontend:
 
-```bash
-npm run preview
+```powershell
+npm.cmd run dev -- --host 0.0.0.0 --port 3000 --strictPort --open false
 ```
+
+Open **http://localhost:3000/** on this computer. For another device on the same network, use the **Network** URL printed by Vite, such as `http://192.168.1.64:3000/`. The IP may change; use the current terminal output. Allow Node.js through Windows Firewall on your private network if another device cannot connect. This LAN address is not a public internet URL.
+
+Vite proxies `/v1`, `/api`, and `/health` to the API on port 3001. Only port 3000 needs LAN access. Running `npm.cmd run dev` alone starts the frontend; it does not start the backend. Strict port mode avoids accidentally opening a second frontend on a different port.
+
+Admin login is at `/ownercontrols_panel/login` and uses an existing admin account. Startup does not create or reset accounts. Admin bootstrap is a separate explicit setup using `BOOTSTRAP_ADMIN=true`, `ADMIN_USERNAME`, and `ADMIN_PASSWORD_HASH`.
+
+### Verify startup
+
+```powershell
+Invoke-RestMethod http://localhost:3000/v1/ping
+Invoke-RestMethod http://localhost:3000/health
+Invoke-RestMethod http://localhost:3000/v1/cases
+```
+
+Ping verifies the API proxy. Health checks MongoDB connectivity, local upload storage, and whether email settings are present; it does not send a test email or verify S3. The cases endpoint verifies that saved case studies can be read. A homepage alone does not establish that the database works.
+
+If API requests return 503, check Terminal 1 and port 3001. If health reports an unhealthy database, check `MONGODB_URI`, MongoDB availability, credentials, and Atlas network access. A degraded email status means SMTP settings are missing. If port 3000 is occupied, reuse the existing project server or stop it before restarting. Stop each server with Ctrl+C in its terminal.
+
+### Checks and production build
+
+```powershell
+npm.cmd run test:block-isolation
+npm.cmd run test:media-system
+npm.cmd run build
+```
+
+The production build is written to `dist`. To serve the built frontend and API together locally, first stop the two development servers, then run:
+
+```powershell
+$env:PORT = '3000'
+$env:HOST = '0.0.0.0'
+$env:BOOTSTRAP_ADMIN = 'false'
+npm.cmd start
+```
+
+`npm.cmd run preview` previews built frontend assets only and is not a full-stack server. `npm.cmd run audit` provides the separate readiness audit; see [the local workflow audit](docs/LOCAL_WORKFLOW_AUDIT.md) for context and limits.
 
 ### Optimize Local Assets
 
@@ -161,32 +213,8 @@ This script uses `sharp` to resize to a 2000px max width, rotate based on EXIF d
 
 ## 🔌 API Integration
 
-The contact form uses a mock API (`src/api/contactApi.js`) that simulates async calls. To integrate with your backend:
+The frontend already calls the Express backend. Contact submissions use `POST /v1/contact`; case studies use `/v1/cases`; authentication uses `/v1/auth/login` and `/v1/auth/me`; media uploads use `/v1/upload`. In development, Vite forwards these requests to port 3001. The API also exposes compatible `/api` aliases defined in [server.js](server.js).
 
-1. Replace the mock functions with actual Axios calls
-2. Update the API endpoints
-3. Components won't need changes as they already handle promises
-
-Example:
-
-```javascript
-// Current mock
-export const submitContactForm = async (formData) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ success: true, message: '...' })
-    }, 1000)
-  })
-}
-
-// Replace with real API call
-import axios from 'axios'
-
-export const submitContactForm = async (formData) => {
-  const response = await axios.post('/api/contact', formData)
-  return response.data
-}
-```
 
 ## 🎞️ Adding Framer Motion
 
@@ -210,7 +238,7 @@ import { motion } from 'framer-motion'
 - ✅ Scalable folder structure
 - ✅ Separation of concerns
 - ✅ Reusable components
-- ✅ Mock API layer for easy backend integration
+- ✅ Express API integration
 - ✅ Responsive design
 - ✅ Semantic HTML
 - ✅ Accessibility considerations
@@ -232,7 +260,7 @@ import { motion } from 'framer-motion'
 - tailwindcss: ^3.4.6
 - autoprefixer: ^10.4.19
 - postcss: ^8.4.39
-- vite: ^5.3.4
+- vite: ^7.3.1
 
 ## 🎨 Customization
 
@@ -261,4 +289,4 @@ This project is created for your use.
 
 ---
 
-**Ready to go!** Just install dependencies and run `npm run dev` to start developing.
+Use the two-terminal startup above to run the complete app locally.

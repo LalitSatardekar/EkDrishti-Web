@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 const SectionSchema = new mongoose.Schema({
+  id: { type: String, index: true },
   type: { type: String, required: true },
   enabled: { type: Boolean, default: true },
   order: { type: Number, required: true },
@@ -23,10 +24,13 @@ const CaseSchema = new mongoose.Schema({
   status: { type: String, enum: ['published', 'draft', 'archived'], default: 'draft' },
   date: String,
   description: String,
+  typography: { type: mongoose.Schema.Types.Mixed, default: {} },
+  // Legacy project-wide title font retained for backward compatibility.
+  sectionTitleFont: String,
   image: String,
   hero: [mongoose.Schema.Types.Mixed],
   heroSettings: { type: mongoose.Schema.Types.Mixed, default: {} },
-  album: [String],
+  album: [mongoose.Schema.Types.Mixed],
   hasVideo: { type: Boolean, default: false },
   youtubeUrl: String,
   video: String,

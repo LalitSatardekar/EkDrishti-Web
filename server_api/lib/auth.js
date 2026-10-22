@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken'
 
 function getJwtSecret() {
-  return process.env.JWT_SECRET || 'ekdrishti_dev_jwt_secret_token_123'
+  if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is required')
+  return process.env.JWT_SECRET
 }
 
 export function signToken(payload) {

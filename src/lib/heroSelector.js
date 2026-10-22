@@ -1,3 +1,5 @@
+import { quickAnalyzeFromFilename } from './imageAnalyzer.js'
+import { justifiedRows } from './media.js'
 /**
  * Hero Selector Utility
  * Dynamic image selection for hero grid supporting 1 to 20 images of any orientation.
@@ -44,7 +46,7 @@ export const selectDynamicHeroImages = (project, options = {}) => {
   const getImgKey = (img) => {
     if (!img) return ''
     if (typeof img === 'string') return img
-    if (typeof img === 'object') return img.url || img.src || JSON.stringify(img)
+    if (typeof img === 'object') return img.src || img.url || JSON.stringify(img)
     return String(img)
   }
 
@@ -129,80 +131,58 @@ export const shuffleGridImages = (images = []) => {
     const j = Math.floor(Math.random() * (i + 1))
     ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
   }
+  if (shuffled.every((item, index) => item === images[index])) shuffled.push(shuffled.shift())
   return shuffled
 }
 
-/**
- * Smart balance: Shuffles and arranges images into relevant placements
- * by interleaving different orientations and avoiding clumping in masonry columns.
- */
-export const balanceGridImages = (images = [], orientationMap = {}) => {
-  if (!images || images.length <= 2) return shuffleGridImages(images)
-
-  // 1. Classify images based on known orientation or filename hints
-  const portraits = []
-  const landscapes = []
-  const others = []
-
-  images.forEach((src) => {
-    const label = orientationMap[src] || ''
-    const lower = (src || '').toLowerCase()
-    if (label.includes('Portrait') || lower.includes('short') || lower.includes('portrait')) {
-      portraits.push(src)
-    } else if (label.includes('Landscape') || lower.includes('long') || lower.includes('wide')) {
-      landscapes.push(src)
-    } else {
-      others.push(src)
-    }
-  })
-
-  // If we have distinct portraits and landscapes, interleave them evenly
-  if (portraits.length > 0 && landscapes.length > 0) {
-    const pShuffled = shuffleGridImages(portraits)
-    const lShuffled = shuffleGridImages(landscapes)
-    const oShuffled = shuffleGridImages(others)
-
-    const result = []
-    let pIdx = 0, lIdx = 0, oIdx = 0
-    let pickPortrait = pShuffled.length >= lShuffled.length
-
-    while (pIdx < pShuffled.length || lIdx < lShuffled.length || oIdx < oShuffled.length) {
-      if (pickPortrait && pIdx < pShuffled.length) {
-        result.push(pShuffled[pIdx++])
-      } else if (!pickPortrait && lIdx < lShuffled.length) {
-        result.push(lShuffled[lIdx++])
-      } else if (pIdx < pShuffled.length) {
-        result.push(pShuffled[pIdx++])
-      } else if (lIdx < lShuffled.length) {
-        result.push(lShuffled[lIdx++])
-      } else if (oIdx < oShuffled.length) {
-        result.push(oShuffled[oIdx++])
-      }
-      pickPortrait = !pickPortrait
-    }
-
-    return result
+// Ordering utilities retain whole asset references, including unknown metadata.
+export const arrangementKey = (item, index) => typeof item === 'string' ? item : item.id || item.src || item.url || String(index)
+export const arrangementOrder = images => images.map(arrangementKey)
+export const restoreArrangement = (images, order) => {
+  const remaining = [...images], result = []
+  for (const key of order) {
+    const index = remaining.findIndex((item, i) => arrangementKey(item, i) === key)
+    if (index >= 0) result.push(...remaining.splice(index, 1))
   }
-
-  // Fallback: smart rotation/stride shuffle to guarantee a different relevant placement
-  const stride = Math.max(2, Math.floor(images.length / 3))
-  const rearranged = []
-  const used = new Set()
-
-  for (let s = 0; s < stride; s++) {
-    for (let i = s; i < images.length; i += stride) {
-      if (!used.has(i)) {
-        used.add(i)
-        rearranged.push(images[i])
-      }
-    }
-  }
-
-  // If identical, do random shuffle
-  if (rearranged.every((img, idx) => img === images[idx])) {
-    return shuffleGridImages(images)
-  }
-
-  return rearranged
+  return [...result, ...remaining]
 }
-
+export const balanceGridImages = (images = [], orientationMap = {}, options = {}) => {
+  const ratio = item => {
+    const src = typeof item === 'string' ? item : item.src || item.url || ''
+    const known = orientationMap[src]
+    const configured = item?.placement?.aspectRatio?.split(/[/:]/).map(Number)
+    const value = configured?.length === 2 ? configured[0] / configured[1] : Number(item?.width) / Number(item?.height) || Number(known?.ratio) || quickAnalyzeFromFilename(src).ratio || (/portrait/i.test(String(known)) ? .66 : /landscape/i.test(String(known)) ? 1.5 : 1)
+    return Math.min(20, Math.max(.05, value || 1))
+  }
+  const columns = Math.max(1, Math.min(12, Math.floor(Number(options.columnsDesktop) || 3)))
+  const width = Math.max(100, Number(options.width) || 1200)
+  const score = list => {
+    const values = list.map(ratio)
+    if (['horizontalMasonry', 'justified'].includes(options.mode)) {
+      const rows = justifiedRows(values.map(value => ({ ratio: value })), width, options)
+      const target = Number(options.targetRowHeight) || 240
+      return rows.reduce((sum, row) => sum + (row.height-target)**2 + (row.final ? (width-row.widths.reduce((a,b)=>a+b,0)-(row.items.length-1)*(Number(options.gapX)||0))**2/10 : 0), 0)
+    }
+    if (['masonry', 'verticalMasonry'].includes(options.mode)) {
+      // CSS columns consume contiguous items; estimate balanced column boundaries.
+      const unit = Math.max(1, (width-(columns-1)*(Number(options.gapX)||0))/columns)
+      const heights = list.map((item,i) => Number(item?.placement?.height) || unit/values[i])
+      const total = heights.reduce((a,b)=>a+b+(Number(options.gapY)||0),0)
+      let used=0, column=0; const totals=Array(columns).fill(0)
+      heights.forEach(height => { const h=height+(Number(options.gapY)||0); if(column<columns-1 && totals[column] && Math.abs(used-total*(column+1)/columns)<Math.abs(used+h-total*(column+1)/columns)) column++; totals[column]+=h; used+=h })
+      return totals.reduce((sum,h)=>sum+(h-total/columns)**2,0)
+    }
+    return values.reduce((sum,value,i)=>sum+(i && (value<.8)===(values[i-1]<.8) ? 1:0)+(i>=columns && (value>1.2)===(values[i-columns]>1.2) ? .5:0),0)
+  }
+  let best=[...images], bestScore=score(best)
+  for(let pass=0;pass<3;pass++) {
+    let improved=false, attempts=0
+    for(let i=0;i<best.length;i++) for(let j=i+1;j<best.length && attempts++<600;j++) {
+      const candidate=[...best]; [candidate[i],candidate[j]]=[candidate[j],candidate[i]]
+      const next=score(candidate)
+      if(next<bestScore-.0001) { best=candidate; bestScore=next; improved=true }
+    }
+    if(!improved) break
+  }
+  return best
+}

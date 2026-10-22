@@ -36,8 +36,10 @@ export const quickAnalyzeFromFilename = (filename) => {
 export const loadImageDimensions = (src) => {
   return new Promise((resolve, reject) => {
     const img = new Image()
+    const timeout = setTimeout(() => { img.onload = null; img.onerror = null; resolve({ ...quickAnalyzeFromFilename(src), error: true }) }, 5000)
     
     img.onload = () => {
+      clearTimeout(timeout)
       const ratio = img.width / img.height
       
       // Categorize orientation based on ratio
@@ -60,6 +62,7 @@ export const loadImageDimensions = (src) => {
     }
     
     img.onerror = () => {
+      clearTimeout(timeout)
       // Fallback to filename analysis on error
       const fallback = quickAnalyzeFromFilename(src)
       resolve({

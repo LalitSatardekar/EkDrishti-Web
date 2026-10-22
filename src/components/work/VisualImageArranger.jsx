@@ -17,14 +17,21 @@ const VisualImageArranger = ({
   title = 'Gallery',
   allowAlbumPick = true,
   allowUpload = true,
-  maxImages = 100
+  maxImages = 100,
+  layout = { mode: 'masonry', columns: 3, gap: 16 },
+  onLayoutChange
 }) => {
   const [draggedIdx, setDraggedIdx] = useState(null)
   const [dragOverIdx, setDragOverIdx] = useState(null)
   const [orientations, setOrientations] = useState({})
   const [showRawUrls, setShowRawUrls] = useState(false)
-  const [viewMode, setViewMode] = useState('masonry') // 'masonry', 'compact', 'visitor'
-  const [columnsCount, setColumnsCount] = useState(3) // 2, 3, 4
+  const [visitorPreview, setVisitorPreview] = useState(false)
+  const configuredMode = layout.mode === 'grid' || layout.mode === 'compact' ? 'compact' : 'masonry'
+  const viewMode = visitorPreview ? 'visitor' : configuredMode
+  const columnsCount = [2, 3, 4, 5].includes(Number(layout.columns)) ? Number(layout.columns) : 3
+  const rawGap = Number(layout.gap)
+  const gap = Number.isFinite(rawGap) ? Math.min(64, Math.max(0, rawGap)) : 16
+  const patchLayout = patch => onLayoutChange?.({ mode: configuredMode, columns: columnsCount, gap, ...patch })
 
   const cleanImages = Array.isArray(images)
     ? images.map(img => (typeof img === 'string' ? img : (img?.url || img?.src || ''))).filter(Boolean)
@@ -154,7 +161,7 @@ const VisualImageArranger = ({
           <div className="flex items-center bg-white/5 p-0.5 rounded-lg border border-white/10 text-[10px]">
             <button
               type="button"
-              onClick={() => setViewMode('masonry')}
+              onClick={() => { setVisitorPreview(false); patchLayout({ mode: 'masonry' }) }}
               className={`px-2 py-1 rounded font-bold transition-all ${
                 viewMode === 'masonry'
                   ? 'bg-amber-500 text-primary shadow'
@@ -166,7 +173,7 @@ const VisualImageArranger = ({
             </button>
             <button
               type="button"
-              onClick={() => setViewMode('compact')}
+              onClick={() => { setVisitorPreview(false); patchLayout({ mode: 'grid' }) }}
               className={`px-2 py-1 rounded font-bold transition-all ${
                 viewMode === 'compact'
                   ? 'bg-amber-500 text-primary shadow'
@@ -178,7 +185,7 @@ const VisualImageArranger = ({
             </button>
             <button
               type="button"
-              onClick={() => setViewMode(prev => (prev === 'visitor' ? 'masonry' : 'visitor'))}
+              onClick={() => setVisitorPreview(value => !value)}
               className={`px-2 py-1 rounded font-bold transition-all ${
                 viewMode === 'visitor'
                   ? 'bg-blue-500 text-white shadow'
@@ -193,11 +200,11 @@ const VisualImageArranger = ({
           {/* Column selector in Masonry view */}
           {viewMode === 'masonry' && cleanImages.length > 2 && (
             <div className="hidden sm:flex items-center gap-1 bg-white/5 p-0.5 rounded-lg border border-white/10 text-[10px]">
-              {[2, 3, 4].map((col) => (
+              {[2, 3, 4, 5].map((col) => (
                 <button
                   key={col}
                   type="button"
-                  onClick={() => setColumnsCount(col)}
+                  onClick={() => patchLayout({ columns: col })}
                   className={`px-1.5 py-0.5 rounded font-mono font-bold transition-all ${
                     columnsCount === col
                       ? 'bg-white/20 text-white'
@@ -210,6 +217,11 @@ const VisualImageArranger = ({
               ))}
             </div>
           )}
+          {!isSingle && <label className="flex items-center gap-1 text-[9px] text-textSecondary">
+            Gap
+            <input type="number" min="0" max="64" value={gap} onChange={event => patchLayout({ gap: Math.min(64, Math.max(0, Number(event.target.value) || 0)) })}
+              className="h-6 w-12 rounded border border-white/10 bg-white/5 px-1 text-[10px] text-white outline-none focus:border-amber-500/60" />
+          </label>}
         </div>
 
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -344,12 +356,15 @@ const VisualImageArranger = ({
                 ? 'w-full max-w-2xl mx-auto flex justify-center items-center py-4'
                 : `w-full ${
                     columnsCount === 2
-                      ? 'columns-1 sm:columns-2 gap-4'
+                      ? 'columns-1 sm:columns-2'
                       : columnsCount === 4
-                      ? 'columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4'
-                      : 'columns-1 sm:columns-2 md:columns-3 gap-4'
+                      ? 'columns-1 sm:columns-2 md:columns-3 lg:columns-4'
+                      : columnsCount === 5
+                      ? 'columns-1 sm:columns-2 md:columns-3 lg:columns-5'
+                      : 'columns-1 sm:columns-2 md:columns-3'
                   }`
             }
+            style={!isSingle ? { columnGap: `${gap}px` } : undefined}
           >
             {cleanImages.map((src, index) => {
               const isDragging = draggedIdx === index
@@ -366,7 +381,7 @@ const VisualImageArranger = ({
                   onDragLeave={(e) => handleDragLeave(e, index)}
                   onDrop={(e) => handleDrop(e, index)}
                   onDragEnd={handleDragEnd}
-                  className={`relative mb-4 break-inside-avoid overflow-hidden transition-all duration-300 ${
+                  className={`relative break-inside-avoid overflow-hidden transition-all duration-300 ${
                     !isVisitor ? 'select-none cursor-grab active:cursor-grabbing' : ''
                   } ${
                     isDragging
@@ -375,6 +390,7 @@ const VisualImageArranger = ({
                       ? 'ring-2 ring-amber-400 scale-[1.02] shadow-[0_0_24px_rgba(245,158,11,0.4)] z-20'
                       : 'hover:shadow-xl'
                   }`}
+                  style={{ marginBottom: `${gap}px` }}
                 >
                   {/* Drop Target Indicator */}
                   {isDropTarget && (
@@ -487,7 +503,7 @@ const VisualImageArranger = ({
           </div>
         ) : (
           /* COMPACT UNIFORM GRID VIEW */
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          <div className={`grid ${columnsCount === 2 ? 'grid-cols-1 sm:grid-cols-2' : columnsCount === 4 ? 'grid-cols-2 md:grid-cols-4' : columnsCount === 5 ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-5' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'}`} style={{ gap: `${gap}px` }}>
             {cleanImages.map((src, index) => {
               const isDragging = draggedIdx === index
               const isDropTarget = dragOverIdx === index && draggedIdx !== index
@@ -621,4 +637,3 @@ const VisualImageArranger = ({
 }
 
 export default VisualImageArranger
-

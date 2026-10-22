@@ -1,12 +1,22 @@
-import { useState, useEffect } from 'react'
+import ClientAccessPanel from '../../components/admin/ClientAccessPanel'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { uploadMediaFile } from '../../api/mediaApi'
+import SectionMediaPanel from '../../components/admin/SectionMediaPanel'
+import SectionTypographyPanel, { ProjectTypographyPanel } from '../../components/admin/SectionTypographyPanel'
+import SectionRenderer from '../../components/work/sections/SectionRenderer'
 import HeroMasonryGrid from '../../components/work/HeroMasonryGrid'
-import VisualImageArranger from '../../components/work/VisualImageArranger'
 import { selectDynamicHeroImages, shuffleGridImages, balanceGridImages } from '../../lib/heroSelector'
 import { SUPPORTED_RATIOS, detectClosestRatio } from '../../lib/aspectRatios'
 import { normalizeCase } from '../../lib/config'
 import BulkPhotoImporterModal from '../../components/admin/BulkPhotoImporterModal'
+import SectionTitle from '../../components/work/sections/SectionTitle'
+import { blockId, createBlockId, createBlockInstance, deepClone, duplicateBlockInstance, reorderBlockInstances, updateBlockById } from '../../lib/caseBlocks'
+import { parseVideoSource } from '../../lib/media'
+import MediaVideo from '../../components/media/MediaVideo'
+import DesignEmbedRenderer from '../../components/media/DesignEmbedRenderer'
+import { DEFAULT_DESIGN_EMBED, parseDesignEmbed } from '../../lib/designEmbed'
 
 export default function AdminCaseEditor() {
   const { id } = useParams()
@@ -18,7 +28,10 @@ export default function AdminCaseEditor() {
   const [saveLoading, setSaveLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [activeSectionIdx, setActiveSectionIdx] = useState(null)
+  const [activeSectionId, setActiveSectionId] = useState(null)
+  const selectedIndex = project?.sections?.findIndex(section => blockId(section) === activeSectionId) ?? -1
+  const activeSectionIdx = selectedIndex < 0 ? null : selectedIndex
+  const setActiveSectionIdx = index => setActiveSectionId(index === null ? null : blockId(project?.sections?.[index]))
   const [activeTab, setActiveTab] = useState('metadata') // 'metadata', 'hero', 'sections'
   const [showAddSection, setShowAddSection] = useState(false)
   const [showAlbumPicker, setShowAlbumPicker] = useState(false)
@@ -27,11 +40,19 @@ export default function AdminCaseEditor() {
   const [albumPickerTarget, setAlbumPickerTarget] = useState('hero') // 'hero', 'gallery'
   const [albumRatioFilter, setAlbumRatioFilter] = useState('ALL') // 'ALL', '3:4', '4:3', '3:2', '2:3', '16:9', '9:16', '1:1'
   const [imageRatios, setImageRatios] = useState({})
-  const [heroPreviewMode, setHeroPreviewMode] = useState(false) // Toggle clean visitor preview vs edit mode
   const [newSectionType, setNewSectionType] = useState('Rich Text')
   const [uploadingField, setUploadingField] = useState(null)
   const [isDirty, setIsDirty] = useState(false)
   const [validationErrors, setValidationErrors] = useState([])
+  const previewChannel = useRef(null)
+  const projectRef = useRef(null)
+  const savedProjectJson = useRef(null)
+  const arrangementHistory = useRef({})
+  const sectionListRef = useRef(null)
+  const draggedSectionIdRef = useRef(null)
+  const sectionDropIndexRef = useRef(null)
+  const [draggedSectionId, setDraggedSectionId] = useState(null)
+  const [sectionDropIndex, setSectionDropIndex] = useState(null)
 
   const getSEOHealth = () => {
     let score = 0
@@ -105,49 +126,62 @@ export default function AdminCaseEditor() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [isDirty])
 
-  const handleFileUpload = async (e, onComplete) => {
-    const file = e.target.files[0]
-    if (!file) return
-
-    if (file.size > 30 * 1024 * 1024) {
-      alert('Selected file is larger than the 30MB maximum limit. Please select an image under 30MB.')
-      e.target.value = ''
-      return
-    }
-
-    const fieldName = e.target.name || 'general'
-    setUploadingField(fieldName)
-
-    const reader = new FileReader()
-    reader.onload = async (event) => {
-      try {
-        const base64 = event.target.result
-        const res = await fetch('/v1/upload', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            filename: file.name,
-            fileType: file.type,
-            content: base64
-          })
-        })
-
-        const data = await res.json()
-        if (data.success) {
-          onComplete(data.data.webpUrl, data.data.originalUrl)
-        } else {
-          throw new Error(data.message || 'Upload failed')
-        }
-      } catch (err) {
-        alert(`Media Upload error: ${err.message}`)
-      } finally {
-        setUploadingField(null)
+  useEffect(() => {
+    if (!id || typeof BroadcastChannel === 'undefined') return undefined
+    const channel = new BroadcastChannel(`ekdrishti-case-preview-${id}`)
+    previewChannel.current = channel
+    channel.onmessage = event => {
+      if (event.data?.type === 'case-preview:hello' && projectRef.current) {
+        channel.postMessage({ type: 'case-preview:update', project: projectRef.current })
       }
     }
-    reader.readAsDataURL(file)
+    return () => { previewChannel.current = null; channel.close() }
+  }, [id])
+
+  useEffect(() => {
+    projectRef.current = project
+    if (project) {
+      const isChanged = savedProjectJson.current !== null && JSON.stringify(project) !== savedProjectJson.current
+      setIsDirty(current => current === isChanged ? current : isChanged)
+      previewChannel.current?.postMessage({ type: 'case-preview:update', project })
+    }
+  }, [project])
+
+  async function uploadFont(file) {
+    if (!file) throw new Error('Choose a font file.')
+    if (file.size > 10 * 1024 * 1024) throw new Error('Font files must be 10MB or smaller.')
+    const extension = file.name.split('.').pop()?.toLowerCase()
+    if (!['woff2', 'woff', 'ttf', 'otf'].includes(extension)) throw new Error('Choose a WOFF2, WOFF, TTF, or OTF font file.')
+    const content = await new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result)
+      reader.onerror = () => reject(new Error('The font file could not be read.'))
+      reader.readAsDataURL(file)
+    })
+    const response = await fetch('/v1/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ filename: file.name, fileType: file.type || `font/${extension}`, content })
+    })
+    const result = await response.json()
+    if (!response.ok || !result.success) throw new Error(result.message || 'Font upload failed.')
+    return result.data.fontUrl
+  }
+
+  const handleFileUpload = async (event, onComplete) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    const fieldName = event.target.name || 'general'
+    event.target.value = ''
+    setUploadingField(fieldName)
+    try {
+      const result = await uploadMediaFile(file, token)
+      onComplete(result.src, result.originalUrl)
+    } catch (failure) {
+      alert(`Media Upload error: ${failure.message}`)
+    } finally {
+      setUploadingField(null)
+    }
   }
 
   const handleBulkImportComplete = (newUrls, target) => {
@@ -186,9 +220,13 @@ export default function AdminCaseEditor() {
       })
       const data = await res.json()
       if (data.success) {
-        setProject(normalizeCase(data.data))
+        const loadedProject = normalizeCase(data.data)
+        projectRef.current = loadedProject
+        savedProjectJson.current = JSON.stringify(loadedProject)
+        arrangementHistory.current = Object.fromEntries((loadedProject.sections || []).map(section => [section.id, { baseline: (section.content?.images || []).map((item, i) => typeof item === 'string' ? item : item.id || item.src || item.url || String(i)), undo: [] }]))
+        setProject(loadedProject)
         if (data.data.sections?.length > 0) {
-          setActiveSectionIdx(0)
+          setActiveSectionId(blockId(loadedProject.sections[0]))
         }
       } else {
         throw new Error(data.message || 'Failed to load project details')
@@ -220,9 +258,7 @@ export default function AdminCaseEditor() {
       return
     }
 
-    const cleanHero = Array.isArray(project.hero)
-      ? project.hero.map(h => (typeof h === 'string' ? h : (h?.url || h?.src || ''))).filter(Boolean)
-      : []
+    const cleanHero = Array.isArray(project.hero) ? deepClone(project.hero) : []
 
     const payload = {
       ...project,
@@ -242,7 +278,10 @@ export default function AdminCaseEditor() {
       const data = await res.json()
       if (data.success) {
         setSuccess('Case study saved successfully!')
-        setProject(data.data)
+        const savedProject = normalizeCase(data.data)
+        projectRef.current = savedProject
+        savedProjectJson.current = JSON.stringify(savedProject)
+        setProject(savedProject)
         setIsDirty(false)
         setTimeout(() => setSuccess(''), 4000)
       } else {
@@ -343,24 +382,27 @@ export default function AdminCaseEditor() {
 
   // --- SECTION BUILDER METHODS ---
 
+  const updateSectionInstance = (sectionId, updater) => {
+    setProject(previous => ({ ...previous, sections: updateBlockById(previous.sections, sectionId, updater) }))
+    setIsDirty(true)
+  }
+
   const handleAddSection = () => {
     setIsDirty(true)
-    const newSection = {
+    const newSection = createBlockInstance({
       type: newSectionType,
-      enabled: true,
       order: (project.sections?.length || 0) + 1,
       title: `${newSectionType} Section`,
       content: getSectionDefaultContent(newSectionType),
-      settings: {},
       metadata: {}
-    }
+    })
 
     setProject(prev => {
       const sections = prev.sections ? [...prev.sections, newSection] : [newSection]
       return { ...prev, sections }
     })
 
-    setActiveSectionIdx(project.sections?.length || 0)
+    setActiveSectionId(newSection.id)
     setActiveTab('sections')
     setShowAddSection(false)
   }
@@ -368,82 +410,84 @@ export default function AdminCaseEditor() {
   const handleDeleteSection = (index) => {
     if (!window.confirm('Delete this section layout?')) return
     setIsDirty(true)
+    const sectionId = blockId(project.sections[index])
     setProject(prev => {
-      const sections = prev.sections.filter((_, idx) => idx !== index)
+      const sections = prev.sections.filter(section => blockId(section) !== sectionId)
       // Recalculate ordering
       const reordered = sections.map((s, idx) => ({ ...s, order: idx + 1 }))
       return { ...prev, sections: reordered }
     })
-    setActiveSectionIdx(prev => {
-      if (prev === index) return null
-      if (prev > index) return prev - 1
-      return prev
-    })
+    if (activeSectionId === blockId(project.sections[index])) setActiveSectionId(null)
   }
 
   const handleDuplicateSection = (index) => {
     setIsDirty(true)
     const source = project.sections[index]
-    const clone = {
-      ...source,
-      _id: undefined,
-      order: project.sections.length + 1,
-      title: `${source.title} (Copy)`
-    }
-    setProject(prev => ({
-      ...prev,
-      sections: [...prev.sections, clone]
-    }))
-    setActiveSectionIdx(project.sections.length)
+    const clone = duplicateBlockInstance(source, index + 2)
+    setProject(prev => {
+      const sections = [...prev.sections]
+      sections.splice(index + 1, 0, clone)
+      return { ...prev, sections: sections.map((section, sectionIndex) => ({ ...section, order: sectionIndex + 1 })) }
+    })
+    setActiveSectionId(clone.id)
   }
 
-  const handleMoveSection = (index, direction) => {
-    if (direction === 'up' && index === 0) return
-    if (direction === 'down' && index === project.sections.length - 1) return
-
+  const reorderSection = (sectionId, insertionIndex) => {
+    if (!sectionId || insertionIndex === null) return
+    const currentSourceIndex = project.sections.findIndex(section => blockId(section) === sectionId)
+    if (currentSourceIndex < 0) return
+    setProject(prev => ({ ...prev, sections: reorderBlockInstances(prev.sections, sectionId, insertionIndex) }))
+    setActiveSectionId(sectionId)
     setIsDirty(true)
-    const swapIdx = direction === 'up' ? index - 1 : index + 1
-    setProject(prev => {
-      const list = [...prev.sections]
-      const temp = list[index]
-      list[index] = list[swapIdx]
-      list[swapIdx] = temp
+  }
 
-      // Fix orders
-      const ordered = list.map((s, idx) => ({ ...s, order: idx + 1 }))
-      return { ...prev, sections: ordered }
-    })
-    setActiveSectionIdx(swapIdx)
+  const finishSectionDrag = (insertionIndex = sectionDropIndexRef.current) => {
+    reorderSection(draggedSectionIdRef.current, insertionIndex)
+    draggedSectionIdRef.current = null
+    setDraggedSectionId(null)
+    setSectionDropIndex(null)
+    sectionDropIndexRef.current = null
+  }
+
+  const updateSectionDropTarget = (clientY, row, index) => {
+    const rect = row.getBoundingClientRect()
+    const nextDropIndex = clientY < rect.top + rect.height / 2 ? index : index + 1
+    sectionDropIndexRef.current = nextDropIndex
+    setSectionDropIndex(nextDropIndex)
+    const list = sectionListRef.current
+    if (!list) return
+    const listRect = list.getBoundingClientRect()
+    if (clientY < listRect.top + 42) list.scrollTop -= 14
+    else if (clientY > listRect.bottom - 42) list.scrollTop += 14
+  }
+
+  const handleSectionKeyboardReorder = (event, index) => {
+    if (!event.altKey || !['ArrowUp', 'ArrowDown'].includes(event.key)) return
+    event.preventDefault()
+    const target = event.key === 'ArrowUp' ? index - 1 : index + 2
+    if (target < 0 || target > project.sections.length) return
+    reorderSection(blockId(project.sections[index]), target)
   }
 
   const handleToggleSectionEnabled = (index) => {
-    setIsDirty(true)
-    setProject(prev => {
-      const list = [...prev.sections]
-      list[index] = { ...list[index], enabled: !list[index].enabled }
-      return { ...prev, sections: list }
-    })
+    const sectionId = blockId(project.sections[index])
+    updateSectionInstance(sectionId, section => ({ ...section, enabled: section.enabled === false }))
   }
 
   const handleSectionFieldChange = (field, value) => {
-    setIsDirty(true)
-    setProject(prev => {
-      const list = [...prev.sections]
-      list[activeSectionIdx] = {
-        ...list[activeSectionIdx],
-        content: {
-          ...list[activeSectionIdx].content,
-          [field]: value
-        }
-      }
-      return { ...prev, sections: list }
-    })
+    const sectionId = blockId(project.sections[activeSectionIdx])
+    updateSectionInstance(sectionId, section => ({ ...section, content: { ...section.content, [field]: value } }))
+  }
+
+  const handleSectionSettingsChange = (field, value) => {
+    const sectionId = blockId(project.sections[activeSectionIdx])
+    updateSectionInstance(sectionId, section => ({ ...section, settings: { ...section.settings, [field]: deepClone(value) } }))
   }
 
   const getSectionDefaultContent = (type) => {
     switch (type) {
       case 'Hero':
-        return { title: 'Hero Showcase' }
+        return { images: deepClone(project.hero?.length ? project.hero : getEffectiveHeroImages()) }
       case 'Rich Text':
       case 'Story':
         return {
@@ -459,11 +503,15 @@ export default function AdminCaseEditor() {
         }
       case 'Gallery':
         return { images: [] }
+      case 'Image Section':
+        return { images: [], caption: '' }
       case 'Video':
         return {
           url: project?.youtubeUrl || project?.video || '',
           aspectRatio: project?.aspectRatio || '16/9'
         }
+      case 'Design Embed':
+        return { url: '' }
       case 'CTA':
         return {
           heading: 'Ready to Capture Your Moments?',
@@ -478,7 +526,7 @@ export default function AdminCaseEditor() {
           role: 'Wedding & Event'
         }
       case 'Album Gallery':
-        return { title: 'Full Album Showcase' }
+        return { images: deepClone(project?.album || []) }
       case 'Client Access':
         return { title: 'Client Downloads' }
       default:
@@ -538,11 +586,11 @@ export default function AdminCaseEditor() {
 
     if (project.album && project.album.length > 0) {
       defaultSections.push({
-        type: 'Album Gallery',
+        type: 'Image Section',
         enabled: true,
         order: nextOrder++,
         title: 'Album Gallery',
-        content: {}
+        content: { images: project.album }
       })
     }
 
@@ -570,11 +618,9 @@ export default function AdminCaseEditor() {
     })
 
     setIsDirty(true)
-    setProject(prev => ({
-      ...prev,
-      sections: defaultSections
-    }))
-    setActiveSectionIdx(0)
+    const createdSections = defaultSections.map(section => createBlockInstance({ ...section, content: section.type === 'Hero' ? { ...section.content, images: deepClone(getEffectiveHeroImages()) } : section.content }))
+    setProject(prev => ({ ...prev, sections: createdSections }))
+    setActiveSectionId(createdSections[0]?.id || null)
     setActiveTab('sections')
   }
 
@@ -610,9 +656,10 @@ export default function AdminCaseEditor() {
         </div>
         <div className="flex items-center gap-2">
           <a
-            href={`/work/${project.slug}?preview=1`}
+            href={`/work/${project.slug}?preview=1&previewId=${encodeURIComponent(id)}`}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => previewChannel.current?.postMessage({ type: 'case-preview:update', project })}
             className="bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold py-2.5 px-4 rounded-xl transition-all"
           >
             👁️  Live Preview
@@ -688,7 +735,7 @@ export default function AdminCaseEditor() {
             </button>
           </div>
 
-          {activeTab === 'hero' ? (
+          {activeTab === 'hero' && project.sections?.some(section => section.type === 'Hero') ? (<div className="space-y-3 text-xs"><p className="text-textSecondary">Each Hero block has its own media and configuration.</p>{project.sections.filter(section => section.type === 'Hero').map(section => <button key={blockId(section)} type="button" onClick={() => setActiveSectionId(blockId(section))} className={`block w-full rounded-lg border px-3 py-3 text-left ${activeSectionId === blockId(section) ? 'border-amber-400 text-amber-300' : 'border-white/10 text-white'}`}>{section.title || 'Hero'} · {section.content?.images?.length || 0} images</button>)}</div>) : activeTab === 'hero' ? (
             <div className="space-y-4 text-[11px]">
               <div className="p-3 bg-[#0B1120] rounded-xl border border-white/5 space-y-2">
                 <div className="flex items-center justify-between">
@@ -1068,7 +1115,7 @@ export default function AdminCaseEditor() {
                   ) : (
                     project.album.map((img, idx) => (
                       <div key={idx} className="relative aspect-square bg-white/5 rounded-lg overflow-hidden group border border-white/5">
-                        <img src={img} alt="album" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                        <img src={typeof img === 'string' ? img : img.src || img.url} alt="album" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                         <button
                           type="button"
                           onClick={() => setProject(prev => ({
@@ -1088,7 +1135,7 @@ export default function AdminCaseEditor() {
           ) : (
             <div className="space-y-4 flex-1 flex flex-col justify-between">
               {/* SECTION TILES & SEQUENCE */}
-              <div className="space-y-2.5 max-h-[420px] overflow-y-auto pr-1">
+              <div ref={sectionListRef} className="space-y-2.5 max-h-[420px] overflow-y-auto pr-1 scroll-smooth">
                 {(!project.sections || project.sections.length === 0) ? (
                   <div className="text-center py-8 px-4 bg-[#0B1120] rounded-2xl border border-white/5 space-y-3">
                     <p className="text-textSecondary text-xs">No sections configured yet.</p>
@@ -1111,7 +1158,8 @@ export default function AdminCaseEditor() {
                         secType.includes('rich') || secType.includes('story') ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
                           secType.includes('result') || secType.includes('stat') ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
                             secType.includes('video') ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' :
-                              secType.includes('gallery') ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' :
+                              secType.includes('embed') ? 'bg-fuchsia-500/20 text-fuchsia-400 border-fuchsia-500/30' :
+                              secType.includes('gallery') || secType.includes('image') ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' :
                                 secType.includes('cta') ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' :
                                   secType.includes('testimonial') || secType.includes('quote') ? 'bg-pink-500/20 text-pink-400 border-pink-500/30' :
                                     'bg-white/10 text-white border-white/20'
@@ -1121,84 +1169,84 @@ export default function AdminCaseEditor() {
                         secType.includes('rich') || secType.includes('story') ? '📝' :
                           secType.includes('result') || secType.includes('stat') ? '📊' :
                             secType.includes('video') ? '🎬' :
+                              secType.includes('embed') ? '🎨' :
                               secType.includes('gallery') ? '📸' :
                                 secType.includes('cta') ? '⚡' :
                                   secType.includes('testimonial') || secType.includes('quote') ? '💬' :
                                     secType.includes('album') ? '📚' : '📦'
 
                     return (
-                      <div
-                        key={sec._id || idx}
-                        className={`p-3 rounded-xl border flex items-center justify-between gap-3 text-xs transition-all ${activeSectionIdx === idx
-                            ? 'bg-amber-500/10 border-amber-500/40 shadow-md ring-1 ring-amber-500/30'
-                            : 'bg-[#0B1120] border-white/5 text-textSecondary hover:text-textPrimary hover:border-white/15'
-                          }`}
-                      >
-                        {/* Step Number & Title */}
+                      <div key={blockId(sec)} className="relative">
+                        {draggedSectionId && sectionDropIndex === idx && <div className="absolute -top-[6px] inset-x-2 z-20 h-0.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]" />}
                         <div
-                          className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer"
-                          onClick={() => setActiveSectionIdx(idx)}
+                          data-section-id={blockId(sec)}
+                          draggable
+                          onDragStart={event => {
+                            if (event.target.closest('button,input,select,textarea,a')) { event.preventDefault(); return }
+                            draggedSectionIdRef.current = blockId(sec)
+                            setDraggedSectionId(blockId(sec))
+                            sectionDropIndexRef.current = idx
+                            setSectionDropIndex(idx)
+                            event.dataTransfer.effectAllowed = 'move'
+                            event.dataTransfer.setData('text/plain', blockId(sec))
+                          }}
+                          onDragOver={event => { event.preventDefault(); event.dataTransfer.dropEffect = 'move'; updateSectionDropTarget(event.clientY, event.currentTarget, idx) }}
+                          onDrop={event => { event.preventDefault(); finishSectionDrag() }}
+                          onDragEnd={() => { draggedSectionIdRef.current = null; sectionDropIndexRef.current = null; setDraggedSectionId(null); setSectionDropIndex(null) }}
+                          className={`group p-3 rounded-xl border flex items-center justify-between gap-3 text-xs cursor-grab transition-[transform,opacity,box-shadow,border-color,background-color] duration-200 active:cursor-grabbing ${draggedSectionId === blockId(sec) ? 'relative z-10 scale-[1.01] opacity-80 shadow-xl shadow-black/30' : ''} ${activeSectionIdx === idx
+                              ? 'bg-amber-500/10 border-amber-500/40 shadow-md ring-1 ring-amber-500/30'
+                              : 'bg-[#0B1120] border-white/5 text-textSecondary hover:text-textPrimary hover:border-white/15'
+                            }`}
                         >
-                          <span className="w-6 h-6 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-mono font-bold text-[10px] text-textSecondary flex-shrink-0">
-                            {String(idx + 1).padStart(2, '0')}
-                          </span>
-                          <div className="min-w-0">
-                            <p className="font-bold text-white truncate flex items-center gap-1.5">
-                              <span>{typeIcon}</span>
-                              <span className="truncate">{sec.title || `${sec.type} Section`}</span>
-                            </p>
-                            <span className={`inline-block px-1.5 py-0.2 rounded text-[9px] font-mono border mt-0.5 ${typeColor}`}>
-                              {sec.type}
-                            </span>
+                          <div className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer" onClick={() => setActiveSectionIdx(idx)}>
+                            <div className="relative flex h-6 w-6 flex-shrink-0 items-center justify-center">
+                              <span className="rounded-lg border border-white/10 bg-white/5 px-1.5 py-1 font-mono text-[10px] font-bold text-textSecondary transition-opacity group-hover:opacity-0 group-focus-within:opacity-0">{String(idx + 1).padStart(2, '0')}</span>
+                              <button
+                                type="button"
+                                draggable
+                                aria-label={`Reorder ${sec.title || sec.type}. Hold Alt and press the up or down arrow key.`}
+                                title="Drag to reorder · Alt + Arrow keys"
+                                onClick={event => event.stopPropagation()}
+                                onDragStart={event => {
+                                  event.stopPropagation()
+                                  draggedSectionIdRef.current = blockId(sec)
+                                  sectionDropIndexRef.current = idx
+                                  setDraggedSectionId(blockId(sec))
+                                  setSectionDropIndex(idx)
+                                  event.dataTransfer.effectAllowed = 'move'
+                                  event.dataTransfer.setData('text/plain', blockId(sec))
+                                }}
+                                onKeyDown={event => handleSectionKeyboardReorder(event, idx)}
+                                onPointerDown={event => {
+                                  if (event.pointerType === 'mouse') return
+                                  event.stopPropagation()
+                                  draggedSectionIdRef.current = blockId(sec)
+                                  sectionDropIndexRef.current = idx
+                                  setDraggedSectionId(blockId(sec))
+                                  setSectionDropIndex(idx)
+                                  event.currentTarget.setPointerCapture(event.pointerId)
+                                }}
+                                onPointerMove={event => {
+                                  if (!draggedSectionIdRef.current || event.pointerType === 'mouse') return
+                                  const row = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-section-id]')
+                                  if (row) updateSectionDropTarget(event.clientY, row, project.sections.findIndex(section => blockId(section) === row.dataset.sectionId))
+                                }}
+                                onPointerUp={event => { if (event.pointerType !== 'mouse' && draggedSectionIdRef.current) finishSectionDrag() }}
+                                className="absolute inset-0 flex touch-none items-center justify-center text-base text-amber-400 opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100 cursor-grab active:cursor-grabbing"
+                              >⠿</button>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-bold text-white truncate flex items-center gap-1.5"><span>{typeIcon}</span><span className="truncate">{sec.title || `${sec.type} Section`}</span></p>
+                              <span className={`inline-block px-1.5 py-0.2 rounded text-[9px] font-mono border mt-0.5 ${typeColor}`}>{secType.includes('embed') ? 'Embed' : sec.type}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <button type="button" onClick={() => handleToggleSectionEnabled(idx)} className={`text-[9px] font-bold px-1.5 py-0.5 rounded transition-all ${sec.enabled !== false ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`} title="Toggle visibility">{sec.enabled !== false ? 'ON' : 'OFF'}</button>
+                            <button type="button" onClick={() => handleDuplicateSection(idx)} className="p-1 hover:text-amber-400 transition-colors" title="Duplicate">🗐</button>
+                            <button type="button" onClick={() => handleDeleteSection(idx)} className="p-1 hover:text-red-400 transition-colors" title="Delete">🗑️</button>
                           </div>
                         </div>
-
-                        {/* Controls */}
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => handleToggleSectionEnabled(idx)}
-                            className={`text-[9px] font-bold px-1.5 py-0.5 rounded transition-all ${sec.enabled !== false ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                              }`}
-                            title="Toggle visibility"
-                          >
-                            {sec.enabled !== false ? 'ON' : 'OFF'}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleMoveSection(idx, 'up')}
-                            disabled={idx === 0}
-                            className="p-1 hover:text-amber-400 disabled:opacity-20 transition-colors"
-                            title="Move Up"
-                          >
-                            ▲
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleMoveSection(idx, 'down')}
-                            disabled={idx === (project.sections?.length || 0) - 1}
-                            className="p-1 hover:text-amber-400 disabled:opacity-20 transition-colors"
-                            title="Move Down"
-                          >
-                            ▼
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDuplicateSection(idx)}
-                            className="p-1 hover:text-amber-400 transition-colors"
-                            title="Duplicate"
-                          >
-                            🗐
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteSection(idx)}
-                            className="p-1 hover:text-red-400 transition-colors"
-                            title="Delete"
-                          >
-                            🗑️
-                          </button>
-                        </div>
+                        {draggedSectionId && sectionDropIndex === project.sections.length && idx === project.sections.length - 1 && <div className="absolute -bottom-[6px] inset-x-2 z-20 h-0.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]" />}
                       </div>
                     )
                   })
@@ -1246,121 +1294,13 @@ export default function AdminCaseEditor() {
         {/* RIGHT COLUMN: DETAIL EDIT FORM */}
         <div className="lg:col-span-2 bg-[#0F172A]/40 border border-white/5 rounded-2xl p-6">
           {activeTab === 'hero' ? (
-            <div className="space-y-6">
-              {/* Hero Grid Header with Clean Preview Toggle & Actions */}
-              {(() => {
-                const effectiveHeroImages = getEffectiveHeroImages()
-                const isCustomHero = Array.isArray(project?.hero) && project.hero.length > 0
-
-                return (
-                  <>
-                    <div className="border-b border-white/5 pb-4 flex flex-col xl:flex-row justify-between xl:items-center gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h2 className="text-base font-heading font-bold text-white">
-                            {heroPreviewMode ? '👁️ Clean Visitor Grid Preview' : 'Live Hero Dynamic Masonry Layout'}
-                          </h2>
-                          <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full whitespace-nowrap ${heroPreviewMode
-                              ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                              : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                            }`}>
-                            {heroPreviewMode ? 'Visitor View (Zero Badges)' : 'WYSIWYG Live Preview & Reorder'}
-                          </span>
-                        </div>
-                        <p className="text-textSecondary text-[11px] mt-1">
-                          {heroPreviewMode
-                            ? 'Exact visitor appearance on the public case study page. Click "Exit Preview" to edit or reorder.'
-                            : 'Drag & drop any image card to easily reorder its position in the grid, or use the position arrow buttons. Click "Clean Grid Preview" to see the live visitor view.'}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
-                        <button
-                          type="button"
-                          onClick={() => setHeroPreviewMode(prev => !prev)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow ${heroPreviewMode
-                              ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40 hover:bg-blue-500/30'
-                              : 'bg-white/5 text-textSecondary border border-white/10 hover:text-white hover:bg-white/10'
-                            }`}
-                        >
-                          {heroPreviewMode ? '✏️ Edit & Reorder' : '👁️ Clean Grid Preview'}
-                        </button>
-
-                        {!heroPreviewMode && effectiveHeroImages.length > 1 && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={handleShuffleHero}
-                              className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 font-bold rounded-xl text-xs transition-all flex items-center gap-1.5 shadow"
-                            >
-                              🎲 Shuffle Grid
-                            </button>
-                            <button
-                              type="button"
-                              onClick={handleSmartBalanceHero}
-                              className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold rounded-xl text-xs transition-all flex items-center gap-1.5 shadow"
-                            >
-                              ✨ Smart Balance
-                            </button>
-                          </>
-                        )}
-
-                        <button
-                          type="button"
-                          onClick={() => setShowAlbumPicker(true)}
-                          className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-primary font-bold rounded-xl text-xs transition-all shadow"
-                        >
-                          ＋ Add Photos from Album
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="p-4 bg-[#0B1120]/60 rounded-2xl border border-white/5 min-h-[420px]">
-                      {effectiveHeroImages.length === 0 ? (
-                        <div className="py-20 text-center space-y-4">
-                          <div className="text-5xl opacity-40">🖼️</div>
-                          <div className="space-y-1">
-                            <h3 className="text-sm font-bold text-white">No Images Available for Hero Grid</h3>
-                            <p className="text-textSecondary text-xs max-w-md mx-auto">
-                              Add photos to the album or upload directly to display them in the dynamic hero masonry layout.
-                            </p>
-                          </div>
-                          <div className="pt-2">
-                            <button
-                              type="button"
-                              onClick={() => setShowAlbumPicker(true)}
-                              className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-primary font-bold rounded-xl text-xs transition-all shadow"
-                            >
-                              📚 Pick from Album
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <HeroMasonryGrid
-                          images={effectiveHeroImages}
-                          editable={!heroPreviewMode}
-                          onReorder={(newImages) => {
-                            setIsDirty(true)
-                            setProject(prev => ({ ...prev, hero: newImages }))
-                          }}
-                          onRemove={(idx) => {
-                            setIsDirty(true)
-                            setProject(prev => {
-                              const current = (prev.hero && prev.hero.length > 0) ? prev.hero : effectiveHeroImages
-                              return {
-                                ...prev,
-                                hero: current.filter((_, i) => i !== idx)
-                              }
-                            })
-                          }}
-                          title={project?.title}
-                        />
-                      )}
-                    </div>
-                  </>
-                )
-              })()}
-            </div>
+            (() => {
+              const section = project.sections?.find(item => blockId(item) === activeSectionId && item.type === 'Hero') || project.sections?.find(item => item.type === 'Hero')
+              if (!section) return <HeroMasonryGrid images={getEffectiveHeroImages()} heroSettings={project.heroSettings || {}} editable onReorder={images => setProject(previous => ({ ...previous, hero: images }))} title={project.title} />
+              const sectionId = blockId(section)
+              const update = updater => updateSectionInstance(sectionId, updater)
+              return <div key={sectionId} className="space-y-4"><h2 className="text-lg font-bold text-white">{section.title}</h2><SectionMediaPanel onUploadFont={uploadFont} arrangementHistory={arrangementHistory.current} section={section} project={project} onUpdate={update} onUploadFile={file => uploadMediaFile(file, token)} /></div>
+            })()
           ) : activeTab === 'sections' && activeSectionIdx !== null && project.sections?.[activeSectionIdx] ? (
             <div className="space-y-6 text-xs">
               {/* SECTION HEADER */}
@@ -1368,7 +1308,7 @@ export default function AdminCaseEditor() {
                 <div>
                   <h2 className="text-lg font-heading font-bold text-white flex items-center gap-2">
                     <span>Block #{activeSectionIdx + 1}:</span>
-                    <span>{project.sections[activeSectionIdx].title}</span>
+                    <SectionTitle as="span" section={project.sections[activeSectionIdx]} project={project}>{project.sections[activeSectionIdx].title}</SectionTitle>
                   </h2>
                   <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded text-[10px] font-mono mt-1 inline-block">
                     Type: {project.sections[activeSectionIdx].type}
@@ -1396,41 +1336,15 @@ export default function AdminCaseEditor() {
                     value={project.sections[activeSectionIdx].title || ''}
                     onChange={(e) => {
                       const val = e.target.value
-                      setProject(prev => {
-                        const list = [...prev.sections]
-                        list[activeSectionIdx] = { ...list[activeSectionIdx], title: val }
-                        return { ...prev, sections: list }
-                      })
-                      setIsDirty(true)
+                      updateSectionInstance(blockId(project.sections[activeSectionIdx]), section => ({ ...section, title: val }))
                     }}
                     className="w-full px-3 py-2 bg-[#0B1120] border border-white/10 rounded-xl text-textPrimary focus:outline-none focus:border-amber-500/60 font-semibold"
                   />
+
                 </div>
 
-                {/* 1. HERO SECTION */}
-                {project.sections[activeSectionIdx].type === 'Hero' && (
-                  <div className="p-4 bg-[#0B1120] rounded-2xl border border-white/5 space-y-3">
-                    <p className="text-textSecondary text-xs">
-                      This block renders the main dynamic Hero Masonry Grid on the case study page.
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab('hero')}
-                        className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-primary font-bold rounded-xl text-xs transition-all shadow"
-                      >
-                        🖼️ Open Hero Grid Editor Tab
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowAlbumPicker(true)}
-                        className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold rounded-xl text-xs transition-all"
-                      >
-                        📚 Pick Photos from Album
-                      </button>
-                    </div>
-                  </div>
-                )}
+                {/* Hero owns its media, modes and preview. */}
+                {project.sections[activeSectionIdx].type === 'Hero' && <SectionMediaPanel onUploadFont={uploadFont} arrangementHistory={arrangementHistory.current} key={activeSectionId} section={project.sections[activeSectionIdx]} project={project} onUpdate={updater => updateSectionInstance(activeSectionId, updater)} onUploadFile={file => uploadMediaFile(file, token)} />}
 
                 {/* 2. RICH TEXT / STORY */}
                 {(project.sections[activeSectionIdx].type === 'Rich Text' || project.sections[activeSectionIdx].type === 'Story') && (
@@ -1444,6 +1358,7 @@ export default function AdminCaseEditor() {
                         placeholder="e.g. The Story, Vision & Execution"
                         className="w-full px-3 py-2 bg-[#0B1120] border border-white/10 rounded-xl text-textPrimary focus:outline-none"
                       />
+
                     </div>
                     <div>
                       <div className="flex justify-between items-center mb-1">
@@ -1477,6 +1392,7 @@ export default function AdminCaseEditor() {
                         onChange={(e) => handleSectionFieldChange('text', e.target.value)}
                         className="w-full px-3 py-2 bg-[#0B1120] border border-white/10 rounded-xl text-textPrimary focus:outline-none font-mono text-xs"
                       />
+
                     </div>
                   </div>
                 )}
@@ -1497,6 +1413,7 @@ export default function AdminCaseEditor() {
                           placeholder="e.g. 2 Highlight Reels"
                           className="w-full px-2.5 py-1.5 bg-surface/50 border border-white/10 rounded-lg text-textPrimary text-xs focus:outline-none"
                         />
+
                       </div>
                       <div className="p-3 bg-[#0B1120] rounded-xl border border-white/5 space-y-2">
                         <span className="text-amber-400 font-bold text-xs">Metric 02</span>
@@ -1507,6 +1424,7 @@ export default function AdminCaseEditor() {
                           placeholder="e.g. Full 4K Photo Coverage"
                           className="w-full px-2.5 py-1.5 bg-surface/50 border border-white/10 rounded-lg text-textPrimary text-xs focus:outline-none"
                         />
+
                       </div>
                       <div className="p-3 bg-[#0B1120] rounded-xl border border-white/5 space-y-2">
                         <span className="text-amber-400 font-bold text-xs">Metric 03</span>
@@ -1517,6 +1435,7 @@ export default function AdminCaseEditor() {
                           placeholder="e.g. Delivered in 48 Hours"
                           className="w-full px-2.5 py-1.5 bg-surface/50 border border-white/10 rounded-lg text-textPrimary text-xs focus:outline-none"
                         />
+
                       </div>
                     </div>
                   </div>
@@ -1527,14 +1446,15 @@ export default function AdminCaseEditor() {
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div className="sm:col-span-2">
-                        <label className="block text-textSecondary font-semibold mb-1 uppercase tracking-wide">YouTube URL or MP4 Link</label>
+                        <label className="block text-textSecondary font-semibold mb-1 uppercase tracking-wide">Video URL</label>
                         <input
                           type="url"
                           value={project.sections[activeSectionIdx].content?.url || ''}
                           onChange={(e) => handleSectionFieldChange('url', e.target.value)}
-                          placeholder="https://www.youtube.com/watch?v=... or S3 .mp4"
+                          placeholder="YouTube, Google Drive, or direct video URL"
                           className="w-full px-3 py-2 bg-[#0B1120] border border-white/10 rounded-xl text-textPrimary focus:outline-none"
                         />
+                        {(() => { const parsed = parseVideoSource(project.sections[activeSectionIdx].content?.url); return project.sections[activeSectionIdx].content?.url ? <p className={`mt-1 text-[10px] ${parsed.error ? 'text-amber-400' : 'text-emerald-400'}`}>{parsed.error ? `⚠ ${parsed.error}` : `✓ ${parsed.provider === 'google-drive' ? 'Google Drive' : parsed.provider === 'youtube' ? 'YouTube' : 'Direct video'} detected`}</p> : null })()}
                       </div>
                       <div>
                         <label className="block text-textSecondary font-semibold mb-1 uppercase tracking-wide">Aspect Ratio</label>
@@ -1550,49 +1470,65 @@ export default function AdminCaseEditor() {
                         </select>
                       </div>
                     </div>
+                    <div className="flex flex-wrap gap-4 text-[11px] text-textSecondary">
+                      <label className="flex items-center gap-2"><input type="checkbox" checked={project.sections[activeSectionIdx].settings?.autoplay === true} onChange={event => handleSectionSettingsChange('autoplay', event.target.checked)} />Autoplay</label>
+                      <label className="flex items-center gap-2"><input type="checkbox" checked={project.sections[activeSectionIdx].settings?.muted === true} onChange={event => handleSectionSettingsChange('muted', event.target.checked)} />Muted</label>
+                      <label className="flex items-center gap-2"><input type="checkbox" checked={project.sections[activeSectionIdx].settings?.loop === true} onChange={event => handleSectionSettingsChange('loop', event.target.checked)} />Loop</label>
+                      <label className="flex items-center gap-2"><input type="checkbox" checked={project.sections[activeSectionIdx].settings?.controls !== false} onChange={event => handleSectionSettingsChange('controls', event.target.checked)} />Controls</label>
+                    </div>
+                    {parseVideoSource(project.sections[activeSectionIdx].content?.url).provider === 'google-drive' && <p className="text-[10px] text-textSecondary">Google Drive controls and loop behavior are managed by Drive. Ensure the file is shared with “Anyone with the link”.</p>}
+                    <div>
+                      <label className="block text-textSecondary font-semibold mb-1 uppercase tracking-wide">Video Caption</label>
+                      <input type="text" value={project.sections[activeSectionIdx].content?.caption || ''} onChange={(e) => handleSectionFieldChange('caption', e.target.value)} className="w-full px-3 py-2 bg-[#0B1120] border border-white/10 rounded-xl text-textPrimary focus:outline-none" />
+
+                    </div>
 
                     {/* Live Video Preview */}
                     {project.sections[activeSectionIdx].content?.url && (
                       <div className="p-3 bg-[#0B1120] rounded-xl border border-white/5 space-y-2">
                         <span className="text-textSecondary text-[10px] uppercase font-bold tracking-wider">Live Video Embed Preview</span>
-                        {project.sections[activeSectionIdx].content.url.includes('youtube') || project.sections[activeSectionIdx].content.url.includes('youtu.be') ? (
-                          <div className="max-w-md mx-auto">
-                            <iframe
-                              src={project.sections[activeSectionIdx].content.url.replace('watch?v=', 'embed/')}
-                              className="w-full aspect-video rounded-lg"
-                              title="preview"
-                            />
-                          </div>
-                        ) : (
-                          <video controls className="max-w-md mx-auto rounded-lg aspect-video">
-                            <source src={project.sections[activeSectionIdx].content.url} type="video/mp4" />
-                          </video>
-                        )}
+                        <MediaVideo source={project.sections[activeSectionIdx].content.url} title="Video preview" aspectRatio={project.sections[activeSectionIdx].content?.aspectRatio || '16/9'} autoplay={project.sections[activeSectionIdx].settings?.autoplay === true} muted={project.sections[activeSectionIdx].settings?.muted === true} loop={project.sections[activeSectionIdx].settings?.loop === true} controls={project.sections[activeSectionIdx].settings?.controls !== false} />
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* 5. GALLERY */}
-                {project.sections[activeSectionIdx].type === 'Gallery' && (
-                  <div className="space-y-4">
-                    <VisualImageArranger
-                      images={project.sections[activeSectionIdx].content?.images || []}
-                      onChange={(newImgs) => handleSectionFieldChange('images', newImgs)}
-                      onUpload={(e) => handleFileUpload(e, (webpUrl) => {
-                        const list = project.sections[activeSectionIdx].content?.images || []
-                        handleSectionFieldChange('images', [...list, webpUrl])
-                      })}
-                      onPickFromAlbum={() => {
-                        setAlbumPickerTarget('gallery')
-                        setShowAlbumPicker(true)
-                      }}
-                      title="Gallery"
-                      allowAlbumPick={Boolean(project?.album && project.album.length > 0)}
-                      allowUpload={true}
-                    />
+                {project.sections[activeSectionIdx].type === 'Design Embed' && (() => {
+                  const section = project.sections[activeSectionIdx]
+                  const embedSettings = { ...DEFAULT_DESIGN_EMBED, ...section.settings }
+                  const parsed = parseDesignEmbed(section.content?.url)
+                  const fieldClass = 'w-full px-3 py-2 bg-[#0B1120] border border-white/10 rounded-xl text-textPrimary focus:outline-none focus:border-amber-500/60'
+                  return <div className="space-y-4">
+                    <div>
+                      <label className="block text-textSecondary font-semibold mb-1 uppercase tracking-wide">Figma / Canva Link</label>
+                      <input type="url" value={section.content?.url || ''} onChange={event => handleSectionFieldChange('url', event.target.value)} placeholder="Paste Figma or Canva share/embed URL…" className={fieldClass} />
+                      {section.content?.url && <p className={`mt-1 text-[10px] ${parsed.error ? 'text-amber-400' : 'text-emerald-400'}`}>{parsed.error ? `⚠ ${parsed.error}` : `✓ ${parsed.provider === 'figma' ? 'Figma' : 'Canva'} detected`}</p>}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
+                      <label className="text-[9px] uppercase text-textSecondary">Container<select value={embedSettings.containerWidth} onChange={event => handleSectionSettingsChange('containerWidth', event.target.value)} className={`${fieldClass} mt-1`}><option value="content">Content</option><option value="wide">Wide</option><option value="fullBleed">Full Bleed</option><option value="custom">Custom</option></select></label>
+                      <label className="text-[9px] uppercase text-textSecondary">Desktop height<input type="number" min="200" max="2000" value={embedSettings.heightDesktop} onChange={event => handleSectionSettingsChange('heightDesktop', Number(event.target.value))} className={`${fieldClass} mt-1`} /></label>
+                      <label className="text-[9px] uppercase text-textSecondary">Aspect ratio<select value={embedSettings.aspectRatio} onChange={event => handleSectionSettingsChange('aspectRatio', event.target.value)} className={`${fieldClass} mt-1`}><option value="auto">Auto</option><option value="16:9">16:9</option><option value="4:3">4:3</option><option value="1:1">1:1</option><option value="custom">Custom</option></select></label>
+                      <label className="text-[9px] uppercase text-textSecondary">Alignment<select value={embedSettings.alignment} onChange={event => handleSectionSettingsChange('alignment', event.target.value)} className={`${fieldClass} mt-1`}><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
+                      <label className="text-[9px] uppercase text-textSecondary">Corner radius<input type="number" min="0" max="100" value={embedSettings.borderRadius} onChange={event => handleSectionSettingsChange('borderRadius', Number(event.target.value))} className={`${fieldClass} mt-1`} /></label>
+                    </div>
+                    <details className="rounded-xl border border-white/5 bg-[#0B1120]/50 p-3"><summary className="cursor-pointer text-[10px] font-semibold uppercase text-textSecondary">More / Advanced</summary><div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-6">
+                      <label className="text-[9px] text-textSecondary">Tablet height<input type="number" min="200" max="2000" value={embedSettings.heightTablet} onChange={event => handleSectionSettingsChange('heightTablet', Number(event.target.value))} className={`${fieldClass} mt-1`} /></label>
+                      <label className="text-[9px] text-textSecondary">Mobile height<input type="number" min="200" max="2000" value={embedSettings.heightMobile} onChange={event => handleSectionSettingsChange('heightMobile', Number(event.target.value))} className={`${fieldClass} mt-1`} /></label>
+                      {embedSettings.containerWidth === 'custom' && <label className="text-[9px] text-textSecondary">Custom width<input type="number" min="320" max="2400" value={embedSettings.customWidth} onChange={event => handleSectionSettingsChange('customWidth', Number(event.target.value))} className={`${fieldClass} mt-1`} /></label>}
+                      {embedSettings.aspectRatio === 'custom' && <label className="text-[9px] text-textSecondary">Custom ratio<input value={embedSettings.customAspectRatio} onChange={event => handleSectionSettingsChange('customAspectRatio', event.target.value)} placeholder="5 / 4" className={`${fieldClass} mt-1`} /></label>}
+                      <label className="text-[9px] text-textSecondary">Background<select value={embedSettings.background} onChange={event => handleSectionSettingsChange('background', event.target.value)} className={`${fieldClass} mt-1`}><option value="transparent">Transparent</option><option value="dark">Dark</option><option value="light">Light</option></select></label>
+                      <label className="text-[9px] text-textSecondary">Side padding<input type="number" min="0" max="200" value={embedSettings.sidePadding} onChange={event => handleSectionSettingsChange('sidePadding', Number(event.target.value))} className={`${fieldClass} mt-1`} /></label>
+                      <label className="text-[9px] text-textSecondary">Top spacing<input type="number" min="0" max="300" value={embedSettings.paddingTop} onChange={event => handleSectionSettingsChange('paddingTop', Number(event.target.value))} className={`${fieldClass} mt-1`} /></label>
+                      <label className="text-[9px] text-textSecondary">Bottom spacing<input type="number" min="0" max="300" value={embedSettings.paddingBottom} onChange={event => handleSectionSettingsChange('paddingBottom', Number(event.target.value))} className={`${fieldClass} mt-1`} /></label>
+                    </div></details>
+                    {section.content?.url && <div className="rounded-xl border border-white/5 bg-[#0B1120] p-3"><p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-textSecondary">Live design preview</p><DesignEmbedRenderer url={section.content.url} settings={section.settings} title="Design embed preview" /></div>}
+                    {parsed.provider === 'figma' && <p className="text-[10px] text-textSecondary">If the design does not appear, check the Figma file’s link-sharing permissions. Password-protected files cannot be embedded.</p>}
+                    {parsed.provider === 'canva' && <p className="text-[10px] text-textSecondary">Canva designs must be published through Share → Embed. Normal editor links are not embeddable.</p>}
                   </div>
-                )}
+                })()}
+
+                {/* One media editor for all image collection blocks. */}
+                {['Image Section', 'Gallery', 'Album Gallery'].includes(project.sections[activeSectionIdx].type) && <SectionMediaPanel onUploadFont={uploadFont} arrangementHistory={arrangementHistory.current} key={activeSectionId} section={project.sections[activeSectionIdx]} project={project} onUpdate={updater => updateSectionInstance(activeSectionId, updater)} onUploadFile={file => uploadMediaFile(file, token)} />}
 
                 {/* 6. CTA */}
                 {project.sections[activeSectionIdx].type === 'CTA' && (
@@ -1606,6 +1542,7 @@ export default function AdminCaseEditor() {
                           onChange={(e) => handleSectionFieldChange('heading', e.target.value)}
                           className="w-full px-3 py-2 bg-[#0B1120] border border-white/10 rounded-xl text-textPrimary focus:outline-none"
                         />
+
                       </div>
                       <div>
                         <label className="block text-textSecondary font-semibold mb-1 uppercase tracking-wide">Button Label</label>
@@ -1615,6 +1552,7 @@ export default function AdminCaseEditor() {
                           onChange={(e) => handleSectionFieldChange('buttonText', e.target.value)}
                           className="w-full px-3 py-2 bg-[#0B1120] border border-white/10 rounded-xl text-textPrimary focus:outline-none"
                         />
+
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1626,6 +1564,7 @@ export default function AdminCaseEditor() {
                           onChange={(e) => handleSectionFieldChange('description', e.target.value)}
                           className="w-full px-3 py-2 bg-[#0B1120] border border-white/10 rounded-xl text-textPrimary focus:outline-none"
                         />
+
                       </div>
                       <div>
                         <label className="block text-textSecondary font-semibold mb-1 uppercase tracking-wide">Button Link</label>
@@ -1652,6 +1591,7 @@ export default function AdminCaseEditor() {
                         placeholder="e.g. Working with Ekdrishti was an absolute dream..."
                         className="w-full px-3 py-2 bg-[#0B1120] border border-white/10 rounded-xl text-textPrimary focus:outline-none"
                       />
+
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
@@ -1662,6 +1602,7 @@ export default function AdminCaseEditor() {
                           onChange={(e) => handleSectionFieldChange('author', e.target.value)}
                           className="w-full px-3 py-2 bg-[#0B1120] border border-white/10 rounded-xl text-textPrimary focus:outline-none"
                         />
+
                       </div>
                       <div>
                         <label className="block text-textSecondary font-semibold mb-1 uppercase tracking-wide">Role / Event Title</label>
@@ -1671,59 +1612,22 @@ export default function AdminCaseEditor() {
                           onChange={(e) => handleSectionFieldChange('role', e.target.value)}
                           className="w-full px-3 py-2 bg-[#0B1120] border border-white/10 rounded-xl text-textPrimary focus:outline-none"
                         />
+
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* 8. ALBUM GALLERY */}
-                {project.sections[activeSectionIdx].type === 'Album Gallery' && (
-                  <div className="space-y-4">
-                    <p className="text-textSecondary text-xs">
-                      This block showcases the full project album (<strong className="text-white">{project.album?.length || 0}</strong> photos). Rearrange or upload album photos below:
-                    </p>
-                    <VisualImageArranger
-                      images={project.album || []}
-                      onChange={(newAlbum) => {
-                        setIsDirty(true)
-                        setProject(prev => ({ ...prev, album: newAlbum }))
-                      }}
-                      onUpload={(e) => handleFileUpload(e, (webpUrl) => {
-                        setIsDirty(true)
-                        setProject(prev => ({
-                          ...prev,
-                          album: prev.album ? [...prev.album, webpUrl] : [webpUrl]
-                        }))
-                      })}
-                      title="Album Showcase"
-                      allowAlbumPick={false}
-                      allowUpload={true}
-                    />
-                  </div>
-                )}
-
                 {/* 9. CLIENT ACCESS */}
-                {project.sections[activeSectionIdx].type === 'Client Access' && (
-                  <div className="p-4 bg-[#0B1120] rounded-2xl border border-white/5 space-y-3">
-                    <p className="text-textSecondary text-xs">
-                      This block renders the client download button linked to the Google Drive all-files repository.
-                    </p>
-                    <div>
-                      <label className="block text-textSecondary font-semibold mb-1 uppercase tracking-wide">Google Drive All-Files Link</label>
-                      <input
-                        type="url"
-                        value={project.driveLinks?.allFiles || ''}
-                        onChange={(e) => handleNestedMetadataChange('driveLinks', 'allFiles', e.target.value)}
-                        placeholder="https://drive.google.com/drive/folders/..."
-                        className="w-full px-3 py-2 bg-surface/50 border border-white/10 rounded-xl text-textPrimary focus:outline-none text-xs"
-                      />
-                    </div>
-                  </div>
-                )}
+                {['Client Access', 'Downloads'].includes(project.sections[activeSectionIdx].type) && <ClientAccessPanel key={activeSectionId} section={project.sections[activeSectionIdx]} project={project} onUpdate={updater => updateSectionInstance(activeSectionId, updater)} onUploadFont={uploadFont} />}
+
               </div>
+              {project.sections[activeSectionIdx].type !== 'Hero' && <SectionTypographyPanel key={`typography-${activeSectionId}`} section={project.sections[activeSectionIdx]} project={project} onUpdate={updater => updateSectionInstance(activeSectionId, updater)} onUploadFont={uploadFont} />}
+              {!['Hero', 'Image Section', 'Gallery', 'Album Gallery', 'Client Access', 'Downloads'].includes(project.sections[activeSectionIdx].type) && <details open className="rounded-xl border border-white/10 p-3"><summary className="text-xs font-semibold text-white">Live section preview</summary><SectionRenderer section={project.sections[activeSectionIdx]} project={project} /></details>}
             </div>
           ) : activeTab === 'metadata' ? (
             <div className="space-y-6">
+              <ProjectTypographyPanel project={project} onUploadFont={uploadFont} onChange={(role, changes) => setProject(previous => { const typography = { ...previous.typography }; if (changes === null) delete typography[role]; else { typography[role] = { ...typography[role], ...changes }; for (const key of Object.keys(typography[role])) if (typography[role][key] === '') delete typography[role][key] } return { ...previous, typography } })} />
               <div className="border-b border-white/5 pb-4">
                 <h2 className="text-sm font-heading font-bold text-white uppercase tracking-wider">SEO Engine Analysis</h2>
                 <p className="text-textSecondary text-[10px]">Realtime checklist tracking title optimization, metadata length, and crawling parameters</p>
@@ -1797,11 +1701,11 @@ export default function AdminCaseEditor() {
                 <option value="Hero">🖼️ Hero Showcase (Masonry Grid)</option>
                 <option value="Rich Text">📝 Rich Text & Story</option>
                 <option value="Results">📊 Key Results & Metrics</option>
-                <option value="Gallery">📸 Image Gallery</option>
+                <option value="Image Section">📸 Image Section</option>
                 <option value="Video">🎬 Video Player / YouTube</option>
+                <option value="Design Embed">🎨 Design Embed (Figma / Canva)</option>
                 <option value="CTA">⚡ Call to Action (CTA)</option>
                 <option value="Testimonial">💬 Client Testimonial</option>
-                <option value="Album Gallery">📚 Full Album Showcase</option>
                 <option value="Client Access">🔒 Client Downloads</option>
               </select>
             </div>
@@ -1828,9 +1732,12 @@ export default function AdminCaseEditor() {
       {/* ALBUM PICKER MODAL */}
       {showAlbumPicker && (() => {
         const isHeroPicker = albumPickerTarget === 'hero'
+        const isHeroSlides = albumPickerTarget === 'heroSlides'
         const activeGalleryList = isHeroPicker
           ? []
           : (project.sections && activeSectionIdx !== null ? (project.sections[activeSectionIdx]?.content?.images || []) : [])
+        const activeGalleryUrls = activeGalleryList.map(item => typeof item === 'string' ? item : (item?.src || item?.url || ''))
+        const isUnifiedImageSection = project.sections?.[activeSectionIdx]?.type === 'Image Section' || isHeroSlides
 
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
@@ -1838,12 +1745,12 @@ export default function AdminCaseEditor() {
               <div className="flex items-center justify-between border-b border-white/5 pb-3">
                 <div>
                   <h2 className="text-base font-heading font-bold text-white">
-                    {isHeroPicker ? 'Pick Hero Images from Album' : 'Pick Gallery Images from Album'}
+                    {isHeroPicker || isHeroSlides ? 'Pick Hero Images from Album' : 'Pick Image Section Media from Album'}
                   </h2>
                   <p className="text-textSecondary text-[11px]">
-                    {isHeroPicker
-                      ? 'Click photos to toggle them into the Hero Grid (min 1, max 20).'
-                      : 'Click photos to toggle them into this Gallery section.'}
+                    {isHeroPicker || isHeroSlides
+                      ? 'Click photos to toggle them into this Hero media set (min 1, max 20).'
+                      : 'Click photos to toggle them into this Image Section.'}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1970,10 +1877,10 @@ export default function AdminCaseEditor() {
                       .map((src, idx) => {
                         const isSelected = isHeroPicker
                           ? (project?.hero || []).includes(src)
-                          : activeGalleryList.includes(src)
+                          : activeGalleryUrls.includes(src)
                         const itemIdx = isHeroPicker
                           ? (project?.hero || []).indexOf(src)
-                          : activeGalleryList.indexOf(src)
+                          : activeGalleryUrls.indexOf(src)
                         const ratioInfo = imageRatios[src]
 
                         return (
@@ -1996,10 +1903,10 @@ export default function AdminCaseEditor() {
                                 })
                               } else {
                                 if (isSelected) {
-                                  const updated = activeGalleryList.filter(item => item !== src)
+                                  const updated = activeGalleryList.filter(item => (typeof item === 'string' ? item : (item?.src || item?.url)) !== src)
                                   handleSectionFieldChange('images', updated)
                                 } else {
-                                  handleSectionFieldChange('images', [...activeGalleryList, src])
+                                  handleSectionFieldChange('images', [...activeGalleryList, isUnifiedImageSection ? { id: createBlockId('media'), src, alt: '', focalX: 50, focalY: 50 } : src])
                                 }
                               }
                             }}

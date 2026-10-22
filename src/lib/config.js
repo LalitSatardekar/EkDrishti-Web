@@ -1,3 +1,8 @@
+import { accessButtons } from './clientAccess.js'
+import { deepClone, ensureBlockIds } from './caseBlocks.js'
+import { selectDynamicHeroImages } from './heroSelector.js'
+import { mediaAsset } from './media.js'
+
 const env = typeof import.meta.env !== 'undefined' ? import.meta.env : {}
 
 export const API_BASE_URL = env.VITE_API_URL || 'http://localhost:5000/api'
@@ -72,25 +77,36 @@ export const normalizeCase = (item) => {
         if (typeof h === 'object') {
           return {
             ...h,
-            url: encodeAssetUrl(h.url || h.src || ''),
+            url: encodeAssetUrl(h.src || h.url || ''),
             src: encodeAssetUrl(h.src || h.url || ''),
           }
         }
         return h
       })
     : []
-  const heroSettings = item.heroSettings || {}
-  const album = Array.isArray(item.album) ? item.album.map(encodeAssetUrl) : []
+  const heroSettings = deepClone(item.heroSettings || {})
+  const encodeMedia = value => typeof value === 'string' ? encodeAssetUrl(value) : { ...deepClone(value), src: encodeAssetUrl(value?.src || value?.url || ''), ...(value?.url ? { url: encodeAssetUrl(value.url) } : {}) }
+  const album = Array.isArray(item.album) ? item.album.map(encodeMedia) : []
+  const selectedHero = selectDynamicHeroImages({ ...item, hero, album, image }).images
 
   const sections = Array.isArray(item.sections)
-    ? item.sections.map((sec) => {
+    ? ensureBlockIds(item.sections, id).map((sec) => {
         if (!sec) return sec
         const typeLower = (sec.type || '').toLowerCase()
         const content = sec.content ? { ...sec.content } : {}
 
-        if ((typeLower === 'gallery' || typeLower === 'album') && Array.isArray(content.images)) {
-          content.images = content.images.map(encodeAssetUrl)
+        if (Array.isArray(content.images)) content.images = content.images.map(encodeMedia)
+        // Materialize legacy shared sources in local state, never migrate remote records.
+        if (typeLower === 'hero' && !Array.isArray(content.images)) {
+          content.images = deepClone(selectedHero)
+          sec.settings = { ...sec.settings, legacyHeroSettings: deepClone(heroSettings) }
         }
+        if (['album', 'album gallery'].includes(typeLower) && !Array.isArray(content.images)) {
+          const used = new Set(selectedHero.map(value => mediaAsset(value).src))
+          const remaining = album.filter(value => !used.has(mediaAsset(value).src))
+          content.images = deepClone(remaining.length ? remaining : album)
+        }
+        if (['client access', 'downloads'].includes(typeLower)) content.buttons = accessButtons({ ...sec, content }, item)
         if (typeLower === 'video' && content.url) {
           content.url = encodeAssetUrl(content.url)
         }
@@ -118,5 +134,6 @@ export const normalizeCase = (item) => {
     video,
     album,
     sections,
+    typography: deepClone(item.typography || {}),
   }
 }
