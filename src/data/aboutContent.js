@@ -1,3 +1,7 @@
+import shreyaPortrait from '../assets/team/shreya-director.jpg'
+import daksheshPortrait from '../assets/team/dakshesh-shetty.jpg'
+import pournimaPortrait from '../assets/team/pournima-thale.jpg'
+import lalitPortrait from '../assets/team/lalit-director.jpg'
 import chinmayPortrait from '../assets/team/chinmay-director.jpg'
 export const faqItems = [
   {
@@ -33,6 +37,8 @@ export const faqItems = [
 ]
 
 export const teamMembers = [
+  { name: 'Dakshesh Shetty', role: 'Production Manager', avatar: daksheshPortrait, instagram: '', linkedin: '' },
+  { name: 'Pournima Thale', role: 'Graphic Designer and Editor', avatar: pournimaPortrait, instagram: '', linkedin: '' },
   { 
     placeholder: true, instagram: '', linkedin: '', name: 'Team Member 1', 
     role: 'Creative Director', 
@@ -63,7 +69,7 @@ export const leadershipTeam = [
   { 
     instagram: '', linkedin: '', name: 'Lalit Satardekar', 
     designation: 'Director & CCO', 
-    image: 'https://assets-ekdrishti.s3.eu-north-1.amazonaws.com/team/directors/lalit.png',
+    image: lalitPortrait,
     bio: 'Creative excellence meets operational efficiency'
   },
   { 
@@ -75,7 +81,7 @@ export const leadershipTeam = [
   { 
     instagram: '', linkedin: '', name: 'Shreya Pandav', 
     designation: 'Director & COO', 
-    image: 'https://assets-ekdrishti.s3.eu-north-1.amazonaws.com/team/directors/shreya.png',
+    image: shreyaPortrait,
     bio: 'Strategic thinker driving business growth'
   },
 ]
