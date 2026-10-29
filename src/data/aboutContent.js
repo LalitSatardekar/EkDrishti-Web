@@ -1,3 +1,4 @@
+import chinmayPortrait from '../assets/team/chinmay-director.jpg'
 export const faqItems = [
   {
     id: 1,
@@ -68,7 +69,7 @@ export const leadershipTeam = [
   { 
     instagram: '', linkedin: '', name: 'Chinmay Shivdikar', 
     designation: 'Director & CEO', 
-    image: 'https://assets-ekdrishti.s3.eu-north-1.amazonaws.com/team/directors/chinmay.png',
+    image: chinmayPortrait,
     bio: 'Visionary leader with 15+ years of experience'
   },
   { 
