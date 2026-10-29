@@ -1,3 +1,4 @@
+import shamikaPortrait from '../assets/team/shamika-jadhav.jpg'
 import shreyaPortrait from '../assets/team/shreya-director.jpg'
 import daksheshPortrait from '../assets/team/dakshesh-shetty.jpg'
 import pournimaPortrait from '../assets/team/pournima-thale.jpg'
@@ -37,6 +38,7 @@ export const faqItems = [
 ]
 
 export const teamMembers = [
+  { name: 'Shamika Jadhav', role: 'Manager and Content Strategist', avatar: shamikaPortrait, instagram: '', linkedin: '' },
   { name: 'Dakshesh Shetty', role: 'Production Manager', avatar: daksheshPortrait, instagram: '', linkedin: '' },
   { name: 'Pournima Thale', role: 'Graphic Designer and Editor', avatar: pournimaPortrait, instagram: '', linkedin: '' },
   { 
