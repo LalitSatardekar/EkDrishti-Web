@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom'
+﻿import { Link } from 'react-router-dom'
 
-const heroBgImage = encodeURI('/assets/webp/Events/Abhijeet & Shirin/Photos/_DSC3881.JPG.webp')
+import heroBgImage from '../../assets/home-hero.webp'
 
 const Hero = () => {
   return (
@@ -61,4 +61,5 @@ const Hero = () => {
 }
 
 export default Hero
+
 
