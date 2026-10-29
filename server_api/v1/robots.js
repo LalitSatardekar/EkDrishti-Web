@@ -12,7 +12,7 @@ export default function handler(req, res) {
     robotsTxt += `Allow: /\n`
     robotsTxt += `Disallow: /ownercontrols_panel/\n`
     robotsTxt += `Disallow: /admin/\n`
-    robotsTxt += `Disallow: /api/\n`
+    robotsTxt += `Disallow: /api/\nDisallow: /v1/\n`
     robotsTxt += `\n`
     robotsTxt += `Sitemap: https://www.ekdrishti.com/sitemap.xml\n`
   } else {

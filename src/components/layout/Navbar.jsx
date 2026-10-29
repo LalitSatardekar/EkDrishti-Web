@@ -15,7 +15,6 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [servicesOpen, setServicesOpen] = useState(false)
   const [mobileServicesOpen, setMobileServicesOpen] = useState(false)
-  // TWEAK: rename button label in the JSX below (search "Let's Talk")
   const [isContactOpen, setIsContactOpen] = useState(false)
   const scrollPosition = useScrollPosition()
   const location = useLocation()
@@ -36,13 +35,15 @@ const Navbar = () => {
 
   const leftNavLinks = [
     { name: 'About', path: '/about' },
+    { name: 'Blogs', path: '/blogs' },
+    { name: 'Events', path: '/events' },
   ]
 
   const rightNavLinks = [
     { name: 'Work', path: '/work' },
   ]
 
-  const isActive = (path) => location.pathname === path
+  const isActive = (path) => location.pathname === path || (path === '/blogs' && location.pathname.startsWith('/blogs/'))
   const isServicesActive = location.pathname.startsWith('/services')
 
   useEffect(() => {
@@ -83,10 +84,10 @@ const Navbar = () => {
       className="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg border-b border-borderSubtle"
       style={{ backgroundColor: '#151627ee' }}
     >
-      <div className="max-w-[1400px] mx-auto px-8">
-        <div className="flex items-center justify-center h-20 relative pr-10 lg:pr-0">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-8">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 lg:gap-6 xl:gap-10 h-20">
           {/* Left Navigation - Desktop */}
-          <div className="hidden lg:flex items-center space-x-16 mr-16">
+          <div className="hidden lg:flex col-start-1 row-start-1 items-center justify-end gap-6 xl:gap-10">
             {leftNavLinks.map((link) => (
               <Link
                 key={link.path}
@@ -103,7 +104,22 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
+          </div>
 
+          {/* Center Logo */}
+          <Link to="/" onClick={() => scrollIfSameRoute('/')} className="col-start-2 row-start-1 flex items-center justify-self-center flex-shrink-0">
+            <img
+              src={!isScrolled ? "/logo.png" : "/logo2.svg"}
+              alt="Ekdrishti"
+              className={cn(
+                'w-auto transition-all duration-300',
+                !isScrolled ? 'h-12 sm:h-14' : 'h-12 sm:h-14'
+              )}
+            />
+          </Link>
+
+          {/* Right Navigation - Desktop */}
+          <div className="hidden lg:flex col-start-3 row-start-1 items-center justify-start gap-6 xl:gap-10">
             {/* Services Dropdown */}
             <div className="relative" ref={dropdownRef} onMouseEnter={openDropdown} onMouseLeave={closeDropdown}>
               <button
@@ -151,22 +167,6 @@ const Navbar = () => {
                 </div>
               )}
             </div>
-          </div>
-
-          {/* Center Logo */}
-          <Link to="/" onClick={() => scrollIfSameRoute('/')} className="flex items-center flex-shrink-0">
-            <img 
-              src={!isScrolled ? "/logo.png" : "/logo2.svg"}
-              alt="Ekdrishti" 
-              className={cn(
-                'w-auto transition-all duration-300',
-                !isScrolled ? 'h-14' : 'h-14'
-              )}
-            />
-          </Link>
-
-          {/* Right Navigation - Desktop */}
-          <div className="hidden lg:flex items-center space-x-8 ml-16">
             {rightNavLinks.map((link) => (
               <Link
                 key={link.path}
@@ -183,22 +183,21 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
-            {/* TWEAK: change button label, padding, or colors below */}
             <button
               onClick={() => {
                 setIsContactOpen(true)
                 trackButtonClick('Contact Us', 'navbar_desktop')
               }}
-              className="px-5 py-2 rounded-full bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm transition-all duration-200 whitespace-nowrap shadow-sm hover:shadow-amber-500/30 hover:shadow-md"
+              className="relative font-medium text-base text-textPrimary hover:text-amber-500 transition-colors duration-200 whitespace-nowrap pb-1 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:rounded-full after:bg-amber-500 after:transition-all after:duration-300 after:w-0 hover:after:w-full"
             >
-              Contact Us
+              Contact
             </button>
           </div>
 
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="lg:hidden focus:outline-none absolute right-0 text-textPrimary"
+            className="lg:hidden col-start-3 row-start-1 justify-self-end focus:outline-none text-textPrimary"
             aria-label={isOpen ? 'Close mobile menu' : 'Open mobile menu'}
             aria-expanded={isOpen}
             aria-controls="mobile-menu"
@@ -228,7 +227,7 @@ const Navbar = () => {
           className={cn(
             'lg:hidden overflow-hidden transition-all duration-300 ease-in-out',
             isOpen
-              ? 'max-h-[520px] opacity-100 border-t border-borderSubtle pb-6'
+              ? 'max-h-[min(520px,calc(100dvh-5rem))] overflow-y-auto opacity-100 border-t border-borderSubtle pb-6'
               : 'max-h-0 opacity-0 pb-0'
           )}
         >
@@ -298,16 +297,15 @@ const Navbar = () => {
                   {link.name}
                 </Link>
               ))}
-              {/* TWEAK: mobile Contact button label/style below */}
               <button
                 onClick={() => {
                   closeMobileMenu()
                   setIsContactOpen(true)
                   trackButtonClick('Contact Us', 'navbar_mobile')
                 }}
-                className="mt-1 w-full text-left px-2 py-2.5 font-semibold text-amber-400 hover:text-amber-300 transition-colors duration-200 rounded-lg"
+                className="w-full text-left px-2 py-2.5 font-medium text-textSecondary hover:text-textPrimary transition-colors duration-200 rounded-lg"
               >
-                Contact Us
+                Contact
               </button>
           </div>
         </div>

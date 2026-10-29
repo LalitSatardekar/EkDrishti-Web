@@ -1,3 +1,8 @@
+import { BLOG_ORIGIN } from '../../src/lib/blogSEO.js'
+import Blog from '../models/Blog.js'
+import { publicBlogFilter } from '../lib/blogValidation.js'
+import { getBlogCategories } from '../lib/blogService.js'
+import { escapeHTML } from '../../src/lib/blogContent.js'
 import { connectToDatabase } from '../lib/db.js'
 import Case from '../models/Case.js'
 
@@ -22,6 +27,7 @@ export default async function handler(req, res) {
     const staticUrls = [
       { loc: `${host}/`, changefreq: 'daily', priority: '1.0' },
       { loc: `${host}/work`, changefreq: 'daily', priority: '0.9' },
+      { loc: `${host}/events`, changefreq: 'weekly', priority: '0.8' },
       { loc: `${host}/services`, changefreq: 'weekly', priority: '0.8' },
       { loc: `${host}/about`, changefreq: 'weekly', priority: '0.7' },
       { loc: `${host}/contact`, changefreq: 'monthly', priority: '0.7' }
@@ -35,7 +41,10 @@ export default async function handler(req, res) {
       lastmod: project.updated_at ? new Date(project.updated_at).toISOString().split('T')[0] : undefined
     }))
 
-    const allUrls = [...staticUrls, ...projectUrls]
+    const articles = await Blog.find({...publicBlogFilter(),'seo.noindex':{$ne:true}}).select('slug updatedAt').lean()
+    const categories = await getBlogCategories()
+    const blogUrls = [{loc:BLOG_ORIGIN+'/blogs',changefreq:'daily',priority:'0.8'},...articles.map(article=>({loc:BLOG_ORIGIN+'/blogs/'+article.slug,lastmod:article.updatedAt?.toISOString().slice(0,10),changefreq:'weekly',priority:'0.7'})),...categories.map(category=>({loc:BLOG_ORIGIN+'/blogs/category/'+category.slug,changefreq:'weekly',priority:'0.5'}))]
+    const allUrls = [...staticUrls, ...projectUrls, ...blogUrls]
 
     // Construct XML string
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`
@@ -43,7 +52,7 @@ export default async function handler(req, res) {
 
     allUrls.forEach(url => {
       xml += `  <url>\n`
-      xml += `    <loc>${url.loc}</loc>\n`
+      xml += `    <loc>${escapeHTML(url.loc)}</loc>\n`
       if (url.lastmod) {
         xml += `    <lastmod>${url.lastmod}</lastmod>\n`
       }
@@ -55,7 +64,7 @@ export default async function handler(req, res) {
     xml += `</urlset>`
 
     res.setHeader('Content-Type', 'text/xml')
-    res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate')
+    res.setHeader('Cache-Control', 'no-store')
     return res.status(200).send(xml)
   } catch (error) {
     console.error('Sitemap API Error:', error)

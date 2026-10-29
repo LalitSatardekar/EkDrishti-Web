@@ -1,16 +1,18 @@
+﻿export const canonicalService = value => ({ events: 'family-events', 'family events': 'family-events', digitalMarketing: 'digital-marketing', 'digital marketing': 'digital-marketing' }[value] || String(value || '').toLowerCase())
+
 /**
  * sortingEngine.js
  *
  * Centralized filtering + sorting layer for all case/work data.
  *
- * ─── Rules ────────────────────────────────────────────────────────────────────
- * • Works on a COPY of input data — originals are never mutated.
- * • Automatically strips out items with status: "draft".
- * • Apply order: filter → sort → limit.
- * • No component should filter/sort data manually — always route through here.
- * • Future-proof: swap the data argument with an API response array and nothing else changes.
+ * â”€â”€â”€ Rules â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+ * â€¢ Works on a COPY of input data â€” originals are never mutated.
+ * â€¢ Automatically strips out items with status: "draft".
+ * â€¢ Apply order: filter â†’ sort â†’ limit.
+ * â€¢ No component should filter/sort data manually â€” always route through here.
+ * â€¢ Future-proof: swap the data argument with an API response array and nothing else changes.
  *
- * ─── Quick reference ──────────────────────────────────────────────────────────
+ * â”€â”€â”€ Quick reference â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  * import { getSortedCases } from "@/lib/sortingEngine"
  * import { allCases }       from "@/data/cases"
  *
@@ -22,9 +24,9 @@
  * })
  */
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Core engine
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * getSortedCases
@@ -43,7 +45,7 @@
  * @returns {Object[]} Processed, filtered, sorted, limited array.
  */
 export function getSortedCases(data, options = {}) {
-  // Step 0 — work on a shallow copy so originals are never mutated
+  // Step 0 â€” work on a shallow copy so originals are never mutated
   let result = [...data]
 
   const {
@@ -56,16 +58,16 @@ export function getSortedCases(data, options = {}) {
     limit,
   } = options
 
-  // ── Step 1 · Auto-exclude drafts ──────────────────────────────────────────
+  // â”€â”€ Step 1 Â· Auto-exclude drafts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Items without a status field are treated as "published" (safe default).
-  result = result.filter((item) => !item.status || item.status !== 'draft')
+  result = result.filter((item) => (!item.status || item.status === 'published') && !item.deleted_at)
 
-  // ── Step 2 · Apply filters ────────────────────────────────────────────────
+  // â”€â”€ Step 2 Â· Apply filters â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   // Filter by service slug (e.g. "digital-marketing")
   if (service) {
     result = result.filter(
-      (item) => item.service === service
+      (item) => canonicalService(item.service) === canonicalService(service)
     )
   }
 
@@ -96,15 +98,17 @@ export function getSortedCases(data, options = {}) {
     result = result.filter((item) => item.featured === true)
   }
 
-  // ── Step 3 · Sort ─────────────────────────────────────────────────────────
+  // â”€â”€ Step 3 Â· Sort â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   if (sortBy === 'priority') {
     // Higher priority number = appears first.
-    // Featured items always come before non-featured at equal priority.
+    // Explicit priorities come first; ties use display order and stable identity.
     result.sort((a, b) => {
-      if (a.featured && !b.featured) return -1
-      if (!a.featured && b.featured) return 1
-      return (b.priority ?? 0) - (a.priority ?? 0)
+      const hasPriority = item => item.priority !== null && item.priority !== undefined && item.priority !== '' && Number.isFinite(Number(item.priority))
+      if (hasPriority(a) !== hasPriority(b)) return hasPriority(a) ? -1 : 1
+      return (Number(b.priority ?? 0) - Number(a.priority ?? 0)) ||
+        (Number(a.order ?? 0) - Number(b.order ?? 0)) ||
+        String(a.slug || a.id || a._id).localeCompare(String(b.slug || b.id || b._id))
     })
   } else if (sortBy === 'date') {
     // Newest date first
@@ -115,7 +119,7 @@ export function getSortedCases(data, options = {}) {
     })
   }
 
-  // ── Step 4 · Limit ────────────────────────────────────────────────────────
+  // â”€â”€ Step 4 Â· Limit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (typeof limit === 'number' && limit > 0) {
     result = result.slice(0, limit)
   }
@@ -124,12 +128,12 @@ export function getSortedCases(data, options = {}) {
 }
 
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Convenience helpers  (thin wrappers — all go through getSortedCases)
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Convenience helpers  (thin wrappers â€” all go through getSortedCases)
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
- * getFeaturedCases — top featured items across all services.
+ * getFeaturedCases â€” top featured items across all services.
  *
  * @param {Object[]} data
  * @param {number}   [limit=3]
@@ -139,7 +143,7 @@ export function getFeaturedCases(data, limit = 3) {
 }
 
 /**
- * getCasesByService — all published items for a specific service.
+ * getCasesByService â€” all published items for a specific service.
  *
  * @param {Object[]} data
  * @param {string}   service  - e.g. "digital-marketing"
@@ -150,7 +154,7 @@ export function getCasesByService(data, service, opts = {}) {
 }
 
 /**
- * getCasesByCategory — all published items for a UI category label.
+ * getCasesByCategory â€” all published items for a UI category label.
  *
  * @param {Object[]} data
  * @param {string}   category - e.g. "DIGITAL MARKETING"
@@ -159,3 +163,4 @@ export function getCasesByService(data, service, opts = {}) {
 export function getCasesByCategory(data, category, opts = {}) {
   return getSortedCases(data, { category, ...opts })
 }
+

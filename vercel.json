@@ -1,25 +1,73 @@
 {
   "functions": {
-    "api/**/*.js": {
-      "runtime": "@vercel/node@5"
+    "api/index.js": {
+      "includeFiles": "{dist/index.html,index.html,src/components/blog/blog.css}",
+      "maxDuration": 60
     }
   },
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains"
+        }
       ]
     }
   ],
   "rewrites": [
-    { "source": "/sitemap.xml", "destination": "/api/v1/sitemap" },
-    { "source": "/robots.txt", "destination": "/api/v1/robots" },
-    { "source": "/health", "destination": "/api/v1/health" },
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/((?!api).*)", "destination": "/index.html" }
+    {
+      "source": "/blogs",
+      "destination": "/api/index?__app_path=/blogs"
+    },
+    {
+      "source": "/indexnow-key.txt",
+      "destination": "/api/index?__app_path=/indexnow-key.txt"
+    },
+    {
+      "source": "/blogs/:path*",
+      "destination": "/api/index?__app_path=/blogs/:path*"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/index?__app_path=/sitemap.xml"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "/api/index?__app_path=/robots.txt"
+    },
+    {
+      "source": "/health",
+      "destination": "/api/index?__app_path=/health"
+    },
+    {
+      "source": "/v1/:path*",
+      "destination": "/api/index?__app_path=/v1/:path*"
+    },
+    {
+      "source": "/api/v1/:path*",
+      "destination": "/api/index?__app_path=/api/v1/:path*"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "/api/index?__app_path=/api/:path*"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/index.html"
+    }
   ]
 }

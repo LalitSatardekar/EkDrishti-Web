@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useCases } from '../context/CasesContext'
 import { getSortedCases } from '../lib/sortingEngine'
 import WorkHoverPreview from '../components/work/WorkHoverPreview'
@@ -12,14 +12,35 @@ import category3 from '../assets/work/category3.png'
 const CATEGORY_FILTERS = {
 }
 
+const WORK_CATEGORIES = {
+  events: 'EVENTS',
+  'digital-marketing': 'DIGITAL MARKETING',
+  production: 'PRODUCTION',
+}
+
 const Work = () => {
   const { allCases, loading } = useCases()
-  const [activeCategory,  setActiveCategory]  = useState('EVENTS')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const categorySlug = searchParams.get('category')
+  const activeCategory = Object.hasOwn(WORK_CATEGORIES, categorySlug) ? WORK_CATEGORIES[categorySlug] : 'EVENTS'
   const [activeSubFilter, setActiveSubFilter] = useState('All')
   const [hoveredItem, setHoveredItem] = useState(null)
   const [hoveredEl,   setHoveredEl]   = useState(null)
   const cleanupRef = useRef(null)
   const gridRef = useRef(null)
+
+  useEffect(() => {
+    setActiveSubFilter('All')
+    setHoveredItem(null)
+    setHoveredEl(null)
+    if (loading || !Object.hasOwn(WORK_CATEGORIES, categorySlug)) return
+    const frame = window.requestAnimationFrame(() => {
+      if (!gridRef.current) return
+      const top = gridRef.current.getBoundingClientRect().top + window.scrollY - 96
+      window.scrollTo({ top, behavior: 'smooth' })
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [categorySlug, loading])
 
   const isMarketing = activeCategory === 'DIGITAL MARKETING'
   const isProduction = activeCategory === 'PRODUCTION'
@@ -58,7 +79,12 @@ const Work = () => {
   }
 
   const handleCategoryChange = (name) => {
-    setActiveCategory(name)
+    const slug = Object.keys(WORK_CATEGORIES).find((key) => WORK_CATEGORIES[key] === name)
+    setSearchParams((previous) => {
+      const next = new URLSearchParams(previous)
+      next.set('category', slug)
+      return next
+    })
     setActiveSubFilter('All')
     setTimeout(() => {
       if (!gridRef.current) return

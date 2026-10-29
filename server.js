@@ -1,4 +1,8 @@
+import { indexNowConfigured, flushBlogNotifications } from './server_api/lib/blogIndexNow.js'
+import { createBlogRouter } from './server_api/v1/blogs.js'
+import { blogHTMLHandler } from './server_api/lib/blogPage.js'
 import express from 'express'
+import eventsHandler from './server_api/v1/events.js'
 import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
@@ -106,11 +110,20 @@ const adapt = (handler) => async (req, res) => {
   }
 }
 
+app.get('/indexnow-key.txt', (req,res) => { if(!indexNowConfigured()) return res.status(404).end();res.type('text/plain').send(process.env.INDEXNOW_KEY) })
+app.post('/v1/blog-notifications/flush', async (req,res) => { if(!process.env.BLOG_WORKER_SECRET || req.headers.authorization!=='Bearer '+process.env.BLOG_WORKER_SECRET) return res.status(401).json({success:false});try{await connectToDatabase();res.json({success:true,data:await flushBlogNotifications()})}catch{res.status(503).json({success:false,message:'Notification worker unavailable.'})} })
+app.use('/v1', createBlogRouter())
+app.use('/api/v1', createBlogRouter())
+app.get(/^\/blogs(?:\/.*)?$/, blogHTMLHandler)
+app.get('/sitemap.xml', adapt(sitemapHandler))
+app.get('/robots.txt', adapt(robotsHandler))
+
 // API Routes (mounted with /v1 and /api/v1 aliases)
 app.all(['/health', '/v1/health', '/api/v1/health', '/api/health'], adapt(healthHandler))
 app.all(['/v1/auth/login', '/api/v1/auth/login'], adapt(loginHandler))
 app.all(['/v1/auth/me', '/api/v1/auth/me'], adapt(meHandler))
 app.all(['/v1/cases', '/api/v1/cases', '/api/cases'], adapt(casesHandler))
+app.all(['/v1/events', '/api/v1/events', '/api/events'], adapt(eventsHandler))
 app.all(['/v1/contact', '/api/v1/contact', '/api/contact'], adapt(contactHandler))
 app.all(['/v1/dashboard', '/api/v1/dashboard', '/api/dashboard'], adapt(dashboardHandler))
 app.all(['/v1/logs', '/api/v1/logs', '/api/logs'], adapt(logsHandler))
@@ -141,7 +154,9 @@ app.use((req, res, next) => {
 
 const PORT = process.env.PORT || 3000
 const HOST = process.env.HOST || '0.0.0.0'
-app.listen(PORT, HOST, () => {
+if (!process.env.VERCEL) app.listen(PORT, HOST, () => {
   console.log(`🚀 EkDrishti server running on port ${PORT} (process.env.PORT = ${process.env.PORT || 'default 3000'})`)
   bootstrapAdmin().catch(e => console.warn('Bootstrap admin warning:', e.message))
 })
+
+export default app

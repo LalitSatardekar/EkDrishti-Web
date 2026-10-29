@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+﻿import { createContext, useContext, useState, useEffect } from 'react'
 import { allCases as rawFallbackCases } from '../data/cases'
 import { normalizeCase } from '../lib/config'
 
@@ -10,24 +10,17 @@ export const useCases = () => useContext(CasesContext)
 
 export const CasesContextProvider = ({ children }) => {
   const [allCases, setAllCases] = useState(fallbackCases)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   const refreshCases = async () => {
     try {
-      const response = await fetch('/v1/cases')
+      const response = await fetch('/v1/cases', { signal: AbortSignal.timeout(15000), cache: 'no-store' })
       if (response.ok) {
         const data = await response.json()
-        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+        if (data.success && Array.isArray(data.data)) {
           const dbCases = data.data.map(normalizeCase)
-          const dbSlugs = new Set(dbCases.map((c) => c.slug))
-          const dbIds = new Set(dbCases.map((c) => String(c.id || c._id)))
-
-          const uniqueFallback = fallbackCases.filter(
-            (c) => !dbSlugs.has(c.slug) && !dbIds.has(String(c.id))
-          )
-
-          setAllCases([...dbCases, ...uniqueFallback])
+          setAllCases(dbCases)
           return
         }
       }
@@ -40,6 +33,10 @@ export const CasesContextProvider = ({ children }) => {
 
   useEffect(() => {
     refreshCases()
+    const refresh = () => refreshCases()
+    window.addEventListener('focus', refresh)
+    const timer = window.setInterval(refresh, 60000)
+    return () => { window.removeEventListener('focus', refresh); window.clearInterval(timer) }
   }, [])
 
   return (
@@ -48,3 +45,4 @@ export const CasesContextProvider = ({ children }) => {
     </CasesContext.Provider>
   )
 }
+

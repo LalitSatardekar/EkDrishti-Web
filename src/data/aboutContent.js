@@ -33,25 +33,25 @@ export const faqItems = [
 
 export const teamMembers = [
   { 
-    name: 'Team Member 1', 
+    placeholder: true, instagram: '', linkedin: '', name: 'Team Member 1', 
     role: 'Creative Director', 
     avatar: 'https://ui-avatars.com/api/?name=Team+Member+1&size=400&background=2563EB&color=fff',
     bio: 'Leading creative vision and strategy'
   },
   { 
-    name: 'Team Member 2', 
+    placeholder: true, instagram: '', linkedin: '', name: 'Team Member 2', 
     role: 'Strategy Lead', 
     avatar: 'https://ui-avatars.com/api/?name=Team+Member+2&size=400&background=F59E0B&color=fff',
     bio: 'Driving strategic initiatives'
   },
   { 
-    name: 'Team Member 3', 
+    placeholder: true, instagram: '', linkedin: '', name: 'Team Member 3', 
     role: 'Marketing Director', 
     avatar: 'https://ui-avatars.com/api/?name=Team+Member+3&size=400&background=2563EB&color=fff',
     bio: 'Overseeing marketing operations'
   },
   { 
-    name: 'Team Member 4', 
+    placeholder: true, instagram: '', linkedin: '', name: 'Team Member 4', 
     role: 'Tech Lead', 
     avatar: 'https://ui-avatars.com/api/?name=Team+Member+4&size=400&background=F59E0B&color=fff',
     bio: 'Managing technical excellence'
@@ -60,19 +60,19 @@ export const teamMembers = [
 
 export const leadershipTeam = [
   { 
-    name: 'Lalit Satardekar', 
+    instagram: '', linkedin: '', name: 'Lalit Satardekar', 
     designation: 'Director & CCO', 
     image: 'https://assets-ekdrishti.s3.eu-north-1.amazonaws.com/team/directors/lalit.png',
     bio: 'Creative excellence meets operational efficiency'
   },
   { 
-    name: 'Chinmay Shivdikar', 
+    instagram: '', linkedin: '', name: 'Chinmay Shivdikar', 
     designation: 'Director & CEO', 
     image: 'https://assets-ekdrishti.s3.eu-north-1.amazonaws.com/team/directors/chinmay.png',
     bio: 'Visionary leader with 15+ years of experience'
   },
   { 
-    name: 'Shreya Pandav', 
+    instagram: '', linkedin: '', name: 'Shreya Pandav', 
     designation: 'Director & COO', 
     image: 'https://assets-ekdrishti.s3.eu-north-1.amazonaws.com/team/directors/shreya.png',
     bio: 'Strategic thinker driving business growth'
@@ -89,3 +89,9 @@ export const visionContent = {
 }
 
 // Made with Bob
+
+/* Replace these stock photographs with approved Ekdrishti team photographs. */
+export const aboutMedia = {
+  hero: { placeholder: true, src: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1600&q=80', alt: 'Illustrative stock photograph of a creative team working together' },
+  vision: { placeholder: true, src: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80', alt: 'Illustrative stock photograph of a collaborative workspace' },
+}

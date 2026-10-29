@@ -28,7 +28,7 @@ const Hero = () => {
               Dreams Deserve
             </span>
             <span className="block text-4xl sm:text-4xl md:text-7xl lg:text-7xl font-heading font-black text-[#F2A020] leading-none">
-              Better Execution.
+              Better Execution
             </span>
           </h1>
 

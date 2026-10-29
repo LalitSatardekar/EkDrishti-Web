@@ -79,7 +79,7 @@ const modalVariants = {
   },
 }
 
-export default function ContactModal({ isOpen, onClose }) {
+export default function ContactModal({ isOpen, onClose, initialService = '' }) {
   const [formData, setFormData] = useState(INITIAL_FORM)
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -108,10 +108,10 @@ export default function ContactModal({ isOpen, onClose }) {
   // Reset form when modal reopens
   useEffect(() => {
     if (isOpen) {
-      setFormData(INITIAL_FORM)
+      setFormData({ ...INITIAL_FORM, service: initialService })
       setError('')
     }
-  }, [isOpen])
+  }, [isOpen, initialService])
 
   // ── FIELD CHANGE ──────────────────────────────────────────
   const handleChange = (e) => {

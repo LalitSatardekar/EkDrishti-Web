@@ -83,6 +83,8 @@ src/
 - `/services` - Services overview
 - `/about` - About the agency
 - `/contact` - Contact form
+- `/blogs` - Journal, with published articles, categories and meaningful author profiles
+- `/ownercontrols_panel/blogs` - Protected Content Studio
 
 ## 🏗️ Key Components
 
@@ -127,7 +129,7 @@ JWT_SECRET=replace-with-a-long-random-secret
 BOOTSTRAP_ADMIN=false
 ```
 
-The example above requires a local MongoDB server; use your Atlas connection string instead when appropriate, with database credentials and network access configured. The existing `.env.example` is an incomplete frontend template, so it does not configure the backend by itself. Never commit your populated `.env`.
+The example above requires a local MongoDB server; use your Atlas connection string instead when appropriate, with database credentials and network access configured. The `.env.example` template now includes core backend and optional Blog integration settings. Blog revisions require Atlas or a transaction-capable local replica set; the existing standalone MongoDB example above is sufficient only for features that do not use transactions. Never commit your populated `.env`.
 
 SMTP settings configure contact-form email delivery. AWS S3 settings configure cloud media uploads; the upload handler also supports local storage in `public/uploads`. These services are separate from starting the frontend and API. Vite reads `VITE_*` settings from root environment files; restart Vite after changing them. The current frontend calls relative `/v1` routes, so local and LAN requests go through Vite's proxy.
 
@@ -290,3 +292,12 @@ This project is created for your use.
 ---
 
 Use the two-terminal startup above to run the complete app locally.
+
+
+## Content Studio / Blog CMS
+
+The Blog CMS adds a Tiptap writing editor, images, independent FAQs, SEO settings, preview, autosave/recovery, revision history, publication scheduling, categories, settings and optional real Search Console / IndexNow integrations. Public article content and metadata are rendered by Express in the initial HTML response; updates do not require rebuilding the frontend. The existing Case CMS remains independent.
+
+Read [the Content Studio engineering report and deployment guide](CONTENT_STUDIO.md) for models, routes, security, test coverage and release gates. Run `npm.cmd run test:blog-cms` and `npm.cmd run test:blog-browser` for isolated Blog regression checks. The browser suite reuses the existing optional Playwright/Edge QA tooling in `scratch/qa`.
+
+**Production SEO is not verified.** Serve Blog/API/sitemap routes through the Node runtime; the existing static FTP deployment of `dist/` alone cannot serve dynamic article HTML. A Vercel adapter is provided but has not been deployed or verified. No example articles are seeded into production.

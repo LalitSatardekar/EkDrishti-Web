@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+﻿import { useState, useEffect, useMemo } from 'react'
 import { useParams, Link, useSearchParams } from 'react-router-dom'
 import AlbumGrid from '../components/album/AlbumGrid'
 import SuggestionSection from '../components/work/SuggestionSection'
@@ -60,7 +60,7 @@ const WorkDetail = ({ isPreview: isPreviewProp = false, previewCase = null }) =>
   const [project, setProject] = useState(() => {
     if (previewCase) return normalizeCase(previewCase)
     const found = fallbackCases.find((c) => c.slug === slug || String(c.id) === String(slug))
-    return found ? normalizeCase(found) : null
+    return found && (!found.status || found.status === 'published') ? normalizeCase(found) : null
   })
   const [projectLoading, setProjectLoading] = useState(false)
   const [projectError, setProjectError] = useState(null)
@@ -91,8 +91,13 @@ const WorkDetail = ({ isPreview: isPreviewProp = false, previewCase = null }) =>
         }
 
         const res = await fetch(`/v1/cases?slug=${slug}`, { headers })
+        if (res.status === 404 && !isPreview) {
+          setProject(null)
+          setProjectError('Project not found or no longer published.')
+          return
+        }
         if (!res.ok) {
-          if (localMatch) {
+          if (localMatch && (isPreview || !localMatch.status || localMatch.status === 'published')) {
             setProject(normalizeCase(localMatch))
             setProjectError(null)
             return
@@ -102,13 +107,13 @@ const WorkDetail = ({ isPreview: isPreviewProp = false, previewCase = null }) =>
         const data = await res.json()
         if (data.success && data.data) {
           setProject(normalizeCase(data.data))
-        } else if (localMatch) {
+        } else if (localMatch && (isPreview || !localMatch.status || localMatch.status === 'published')) {
           setProject(normalizeCase(localMatch))
         } else {
           throw new Error(data.message || 'Project not found')
         }
       } catch (err) {
-        if (localMatch) {
+        if (localMatch && (isPreview || !localMatch.status || localMatch.status === 'published')) {
           setProject(normalizeCase(localMatch))
           setProjectError(null)
         } else {
@@ -273,7 +278,7 @@ const WorkDetail = ({ isPreview: isPreviewProp = false, previewCase = null }) =>
       return (
         <div className="min-h-screen bg-primary flex items-center justify-center px-6">
           <div className="text-center">
-            <div className="text-6xl mb-4">🚧</div>
+            <div className="text-6xl mb-4">ðŸš§</div>
             <h1 className="text-2xl font-heading font-bold text-textPrimary mb-2">Project Preview Unavailable</h1>
             <p className="text-textSecondary">This project page is not yet available for preview.</p>
           </div>
@@ -539,3 +544,4 @@ const WorkDetail = ({ isPreview: isPreviewProp = false, previewCase = null }) =>
 }
 
 export default WorkDetail
+

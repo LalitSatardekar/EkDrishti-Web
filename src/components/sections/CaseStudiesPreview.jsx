@@ -1,97 +1,31 @@
 import { Link } from 'react-router-dom'
 import { useCases } from '../../context/CasesContext'
 import { getSortedCases } from '../../lib/sortingEngine'
-import { trackButtonClick, trackCaseClick } from '../../lib/analytics'
+import { trackCaseClick } from '../../lib/analytics'
 
-const CaseStudyCard = ({ study }) => {
-  return (
-    <Link
-      to={`/work/${study.slug}`}
-      onClick={() => trackCaseClick(study, 'home_case_preview')}
-      className="group relative block rounded-2xl overflow-hidden aspect-[4/3]"
-    >
-      <img
-        src={study.image}
-        alt={study.title}
-        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-      />
+export const PORTFOLIO_GROUPS = [
+  { service: 'family-events', slug: 'events', title: 'Events', columns: 'lg:grid-cols-4', limit: 8 },
+  { service: 'digital-marketing', slug: 'digital-marketing', title: 'Digital Marketing', columns: 'lg:grid-cols-2', limit: 6 },
+  { service: 'production', slug: 'production', title: 'Production', columns: 'lg:grid-cols-3', limit: 6 },
+]
+export const IMAGE_FALLBACK = '/assets/image-placeholder.svg'
+export const imageFallback = event => { event.currentTarget.onerror = null; event.currentTarget.src = IMAGE_FALLBACK }
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-90 group-hover:opacity-95 transition-opacity duration-300" />
+export const CaseStudyCard = ({ study }) => <Link to={'/work/' + study.slug} onClick={() => trackCaseClick(study, 'portfolio')} className="reveal-card case-card" aria-label={'View Case Study: ' + study.title}>
+  <img src={study.thumbnail || study.image || IMAGE_FALLBACK} onError={imageFallback} alt={study.title} loading="lazy" width="800" height="600" />
+  <div className="card-reveal"><h3 className="text-lg md:text-xl font-bold text-white">{study.title}</h3><span className="mt-3 block text-sm font-semibold text-amber-400">View Case Study →</span></div>
+</Link>
 
-      <div className="absolute inset-0 p-5 md:p-8 flex flex-col justify-end space-y-3">
-       {/* <span className="inline-flex items-center px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-semibold w-fit">
-          {study.category}
-        </span>*/}
-        <div>
-          <h3 className="text-xl lg:text-3xl font-heading font-bold text-textPrimary mb-2 lg:mb-3 group-hover:text-amber-400 transition-colors duration-300">
-            {study.title}
-          </h3>
-          
-        </div>
-        <div className="flex items-center text-amber-400 font-medium">
-          View Case Study
-          <svg
-            className="w-5 h-5 ml-2 group-hover:translate-x-2 transition-transform duration-300"
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path d="M17 8l4 4m0 0l-4 4m4-4H3" />
-          </svg>
-        </div>
-      </div>
-    </Link>
-  )
-}
-
-const CaseStudiesPreview = () => {
+export const PortfolioGroup = ({ group, home = false }) => {
   const { allCases, loading } = useCases()
-
-  if (loading) {
-    return (
-      <div className="py-20 text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500 mb-2"></div>
-      </div>
-    )
-  }
-
-  const featured = getSortedCases(allCases, { featured: true, sortBy: 'priority', limit: 6 })
-  const fallback = featured.length > 0 ? featured : getSortedCases(allCases, { sortBy: 'priority', limit: 6 })
-
-  return (
-    <section className="lg:py-5 px-8 md:py-24">
-      <div className="section-container">
-        <div className="text-center mb-16">
-          <span className="text-amber-400 font-medium mb-4 block">Success Stories</span>
-          <h2 className="text-3xl md:text-4xl lg:text-5  font-heading font-bold text-textPrimary mb-4 md:mb-6">
-            Dreams we built, together
-          </h2>
-          <p className="text-xl text-textSecondary max-w-2xl mx-auto">
-            Explore how we've helped leading brands achieve extraordinary results through strategic digital marketing.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-          {fallback.map((study) => (
-            <CaseStudyCard key={study.id || study._id || study.slug} study={study} />
-          ))}
-        </div>
-
-        <div className="text-center">
-          <Link
-            to="/work"
-            onClick={() => trackButtonClick('View All Projects', 'home_case_studies')}
-            className="btn-secondary inline-block"
-          >
-            View All Projects
-          </Link>
-        </div>
-      </div>
-    </section>
-  )
+  const cases = getSortedCases(allCases, { service: group.service, featured: home, limit: group.limit })
+  return <section className="portfolio-group" aria-label={group.title}>
+    <div className="text-center mb-7"><h2 className="text-2xl md:text-3xl font-semibold">{home ? group.title : group.title + ' Case Studies'}</h2>
+      {!home && <p className="text-textSecondary mt-3">Explore our work in {group.title.toLowerCase()}.</p>}</div>
+    {cases.length ? <div className={'grid sm:grid-cols-2 ' + group.columns + ' gap-4 md:gap-6'}>{cases.map(study => <CaseStudyCard key={study.slug || study.id} study={study} />)}</div> : <p role="status" className="text-center text-textSecondary py-10">{loading ? 'Loading projects…' : home ? 'Featured projects will be shared here soon.' : 'Projects will be shared here soon.'}</p>}
+    <div className="text-center mt-8"><Link className="portfolio-button" to={'/work?category=' + group.slug}>View More {group.title}</Link></div>
+  </section>
 }
-
-export default CaseStudiesPreview
+export default function CaseStudiesPreview() {
+  return <section className="section-container py-12 md:py-16"><h2 className="text-center text-3xl md:text-4xl font-bold mb-10">Portfolios</h2>{PORTFOLIO_GROUPS.map(group => <PortfolioGroup key={group.service} group={group} home />)}</section>
+}

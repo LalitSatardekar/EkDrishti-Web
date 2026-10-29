@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import { useEffect, useRef, lazy, Suspense } from 'react'
 import Layout from './components/layout/Layout'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -9,17 +9,25 @@ import AdminRoute from './components/layout/AdminRoute'
 import AdminLayout from './components/layout/AdminLayout'
 
 // Lazy load pages for better performance
+const Blogs = lazy(() => import('./pages/Blogs'))
+const Events = lazy(() => import('./pages/Events'))
+const AdminEvents = lazy(() => import('./pages/admin/AdminEvents'))
 const Home = lazy(() => import('./pages/Home'))
 const Work = lazy(() => import('./pages/Work'))
 const WorkDetail = lazy(() => import('./pages/WorkDetail'))
 const Services = lazy(() => import('./pages/Services'))
 const About = lazy(() => import('./pages/About'))
 const Contact = lazy(() => import('./pages/Contact'))
+const NotFound = lazy(() => import('./pages/NotFound'))
 const FamilyEvents = lazy(() => import('./pages/services/FamilyEvents'))
 const DigitalMarketing = lazy(() => import('./pages/services/DigitalMarketing'))
 const Production = lazy(() => import('./pages/services/Production'))
 
 // Admin lazy components
+const AdminBlogs = lazy(() => import('./pages/admin/AdminBlogs'))
+const AdminBlogEditor = lazy(() => import('./pages/admin/AdminBlogEditor'))
+const AdminBlogSettings = lazy(() => import('./pages/admin/AdminBlogSettings'))
+const AdminBlogInsights = lazy(() => import('./pages/admin/AdminBlogInsights'))
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'))
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
 const AdminCasesListing = lazy(() => import('./pages/admin/AdminCasesListing'))
@@ -108,15 +116,21 @@ function App() {
                 <Route path="/ownercontrols_panel/health" element={<AdminRoute><AdminLayout><AdminHealth /></AdminLayout></AdminRoute>} />
                 <Route path="/ownercontrols_panel/settings" element={<AdminRoute><AdminLayout><AdminSettings /></AdminLayout></AdminRoute>} />
 
-                {/* Legacy /admin redirects */}
-                <Route path="/admin/*" element={<Navigate to="/ownercontrols_panel" replace />} />
-                <Route path="/admin" element={<Navigate to="/ownercontrols_panel" replace />} />
+                <Route path="/ownercontrols_panel/blogs" element={<AdminRoute><AdminLayout><AdminBlogs /></AdminLayout></AdminRoute>} />
+                <Route path="/ownercontrols_panel/events" element={<AdminRoute><AdminLayout><AdminEvents /></AdminLayout></AdminRoute>} />
+                <Route path="/ownercontrols_panel/blogs/new" element={<AdminRoute><AdminLayout><AdminBlogEditor /></AdminLayout></AdminRoute>} />
+                <Route path="/ownercontrols_panel/blogs/settings" element={<AdminRoute><AdminLayout><AdminBlogSettings /></AdminLayout></AdminRoute>} />
+                <Route path="/ownercontrols_panel/blogs/insights" element={<AdminRoute><AdminLayout><AdminBlogInsights /></AdminLayout></AdminRoute>} />
+                <Route path="/ownercontrols_panel/blogs/:id" element={<AdminRoute><AdminLayout><AdminBlogEditor /></AdminLayout></AdminRoute>} />
 
                 {/* Public frontend endpoints wrapped in default Layout */}
                 <Route path="/*" element={
                   <Layout>
                     <Routes>
                       <Route path="/" element={<Home />} />
+                      <Route path="/home" element={<Home />} />
+                      <Route path="/blogs/*" element={<Blogs />} />
+                      <Route path="/events" element={<Events />} />
                       <Route path="/work" element={<Work />} />
                       <Route path="/work/:slug" element={<WorkDetail />} />
                       <Route path="/services" element={<Services />} />
@@ -125,6 +139,7 @@ function App() {
                       <Route path="/services/production" element={<Production />} />
                       <Route path="/about" element={<About />} />
                       <Route path="/contact" element={<Contact />} />
+                      <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Layout>
                 } />

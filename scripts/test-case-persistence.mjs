@@ -92,7 +92,7 @@ export async function runIsolatedCaseChecks(browserChecks) {
     assert.equal(stored.sections.find(section => section.id === 'image-a').settings.typographyOverrides.caption.color, '#ff0000')
     assert.equal(new Set(stored.sections.map(section => section.id)).size, stored.sections.length)
     console.log('Actual isolated MongoDB POST → PUT → stored document → GET → normalization checks passed.')
-    if (browserChecks) await browserChecks({ base, token, project: reloaded, request, photos })
+    if (browserChecks) await browserChecks({ base, token, project: reloaded, request, photos, app })
     return { checks: 'passed' }
   } finally {
     if (mongoose.connection.readyState === 1 && mongoose.connection.name === name && /^ekdrishti_cms_qa_[a-f0-9]{16}$/.test(name)) {

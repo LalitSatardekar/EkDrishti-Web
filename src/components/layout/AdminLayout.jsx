@@ -14,6 +14,8 @@ export default function AdminLayout({ children }) {
   const navItems = [
     { path: '/ownercontrols_panel', label: '📊  Dashboard', exact: true },
     { path: '/ownercontrols_panel/cases', label: '📁  Case Studies' },
+    { path: '/ownercontrols_panel/blogs', label: 'Content Studio' },
+    { path: '/ownercontrols_panel/events', label: 'Events' },
     { path: '/ownercontrols_panel/media', label: '🖼️  Media Library' },
     { path: '/ownercontrols_panel/contacts', label: '📩  Contact Forms' },
     { path: '/ownercontrols_panel/logs', label: '📋  Activity Logs' },
